@@ -1,9 +1,9 @@
 import {
+  BookOpen,
   CalendarDays,
   Home,
   Leaf,
   PenLine,
-  Sparkles,
 } from "lucide-react";
 
 const navigation = [
@@ -23,14 +23,14 @@ const navigation = [
     icon: PenLine,
   },
   {
-    label: "Mood",
-    path: "/mood",
-    icon: Sparkles,
-  },
-  {
     label: "Habits",
     path: "/habits",
     icon: Leaf,
+  },
+  {
+    label: "Reading",
+    path: "/reading",
+    icon: BookOpen,
   },
 ];
 

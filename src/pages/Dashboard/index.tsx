@@ -20,9 +20,11 @@ import { useState } from "react";
 
 import { Card } from "../../components/ui/Card";
 import { getTasks, type Task } from "../../lib/storage";
+import { getHabits, type Habit } from "../../lib/habitStorage";
 
 export default function Dashboard() {
   const [tasks] = useState<Task[]>(() => getTasks());
+  const [habits] = useState<Habit[]>(() => getHabits());
 
   const completedTasks = tasks.filter(
     (task) => task.completed
@@ -39,6 +41,50 @@ export default function Dashboard() {
 
   const today = new Date();
 
+  const todayString = today.toISOString().split("T")[0];
+
+  const completedHabits = habits.filter((habit) =>
+    habit.completedDates.includes(todayString)
+  ).length;
+
+  const totalHabits = habits.length;
+
+  const habitProgress =
+    totalHabits === 0
+      ? 0
+      : Math.round(
+          (completedHabits / totalHabits) * 100
+        );
+
+  const habitStreaks = habits.map((habit) => {
+    const completedDates = new Set(
+      habit.completedDates
+    );
+
+    let streak = 0;
+    const date = new Date();
+
+    while (true) {
+      const dateString = date
+        .toISOString()
+        .split("T")[0];
+
+      if (!completedDates.has(dateString)) {
+        break;
+      }
+
+      streak++;
+      date.setDate(date.getDate() - 1);
+    }
+
+    return streak;
+  });
+
+  const bestHabitStreak =
+    habitStreaks.length > 0
+      ? Math.max(...habitStreaks)
+      : 0;
+
   const formattedDate = today.toLocaleDateString(
     "en-US",
     {
@@ -53,6 +99,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#fffafd]">
       <div className="mx-auto max-w-[1500px] px-5 py-6 md:px-8 md:py-8">
+
         {/* ───────────────── HEADER ───────────────── */}
 
         <header className="mb-8 flex items-center justify-between gap-4">
@@ -99,6 +146,7 @@ export default function Dashboard() {
         {/* ───────────────── STAT CARDS ───────────────── */}
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
           {/* Tasks */}
           <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-[#fff0f7] to-white shadow-[0_8px_30px_rgba(216,93,145,0.08)]">
             <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#fce1ef]" />
@@ -182,10 +230,10 @@ export default function Dashboard() {
                   </p>
 
                   <p className="mt-2 text-3xl font-bold text-[#3f3340]">
-                    3
+                    {completedHabits}
                     <span className="text-lg font-medium text-[#ad9da6]">
                       {" "}
-                      / 5
+                      / {totalHabits}
                     </span>
                   </p>
                 </div>
@@ -195,14 +243,29 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-5 flex items-center gap-2">
+              <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/80">
+                <div
+                  className="h-full rounded-full bg-[#78a887] transition-all"
+                  style={{
+                    width: `${habitProgress}%`,
+                  }}
+                />
+              </div>
+
+              <div className="mt-3 flex items-center gap-2">
                 <Flame
                   size={16}
-                  className="text-[#e89a62]"
+                  className={
+                    bestHabitStreak > 0
+                      ? "text-[#e89a62]"
+                      : "text-[#c5b9be]"
+                  }
                 />
 
                 <p className="text-xs font-medium text-[#8f7d88]">
-                  4 day streak
+                  {bestHabitStreak > 0
+                    ? `${bestHabitStreak} day streak`
+                    : "Start your streak today"}
                 </p>
               </div>
             </div>
@@ -239,6 +302,7 @@ export default function Dashboard() {
         {/* ───────────────── MAIN GRID ───────────────── */}
 
         <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.9fr)]">
+
           {/* Productivity */}
           <Card className="overflow-hidden">
             <div className="flex items-start justify-between gap-4">
@@ -377,6 +441,7 @@ export default function Dashboard() {
         {/* ───────────────── LOWER CARDS ───────────────── */}
 
         <section className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
           {/* Reading */}
           <Card className="overflow-hidden">
             <div className="flex items-center justify-between">
@@ -415,7 +480,7 @@ export default function Dashboard() {
                 </p>
 
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#f7edf2]">
-                  <div className="h-full w-0 rounded-full bg-[#d85d91]" />
+                  <div className="h-0 w-0 rounded-full bg-[#d85d91]" />
                 </div>
 
                 <p className="mt-2 text-xs text-[#a18f99]">
