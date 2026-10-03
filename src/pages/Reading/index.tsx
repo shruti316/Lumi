@@ -1,27 +1,57 @@
+import { useState } from "react";
 import {
   BookOpen,
   Plus,
   Search,
   Star,
   Trash2,
-  X,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
-import { useState } from "react";
-
+import { Card } from "../../components/ui/Card";
+import { Modal } from "../../components/ui/Modal";
 import {
   addBook,
   deleteBook,
   getBooks,
+  updateBook,
   type Book,
 } from "../../lib/readingStorage";
 
-const EMPTY_BOOK = {
+const STARTER_BOOKS: Omit<Book, "id" | "createdAt">[] = [
+  {
+    title: "Atomic Habits",
+    author: "James Clear",
+    cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80",
+    status: "reading",
+    currentPage: 142,
+    totalPages: 320,
+    rating: 5,
+    whyIPickedIt: "Recommended for building positive daily systems.",
+    notes: "Habits are the compound interest of self-improvement.",
+    favoriteQuote: "You do not rise to the level of your goals. You fall to the level of your systems.",
+  },
+  {
+    title: "Before the Coffee Gets Cold",
+    author: "Toshikazu Kawaguchi",
+    cover: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80",
+    status: "want-to-read",
+    currentPage: 0,
+    totalPages: 213,
+    rating: 0,
+    whyIPickedIt: "A cozy Tokyo cafe that lets visitors travel back in time.",
+    notes: "",
+    favoriteQuote: "",
+  },
+];
+
+const EMPTY_BOOK_FORM = {
   title: "",
   author: "",
   cover: "",
-  status: "want-to-read" as Book["status"],
+  status: "reading" as Book["status"],
   currentPage: 0,
-  totalPages: 0,
+  totalPages: 300,
   rating: 0,
   whyIPickedIt: "",
   notes: "",
@@ -29,28 +59,32 @@ const EMPTY_BOOK = {
 };
 
 export default function Reading() {
-  const [books, setBooks] = useState<Book[]>(() => getBooks());
+  const [books, setBooks] = useState<Book[]>(() => {
+    const existing = getBooks();
+    if (existing.length === 0) {
+      // Initialize with starter books so library is never a barren void
+      const starters = STARTER_BOOKS.map((b) => ({
+        ...b,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      }));
+      starters.forEach((b) => addBook(b));
+      return starters;
+    }
+    return existing;
+  });
 
   const [showModal, setShowModal] = useState(false);
-
   const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<
+    "all" | "reading" | "want-to-read" | "completed"
+  >("all");
 
-  const [form, setForm] = useState(EMPTY_BOOK);
+  const [form, setForm] = useState(EMPTY_BOOK_FORM);
 
-  function openModal() {
-    setForm(EMPTY_BOOK);
-    setShowModal(true);
-  }
-
-  function closeModal() {
-    setShowModal(false);
-    setForm(EMPTY_BOOK);
-  }
-
-  function handleAddBook() {
-    if (!form.title.trim() || !form.author.trim()) {
-      return;
-    }
+  function handleSaveBook(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title.trim() || !form.author.trim()) return;
 
     const newBook: Book = {
       id: crypto.randomUUID(),
@@ -68,652 +102,520 @@ export default function Reading() {
     };
 
     addBook(newBook);
-
     setBooks(getBooks());
-
-    closeModal();
+    setForm(EMPTY_BOOK_FORM);
+    setShowModal(false);
   }
 
-  function handleDeleteBook(bookId: string) {
-    deleteBook(bookId);
+  function handleQuickUpdatePage(book: Book, newPage: number) {
+    const clampedPage = Math.max(0, Math.min(book.totalPages || 9999, newPage));
+    const isNowComplete = clampedPage >= book.totalPages && book.totalPages > 0;
+    const updated: Book = {
+      ...book,
+      currentPage: clampedPage,
+      status: isNowComplete ? "completed" : book.status,
+    };
+    updateBook(updated);
     setBooks(getBooks());
   }
+
+  function handleDelete(id: string) {
+    deleteBook(id);
+    setBooks(getBooks());
+  }
+
+  const currentlyReadingList = books.filter((b) => b.status === "reading");
+  const wantToReadList = books.filter((b) => b.status === "want-to-read");
+  const completedList = books.filter((b) => b.status === "completed");
+
+  const totalPagesRead = books.reduce((acc, b) => acc + (b.currentPage || 0), 0);
+
+  const featuredBook = currentlyReadingList.length > 0 ? currentlyReadingList[0] : null;
 
   const filteredBooks = books.filter((book) => {
-    const searchText = search.toLowerCase();
+    const matchesSearch =
+      book.title.toLowerCase().includes(search.toLowerCase()) ||
+      book.author.toLowerCase().includes(search.toLowerCase());
+    if (!matchesSearch) return false;
 
-    return (
-      book.title.toLowerCase().includes(searchText) ||
-      book.author.toLowerCase().includes(searchText)
-    );
+    if (activeFilter === "all") return true;
+    return book.status === activeFilter;
   });
 
-  const currentlyReading = books.filter(
-    (book) => book.status === "reading"
-  );
-
-  const completedBooks = books.filter(
-    (book) => book.status === "completed"
-  );
-
-  const wantToRead = books.filter(
-    (book) => book.status === "want-to-read"
-  );
-
   return (
-    <div className="min-h-screen bg-[#fffafd]">
-      <div className="mx-auto max-w-[1400px] px-5 py-6 md:px-8 md:py-8">
-
-        {/* HEADER */}
-
-        <header className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+    <div className="min-h-screen pb-24 text-[#403842]">
+      <div className="mx-auto max-w-6xl px-5 py-6 md:px-8 md:py-8">
+        {/* ═══════════════════════════════════════
+            HEADER
+        ═══════════════════════════════════════ */}
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="mb-1 text-sm font-medium text-[#9a82c7]">
-              My little library 📚
+            <p className="text-xs font-bold uppercase tracking-widest text-[#7564af]">
+              My Cozy Digital Library 📚
             </p>
-
-            <h1 className="text-3xl font-bold tracking-tight text-[#3f3340] md:text-4xl">
-              Reading
+            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#40364a] sm:text-5xl">
+              Reading & Books
             </h1>
-
-            <p className="mt-2 max-w-xl text-sm leading-6 text-[#95838e] md:text-base">
-              Keep track of the stories you're reading,
-              the ones waiting for you, and the ones that
-              stayed with you.
+            <p className="font-caveat text-xl text-[#766d78]">
+              Track the books you're exploring, the wisdom gained & stories on your shelf.
             </p>
           </div>
 
           <button
             type="button"
-            onClick={openModal}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-[#8d7ad9] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#7d69ca]"
+            onClick={() => {
+              setForm(EMPTY_BOOK_FORM);
+              setShowModal(true);
+            }}
+            className="flex items-center gap-2 rounded-2xl bg-[#eee9f8] border border-[#dcd5ed] px-4 py-2.5 text-xs font-bold text-[#40364a] shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:bg-[#e4dcfa] active:scale-95 w-fit"
           >
-            <Plus size={18} />
-            Add a book
+            <Plus size={16} />
+            <span>Add a Book</span>
           </button>
         </header>
 
-        {/* STATS */}
+        {/* ═══════════════════════════════════════
+            TOP STATS BAR
+        ═══════════════════════════════════════ */}
+        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Card className="!bg-[#eee9f8] !border-[#dcd5ed] p-3.5 glow-lavender">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7564af]">
+              Currently Reading
+            </p>
+            <p className="text-2xl font-extrabold text-[#40364a] mt-0.5">
+              {currentlyReadingList.length}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[#766d78]">
+              Active reads
+            </p>
+          </Card>
 
-        <section className="grid gap-4 sm:grid-cols-3">
-          <ReadingStat
-            label="Currently reading"
-            value={currentlyReading.length}
-            emoji="📖"
-            className="bg-[#f1ecff]"
-          />
+          <Card className="!bg-[#deeee0] !border-[#c6dccc] p-3.5 glow-green">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5e8668]">
+              Completed Books
+            </p>
+            <p className="text-2xl font-extrabold text-[#304639] mt-0.5 flex items-center gap-1">
+              <CheckCircle2 size={18} className="text-[#5e8668]" />
+              {completedList.length}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[#766d78]">
+              Finished stories
+            </p>
+          </Card>
 
-          <ReadingStat
-            label="Want to read"
-            value={wantToRead.length}
-            emoji="🌷"
-            className="bg-[#fff0f7]"
-          />
+          <Card className="!bg-[#f7dce7] !border-[#e8c5d5] p-3.5 glow-pink">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5577f]">
+              Want to Read
+            </p>
+            <p className="text-2xl font-extrabold text-[#473640] mt-0.5">
+              {wantToReadList.length}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[#766d78]">
+              On reading wishlist
+            </p>
+          </Card>
 
-          <ReadingStat
-            label="Completed"
-            value={completedBooks.length}
-            emoji="✨"
-            className="bg-[#edf8ef]"
-          />
+          <Card className="!bg-[#f7e0cc] !border-[#edcfb5] p-3.5 glow-peach">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#ae6e42]">
+              Total Pages Logged
+            </p>
+            <p className="text-2xl font-extrabold text-[#493b33] mt-0.5 flex items-center gap-1">
+              <Sparkles size={18} className="text-[#ae6e42]" />
+              {totalPagesRead}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[#766d78]">
+              Pages absorbed
+            </p>
+          </Card>
         </section>
 
-        {/* SEARCH */}
+        {/* ═══════════════════════════════════════
+            FEATURED CURRENT READ SPOTLIGHT
+        ═══════════════════════════════════════ */}
+        {featuredBook && (
+          <Card className="mb-6 !bg-gradient-to-r !from-[#eee9f8] !to-[#f7e0cc] !border-[#dcd5ed] p-5 shadow-sm glow-lavender">
+            <div className="flex flex-col md:flex-row items-center gap-5">
+              {featuredBook.cover ? (
+                <img
+                  src={featuredBook.cover}
+                  alt={featuredBook.title}
+                  className="h-32 w-24 object-cover rounded-xl shadow-md shrink-0"
+                />
+              ) : (
+                <div className="flex h-32 w-24 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#7c69b3] to-[#b5577f] text-xs font-bold text-white shadow-md">
+                  📖 BOOK
+                </div>
+              )}
 
-        <div className="mt-6">
-          <div className="relative">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a18f99]"
-            />
+              <div className="min-w-0 flex-1 w-full">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-[#ded5f2] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#7564af]">
+                    Current Spotlight
+                  </span>
+                  {featuredBook.rating > 0 && (
+                    <div className="flex items-center gap-0.5 text-[#e7b25f]">
+                      {Array.from({ length: featuredBook.rating }).map((_, i) => (
+                        <Star key={i} size={12} className="fill-[#e7b25f]" />
+                      ))}
+                    </div>
+                  )}
+                </div>
 
+                <h2 className="mt-1.5 font-caveat text-3xl font-bold text-[#40364a] truncate">
+                  {featuredBook.title}
+                </h2>
+                <p className="text-xs font-semibold text-[#766d78]">
+                  by {featuredBook.author}
+                </p>
+
+                {featuredBook.favoriteQuote && (
+                  <p className="mt-2 text-xs italic text-[#574c5d] bg-white/60 p-2 rounded-lg border border-white/80">
+                    "{featuredBook.favoriteQuote}"
+                  </p>
+                )}
+
+                {/* Live progress slider & page control */}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-xs font-bold text-[#40364a] mb-1">
+                    <span>
+                      Page {featuredBook.currentPage} of {featuredBook.totalPages || 300}
+                    </span>
+                    <span>
+                      {featuredBook.totalPages > 0
+                        ? Math.round(
+                            (featuredBook.currentPage / featuredBook.totalPages) * 100
+                          )
+                        : 0}
+                      %
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={featuredBook.totalPages || 300}
+                      value={featuredBook.currentPage}
+                      onChange={(e) =>
+                        handleQuickUpdatePage(featuredBook, Number(e.target.value))
+                      }
+                      className="w-full accent-[#7c69b3] cursor-pointer"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleQuickUpdatePage(
+                          featuredBook,
+                          featuredBook.currentPage + 10
+                        )
+                      }
+                      className="rounded-lg bg-white/90 border border-[#dcd5ed] px-2.5 py-1 text-[11px] font-bold text-[#7564af] hover:bg-white shrink-0 shadow-2xs"
+                    >
+                      +10 pgs
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* ═══════════════════════════════════════
+            FILTERS & SEARCH
+        ═══════════════════════════════════════ */}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-1.5 rounded-2xl border border-[#efe8e1] bg-white/80 p-1 w-fit shadow-2xs">
+            {(
+              [
+                { id: "all", label: "All Books" },
+                { id: "reading", label: "Reading" },
+                { id: "want-to-read", label: "Want to Read" },
+                { id: "completed", label: "Completed" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveFilter(tab.id)}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                  activeFilter === tab.id
+                    ? "bg-[#eee9f8] text-[#7564af] shadow-2xs"
+                    : "text-[#766d78] hover:text-[#403842]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex-1 sm:w-64">
+            <Search size={14} className="absolute left-3 top-2.5 text-[#918793]" />
             <input
               type="text"
+              placeholder="Search title or author..."
               value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              placeholder="Search your books..."
-              className="w-full rounded-2xl border border-[#f0e3eb] bg-white py-3.5 pl-11 pr-4 text-sm text-[#4c3e48] outline-none transition placeholder:text-[#b6a7af] focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-[#efe8e1] bg-white pl-8 pr-3 py-1.5 text-xs font-medium text-[#403842] shadow-2xs outline-none"
             />
           </div>
         </div>
 
-        {/* BOOK GRID */}
+        {/* ═══════════════════════════════════════
+            BOOK CARDS GRID
+        ═══════════════════════════════════════ */}
+        {filteredBooks.length === 0 ? (
+          <Card className="!bg-[#eee9f8] !border-[#dcd5ed] p-8 text-center glow-lavender">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs">
+              📚
+            </div>
+            <h3 className="font-caveat text-2xl font-bold text-[#40364a]">
+              No books found in this view
+            </h3>
+            <p className="mt-1 text-xs text-[#766d78]">
+              Add new books to your shelf or adjust the filter above.
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredBooks.map((book) => {
+              const progress =
+                book.totalPages > 0
+                  ? Math.min(
+                      100,
+                      Math.round((book.currentPage / book.totalPages) * 100)
+                    )
+                  : 0;
 
-        <section className="mt-8">
-          {filteredBooks.length === 0 ? (
-            <EmptyReadingState
-              hasBooks={books.length > 0}
-              onAddBook={openModal}
-            />
-          ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredBooks.map((book) => (
-                <BookCard
+              return (
+                <Card
                   key={book.id}
-                  book={book}
-                  onDelete={handleDeleteBook}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+                  className="group relative flex flex-col justify-between overflow-hidden !bg-white/90 !border-[#efe8e1] p-4 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div>
+                    {/* Top cover / icon banner */}
+                    <div className="relative mb-3 h-36 w-full overflow-hidden rounded-xl bg-gradient-to-br from-[#eee9f8] to-[#f7dce7] flex items-center justify-center">
+                      {book.cover ? (
+                        <img
+                          src={book.cover}
+                          alt={book.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <BookOpen size={36} className="text-[#7c69b3]" />
+                      )}
 
-      {/* ADD BOOK MODAL */}
+                      <span
+                        className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider backdrop-blur-md ${
+                          book.status === "reading"
+                            ? "bg-[#eee9f8]/90 text-[#7564af]"
+                            : book.status === "completed"
+                            ? "bg-[#deeee0]/90 text-[#5e8668]"
+                            : "bg-[#f7dce7]/90 text-[#b5577f]"
+                        }`}
+                      >
+                        {book.status === "reading"
+                          ? "Reading"
+                          : book.status === "completed"
+                          ? "Finished"
+                          : "Wishlist"}
+                      </span>
 
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3f3340]/30 px-4 py-6 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[28px] bg-white p-6 shadow-2xl md:p-8">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(book.id)}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-[#918793] hover:text-red-500 hover:bg-white transition shadow-2xs opacity-0 group-hover:opacity-100"
+                        title="Delete book"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
 
-            <div className="mb-6 flex items-start justify-between gap-4">
+                    <h3 className="font-bold text-sm text-[#403842] truncate">
+                      {book.title}
+                    </h3>
+                    <p className="text-xs text-[#766d78] truncate">
+                      by {book.author}
+                    </p>
+
+                    {book.rating > 0 && (
+                      <div className="mt-1.5 flex items-center gap-0.5 text-[#e7b25f]">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={11}
+                            className={
+                              i < book.rating
+                                ? "fill-[#e7b25f]"
+                                : "text-[#dcd5ed]"
+                            }
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {book.whyIPickedIt && (
+                      <p className="mt-2 text-[11px] text-[#766d78] line-clamp-2 italic bg-[#faf8f6] p-2 rounded-lg">
+                        "{book.whyIPickedIt}"
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Progress & Quick Page Counter */}
+                  <div className="mt-3 pt-2.5 border-t border-[#efe8e1]">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-[#766d78] mb-1">
+                      <span>
+                        {book.currentPage} / {book.totalPages || 0} pgs
+                      </span>
+                      <span className="text-[#7564af]">{progress}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-[#efe8e1]">
+                      <div
+                        className="h-full rounded-full bg-[#7c69b3] transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════
+            NEW BOOK MODAL
+        ═══════════════════════════════════════ */}
+        <Modal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          title="Add a Book to Library"
+          subtitle="Track and reflect on what you read."
+        >
+          <form onSubmit={handleSaveBook} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-sm font-medium text-[#9a82c7]">
-                  Add to your library
-                </p>
-
-                <h2 className="mt-1 text-2xl font-bold text-[#3f3340]">
-                  Add a new book 📚
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeModal}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f8f2f6] text-[#8f7d88] transition hover:bg-[#f2e8ee]"
-              >
-                <X size={19} />
-              </button>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2">
-
-              {/* TITLE */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Book title *
+                <label className="block text-xs font-bold text-[#403842] mb-1">
+                  Book Title *
                 </label>
-
                 <input
+                  type="text"
+                  placeholder="e.g. The Psychology of Money"
                   value={form.title}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      title: event.target.value,
-                    })
-                  }
-                  placeholder="e.g. The Silent Patient"
-                  className="w-full rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="w-full rounded-xl border border-[#dcd5ed] bg-[#faf8f6] px-3.5 py-2 text-xs font-medium text-[#403842] focus:border-[#7c69b3] focus:bg-white outline-none"
+                  required
                 />
               </div>
 
-              {/* AUTHOR */}
-
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
+                <label className="block text-xs font-bold text-[#403842] mb-1">
                   Author *
                 </label>
-
                 <input
+                  type="text"
+                  placeholder="e.g. Morgan Housel"
                   value={form.author}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      author: event.target.value,
-                    })
-                  }
-                  placeholder="e.g. Alex Michaelides"
-                  className="w-full rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                />
-              </div>
-
-              {/* COVER */}
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Cover image URL
-                </label>
-
-                <input
-                  value={form.cover}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      cover: event.target.value,
-                    })
-                  }
-                  placeholder="Paste an image URL"
-                  className="w-full rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                />
-
-                <p className="mt-2 text-xs text-[#a18f99]">
-                  We'll add proper image uploading later.
-                </p>
-              </div>
-
-              {/* STATUS */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Reading status
-                </label>
-
-                <select
-                  value={form.status}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      status:
-                        event.target.value as Book["status"],
-                    })
-                  }
-                  className="w-full rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                >
-                  <option value="want-to-read">
-                    Want to read
-                  </option>
-
-                  <option value="reading">
-                    Currently reading
-                  </option>
-
-                  <option value="completed">
-                    Completed
-                  </option>
-                </select>
-              </div>
-
-              {/* TOTAL PAGES */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Total pages
-                </label>
-
-                <input
-                  type="number"
-                  min="0"
-                  value={form.totalPages || ""}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      totalPages: Number(
-                        event.target.value
-                      ),
-                    })
-                  }
-                  placeholder="e.g. 352"
-                  className="w-full rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                />
-              </div>
-
-              {/* CURRENT PAGE */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Current page
-                </label>
-
-                <input
-                  type="number"
-                  min="0"
-                  value={form.currentPage || ""}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      currentPage: Number(
-                        event.target.value
-                      ),
-                    })
-                  }
-                  placeholder="e.g. 120"
-                  className="w-full rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                />
-              </div>
-
-              {/* RATING */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Rating
-                </label>
-
-                <select
-                  value={form.rating}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      rating: Number(
-                        event.target.value
-                      ),
-                    })
-                  }
-                  className="w-full rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                >
-                  <option value="0">Not rated</option>
-                  <option value="1">⭐ 1</option>
-                  <option value="2">⭐ 2</option>
-                  <option value="3">⭐ 3</option>
-                  <option value="4">⭐ 4</option>
-                  <option value="5">⭐ 5</option>
-                </select>
-              </div>
-
-              {/* WHY */}
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Why did I pick this book?
-                </label>
-
-                <textarea
-                  value={form.whyIPickedIt}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      whyIPickedIt:
-                        event.target.value,
-                    })
-                  }
-                  rows={3}
-                  placeholder="What made you want to read it?"
-                  className="w-full resize-none rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                />
-              </div>
-
-              {/* NOTES */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Notes
-                </label>
-
-                <textarea
-                  value={form.notes}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      notes: event.target.value,
-                    })
-                  }
-                  rows={4}
-                  placeholder="Your thoughts..."
-                  className="w-full resize-none rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
-                />
-              </div>
-
-              {/* QUOTE */}
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#51434d]">
-                  Favourite quote
-                </label>
-
-                <textarea
-                  value={form.favoriteQuote}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      favoriteQuote:
-                        event.target.value,
-                    })
-                  }
-                  rows={4}
-                  placeholder="A quote you want to remember..."
-                  className="w-full resize-none rounded-2xl border border-[#eee2e9] bg-[#fffafd] px-4 py-3 text-sm outline-none focus:border-[#cfc2ee] focus:ring-4 focus:ring-[#f1ecff]"
+                  onChange={(e) => setForm({ ...form, author: e.target.value })}
+                  className="w-full rounded-xl border border-[#dcd5ed] bg-[#faf8f6] px-3.5 py-2 text-xs font-medium text-[#403842] focus:border-[#7c69b3] focus:bg-white outline-none"
+                  required
                 />
               </div>
             </div>
 
-            {/* BUTTONS */}
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-[#403842] mb-1">
+                  Status
+                </label>
+                <select
+                  value={form.status}
+                  onChange={(e) =>
+                    setForm({ ...form, status: e.target.value as Book["status"] })
+                  }
+                  className="w-full rounded-xl border border-[#dcd5ed] bg-[#faf8f6] px-3 py-2 text-xs font-bold text-[#403842] focus:border-[#7c69b3] focus:bg-white outline-none"
+                >
+                  <option value="reading">Reading</option>
+                  <option value="want-to-read">Want to Read</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
 
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <div>
+                <label className="block text-xs font-bold text-[#403842] mb-1">
+                  Current Page
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.currentPage}
+                  onChange={(e) =>
+                    setForm({ ...form, currentPage: Number(e.target.value) })
+                  }
+                  className="w-full rounded-xl border border-[#dcd5ed] bg-[#faf8f6] px-3.5 py-2 text-xs font-medium text-[#403842] focus:border-[#7c69b3] focus:bg-white outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#403842] mb-1">
+                  Total Pages
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.totalPages}
+                  onChange={(e) =>
+                    setForm({ ...form, totalPages: Number(e.target.value) })
+                  }
+                  className="w-full rounded-xl border border-[#dcd5ed] bg-[#faf8f6] px-3.5 py-2 text-xs font-medium text-[#403842] focus:border-[#7c69b3] focus:bg-white outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#403842] mb-1">
+                Cover Image URL (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="https://..."
+                value={form.cover}
+                onChange={(e) => setForm({ ...form, cover: e.target.value })}
+                className="w-full rounded-xl border border-[#dcd5ed] bg-[#faf8f6] px-3.5 py-2 text-xs font-medium text-[#403842] focus:border-[#7c69b3] focus:bg-white outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[#403842] mb-1">
+                Why I Picked It / Notes
+              </label>
+              <textarea
+                placeholder="What drawn you to this book..."
+                value={form.whyIPickedIt}
+                onChange={(e) =>
+                  setForm({ ...form, whyIPickedIt: e.target.value })
+                }
+                rows={2}
+                className="w-full rounded-xl border border-[#dcd5ed] bg-[#faf8f6] px-3.5 py-2 text-xs font-medium text-[#403842] focus:border-[#7c69b3] focus:bg-white outline-none resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={closeModal}
-                className="rounded-2xl px-5 py-3 text-sm font-semibold text-[#8f7d88] transition hover:bg-[#f8f2f6]"
+                onClick={() => setShowModal(false)}
+                className="rounded-xl px-4 py-2 text-xs font-bold text-[#766d78] hover:bg-white/50"
               >
                 Cancel
               </button>
-
               <button
-                type="button"
-                onClick={handleAddBook}
-                disabled={
-                  !form.title.trim() ||
-                  !form.author.trim()
-                }
-                className="rounded-2xl bg-[#8d7ad9] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#7d69ca] disabled:cursor-not-allowed disabled:opacity-40"
+                type="submit"
+                disabled={!form.title.trim() || !form.author.trim()}
+                className="rounded-xl bg-[#7c69b3] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#6b58a1] disabled:opacity-50"
               >
-                Add book
+                Add to Library
               </button>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ───────────────── STAT ───────────────── */
-
-function ReadingStat({
-  label,
-  value,
-  emoji,
-  className,
-}: {
-  label: string;
-  value: number;
-  emoji: string;
-  className: string;
-}) {
-  return (
-    <div
-      className={`rounded-[24px] p-5 ${className}`}
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-[#756671]">
-          {label}
-        </p>
-
-        <span className="text-xl">{emoji}</span>
+          </form>
+        </Modal>
       </div>
-
-      <p className="mt-3 text-3xl font-bold text-[#3f3340]">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-/* ───────────────── BOOK CARD ───────────────── */
-
-function BookCard({
-  book,
-  onDelete,
-}: {
-  book: Book;
-  onDelete: (bookId: string) => void;
-}) {
-  const progress =
-    book.totalPages > 0
-      ? Math.min(
-          100,
-          Math.round(
-            (book.currentPage /
-              book.totalPages) *
-              100
-          )
-        )
-      : 0;
-
-  const statusLabel = {
-    "want-to-read": "Want to read",
-    reading: "Currently reading",
-    completed: "Completed",
-  };
-
-  return (
-    <article className="group overflow-hidden rounded-[26px] border border-[#f1e5eb] bg-white shadow-[0_8px_30px_rgba(80,50,70,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_35px_rgba(80,50,70,0.09)]">
-
-      {/* COVER */}
-
-      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-[#eee9ff] via-[#fceaf3] to-[#fff0e3]">
-        {book.cover ? (
-          <img
-            src={book.cover}
-            alt={book.title}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-            <BookOpen
-              size={38}
-              className="text-[#9a82c7]"
-            />
-
-            <p className="mt-4 max-w-[170px] text-sm font-semibold text-[#756671]">
-              {book.title}
-            </p>
-
-            <p className="mt-1 text-xs text-[#a18f99]">
-              {book.author}
-            </p>
-          </div>
-        )}
-
-        {/* STATUS */}
-
-        <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#66576a] shadow-sm backdrop-blur">
-          {statusLabel[book.status]}
-        </div>
-
-        {/* DELETE */}
-
-        <button
-          type="button"
-          onClick={() => onDelete(book.id)}
-          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white/90 text-[#b28f9e] opacity-0 shadow-sm backdrop-blur transition group-hover:opacity-100 hover:bg-[#fff0f4] hover:text-[#d85d91]"
-          title="Delete book"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
-
-      {/* CONTENT */}
-
-      <div className="p-5">
-        <h3 className="truncate font-bold text-[#3f3340]">
-          {book.title}
-        </h3>
-
-        <p className="mt-1 truncate text-sm text-[#95838e]">
-          {book.author}
-        </p>
-
-        {/* RATING */}
-
-        {book.rating > 0 && (
-          <div className="mt-3 flex items-center gap-1">
-            {Array.from({ length: 5 }).map(
-              (_, index) => (
-                <Star
-                  key={index}
-                  size={14}
-                  className={
-                    index < book.rating
-                      ? "fill-[#e7b25f] text-[#e7b25f]"
-                      : "text-[#ddd2d8]"
-                  }
-                />
-              )
-            )}
-          </div>
-        )}
-
-        {/* PROGRESS */}
-
-        {book.totalPages > 0 && (
-          <div className="mt-5">
-            <div className="mb-2 flex items-center justify-between text-xs">
-              <span className="text-[#95838e]">
-                {book.currentPage} /{" "}
-                {book.totalPages} pages
-              </span>
-
-              <span className="font-semibold text-[#8d7ad9]">
-                {progress}%
-              </span>
-            </div>
-
-            <div className="h-2 overflow-hidden rounded-full bg-[#f2edf5]">
-              <div
-                className="h-full rounded-full bg-[#9a87df] transition-all"
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* WHY I PICKED IT */}
-
-        {book.whyIPickedIt && (
-          <div className="mt-5 rounded-2xl bg-[#faf7ff] p-3">
-            <p className="text-xs leading-5 text-[#756671]">
-              <span className="font-semibold">
-                Why I picked it:
-              </span>{" "}
-              {book.whyIPickedIt}
-            </p>
-          </div>
-        )}
-      </div>
-    </article>
-  );
-}
-
-/* ───────────────── EMPTY STATE ───────────────── */
-
-function EmptyReadingState({
-  hasBooks,
-  onAddBook,
-}: {
-  hasBooks: boolean;
-  onAddBook: () => void;
-}) {
-  return (
-    <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[28px] border border-dashed border-[#e9dce5] bg-white px-6 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[#f1ecff] text-4xl">
-        📚
-      </div>
-
-      <h2 className="mt-5 text-xl font-bold text-[#3f3340]">
-        {hasBooks
-          ? "No books found"
-          : "Your library is waiting"}
-      </h2>
-
-      <p className="mt-2 max-w-md text-sm leading-6 text-[#95838e]">
-        {hasBooks
-          ? "Try searching with another title or author."
-          : "Add your first book and start building your little digital library."}
-      </p>
-
-      {!hasBooks && (
-        <button
-          type="button"
-          onClick={onAddBook}
-          className="mt-6 flex items-center gap-2 rounded-2xl bg-[#8d7ad9] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#7d69ca]"
-        >
-          <Plus size={18} />
-          Add your first book
-        </button>
-      )}
     </div>
   );
 }

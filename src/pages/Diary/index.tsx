@@ -1,13 +1,13 @@
 import { useState } from "react";
 import {
-  BookOpen,
   CalendarDays,
   Heart,
-  Plus,
+  PenLine,
   Search,
   Trash2,
-  X,
+  Tag,
 } from "lucide-react";
+import { Card } from "../../components/ui/Card";
 import {
   addDiaryEntry,
   deleteDiaryEntry,
@@ -15,52 +15,74 @@ import {
   type DiaryEntry,
 } from "../../lib/diaryStorage";
 
-const moods = [
+const MOODS = [
   { emoji: "😊", label: "Happy" },
   { emoji: "😌", label: "Calm" },
-  { emoji: "🥰", label: "Loved" },
+  { emoji: "🥰", label: "Grateful" },
+  { emoji: "⚡", label: "Energized" },
   { emoji: "😐", label: "Okay" },
-  { emoji: "😔", label: "Sad" },
-  { emoji: "😤", label: "Frustrated" },
+  { emoji: "😔", label: "Reflective" },
+  { emoji: "😴", label: "Tired" },
 ];
 
-const suggestedTags = [
+const SUGGESTED_TAGS = [
   "college",
-  "personal",
+  "gratitude",
+  "wins",
   "friends",
-  "family",
+  "learning",
   "memories",
+  "thoughts",
   "growth",
 ];
 
-function Diary() {
-  const [entries, setEntries] = useState<DiaryEntry[]>(() =>
-    getDiaryEntries()
-  );
+const STARTER_ENTRY: Omit<DiaryEntry, "id" | "createdAt"> = {
+  title: "A fresh start to the new semester ✨",
+  content:
+    "Feeling optimistic about building better daily routines and keeping up with coursework. Spent some time organizing my notes and enjoying a warm matcha latte this afternoon. Taking things one day at a time.",
+  mood: "🥰",
+  tags: ["college", "growth", "gratitude"],
+};
 
+export default function Diary() {
+  const [entries, setEntries] = useState<DiaryEntry[]>(() => {
+    const existing = getDiaryEntries();
+    if (existing.length === 0) {
+      const starter = {
+        ...STARTER_ENTRY,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      };
+      addDiaryEntry(starter);
+      return [starter];
+    }
+    return existing;
+  });
+
+  // Inline Quick Entry State
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedMood, setSelectedMood] = useState("😊");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Search & Filter State
   const [search, setSearch] = useState("");
-  const [showEditor, setShowEditor] = useState(false);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags((currentTags) =>
-      currentTags.includes(tag)
-        ? currentTags.filter((item) => item !== tag)
-        : [...currentTags, tag]
+  function toggleTag(tag: string) {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
-  };
+  }
 
-  const handleSave = () => {
-    if (!title.trim() && !content.trim()) {
-      return;
-    }
+  function handleSaveEntry(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim() && !content.trim()) return;
 
     const newEntry: DiaryEntry = {
       id: crypto.randomUUID(),
-      title: title.trim() || "Untitled entry",
+      title: title.trim() || "Untitled reflection",
       content: content.trim(),
       mood: selectedMood,
       tags: selectedTags,
@@ -68,34 +90,33 @@ function Diary() {
     };
 
     addDiaryEntry(newEntry);
-
     setEntries(getDiaryEntries());
     setTitle("");
     setContent("");
     setSelectedMood("😊");
     setSelectedTags([]);
-    setShowEditor(false);
-  };
+    setIsExpanded(false);
+  }
 
-  const handleDelete = (id: string) => {
+  function handleDelete(id: string) {
     deleteDiaryEntry(id);
     setEntries(getDiaryEntries());
-  };
+  }
 
   const filteredEntries = entries.filter((entry) => {
-    const searchText = search.toLowerCase();
+    const matchesSearch =
+      entry.title.toLowerCase().includes(search.toLowerCase()) ||
+      entry.content.toLowerCase().includes(search.toLowerCase()) ||
+      entry.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
 
-    return (
-      entry.title.toLowerCase().includes(searchText) ||
-      entry.content.toLowerCase().includes(searchText) ||
-      entry.tags.some((tag) =>
-        tag.toLowerCase().includes(searchText)
-      )
-    );
+    const matchesTag = tagFilter ? entry.tags.includes(tagFilter) : true;
+
+    return matchesSearch && matchesTag;
   });
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      weekday: "short",
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -103,252 +124,250 @@ function Diary() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fffafd] px-5 py-7 md:px-10 md:py-9">
-      <div className="mx-auto max-w-6xl">
-
-        {/* Header */}
-        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-h-screen pb-24 text-[#403842]">
+      <div className="mx-auto max-w-6xl px-5 py-6 md:px-8 md:py-8">
+        {/* ═══════════════════════════════════════
+            HEADER
+        ═══════════════════════════════════════ */}
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="mb-2 text-sm font-semibold text-[#d895a9]">
-              Your little corner of the world 🌷
+            <p className="text-xs font-bold uppercase tracking-widest text-[#ae6e42]">
+              Personal Sanctuary & Journal 🌷
             </p>
-
-            <h1 className="text-3xl font-extrabold tracking-tight text-[#3f3340] md:text-4xl">
+            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#493b33] sm:text-5xl">
               My Diary
             </h1>
-
-            <p className="mt-2 max-w-xl text-sm leading-6 text-[#8f7d88]">
-              A quiet place to write down your days, thoughts, feelings,
-              and little moments you want to remember.
+            <p className="font-caveat text-xl text-[#766d78]">
+              A quiet, aesthetic space to reflect, unwind, and document your personal journey.
             </p>
           </div>
 
-          <button
-            onClick={() => setShowEditor(true)}
-            className="flex w-fit items-center gap-2 rounded-2xl bg-[#e879a9] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <Plus size={18} />
-            New Entry
-          </button>
-        </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-2xl border border-[#efe8e1] bg-white/80 px-3.5 py-2 text-xs font-bold text-[#ae6e42] shadow-2xs">
+              ✍️ {entries.length} entries penned
+            </span>
+          </div>
+        </header>
 
-        {/* Search */}
-        <div className="mb-7 flex items-center gap-3 rounded-2xl border border-[#f0e3ea] bg-white px-4 py-3 shadow-sm">
-          <Search size={19} className="text-[#a18f99]" />
+        {/* ═══════════════════════════════════════
+            QUICK WRITE BOX (LOW FRICTION)
+        ═══════════════════════════════════════ */}
+        <Card className="mb-8 !bg-gradient-to-br !from-[#f7e0cc] !to-[#fff2ea] !border-[#edcfb5] p-5 shadow-sm glow-peach">
+          <form onSubmit={handleSaveEntry} className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#ae6e42] flex items-center gap-1.5">
+                <PenLine size={14} />
+                Write Today's Thoughts
+              </span>
 
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search your diary..."
-            className="w-full bg-transparent text-sm text-[#3f3340] outline-none placeholder:text-[#b5a6ae]"
-          />
-        </div>
-
-        {/* Empty state */}
-        {filteredEntries.length === 0 ? (
-          <div className="rounded-[2rem] border border-[#f2e4eb] bg-white px-6 py-16 text-center shadow-sm">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#fff0f6]">
-              <BookOpen size={28} className="text-[#e879a9]" />
+              {/* Mood selector in header */}
+              <div className="flex items-center gap-1">
+                {MOODS.map((m) => (
+                  <button
+                    key={m.label}
+                    type="button"
+                    onClick={() => setSelectedMood(m.emoji)}
+                    className={`h-7 w-7 rounded-lg text-sm transition-transform ${
+                      selectedMood === m.emoji
+                        ? "bg-white border border-[#edcfb5] scale-110 shadow-2xs"
+                        : "opacity-60 hover:opacity-100 hover:scale-105"
+                    }`}
+                    title={m.label}
+                  >
+                    {m.emoji}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <h2 className="text-xl font-extrabold text-[#3f3340]">
-              {search
-                ? "No entries found"
-                : "Your diary is waiting for its first story ✨"}
-            </h2>
+            <input
+              type="text"
+              placeholder="Give today a title (e.g. Afternoon coffee & breakthroughs)..."
+              value={title}
+              onFocus={() => setIsExpanded(true)}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-xl border border-[#edcfb5] bg-white px-3.5 py-2.5 text-xs font-bold text-[#403842] placeholder:text-[#918793] focus:border-[#ae6e42] outline-none shadow-2xs"
+            />
 
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#8f7d88]">
-              {search
-                ? "Try searching for another word, tag, or thought."
-                : "Write about your day, something you're grateful for, a random thought, or anything you want to remember."}
-            </p>
+            {(isExpanded || content) && (
+              <>
+                <textarea
+                  placeholder="Pour your thoughts, feelings, highlights of the day, or lessons learned..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={4}
+                  className="w-full rounded-xl border border-[#edcfb5] bg-white p-3.5 text-xs font-medium text-[#403842] leading-relaxed placeholder:text-[#918793] focus:border-[#ae6e42] outline-none shadow-2xs resize-none"
+                />
 
-            {!search && (
-              <button
-                onClick={() => setShowEditor(true)}
-                className="mt-6 rounded-2xl bg-[#fff0f6] px-5 py-3 text-sm font-bold text-[#d95f92] transition hover:bg-[#ffe5f0]"
-              >
-                Write my first entry
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2">
-            {filteredEntries.map((entry) => (
-              <article
-                key={entry.id}
-                className="group relative rounded-[2rem] border border-[#f2e4eb] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-              >
-                {/* Delete */}
-                <button
-                  onClick={() => handleDelete(entry.id)}
-                  className="absolute right-5 top-5 rounded-xl p-2 text-[#c7b9c0] opacity-0 transition hover:bg-[#fff0f4] hover:text-[#d66b91] group-hover:opacity-100"
-                  title="Delete entry"
-                >
-                  <Trash2 size={16} />
-                </button>
-
-                <div className="mb-4 flex items-center justify-between pr-10">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#a18f99]">
-                    <CalendarDays size={15} />
-                    {formatDate(entry.createdAt)}
-                  </div>
-
-                  <span className="text-2xl">
-                    {entry.mood}
+                {/* Tags Picker */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#ae6e42] mr-1 flex items-center gap-1">
+                    <Tag size={11} /> Tags:
                   </span>
+                  {SUGGESTED_TAGS.map((t) => {
+                    const isSelected = selectedTags.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => toggleTag(t)}
+                        className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                          isSelected
+                            ? "bg-[#edcfb5] border-[#ae6e42] text-[#493b33] shadow-2xs"
+                            : "bg-white border-[#efe8e1] text-[#766d78] hover:bg-[#faf8f6]"
+                        }`}
+                      >
+                        #{t}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                <h2 className="mb-3 text-xl font-extrabold text-[#3f3340]">
-                  {entry.title}
-                </h2>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTitle("");
+                      setContent("");
+                      setSelectedTags([]);
+                      setIsExpanded(false);
+                    }}
+                    className="rounded-xl px-4 py-2 text-xs font-bold text-[#766d78] hover:bg-white/50"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!title.trim() && !content.trim()}
+                    className="flex items-center gap-1.5 rounded-xl bg-[#ae6e42] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#975c34] disabled:opacity-50"
+                  >
+                    <Heart size={13} />
+                    <span>Save Entry</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </form>
+        </Card>
 
-                <p className="whitespace-pre-wrap text-sm leading-7 text-[#756670]">
-                  {entry.content}
-                </p>
+        {/* ═══════════════════════════════════════
+            SEARCH & TAG FILTER BAR
+        ═══════════════════════════════════════ */}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTagFilter(null)}
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                tagFilter === null
+                  ? "bg-[#f7e0cc] border border-[#edcfb5] text-[#ae6e42] shadow-2xs"
+                  : "bg-white border border-[#efe8e1] text-[#766d78] hover:text-[#403842]"
+              }`}
+            >
+              All Entries ({entries.length})
+            </button>
+            {SUGGESTED_TAGS.slice(0, 5).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTagFilter(tagFilter === t ? null : t)}
+                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                  tagFilter === t
+                    ? "bg-[#f7e0cc] border border-[#edcfb5] text-[#ae6e42] shadow-2xs"
+                    : "bg-white border border-[#efe8e1] text-[#766d78] hover:text-[#403842]"
+                }`}
+              >
+                #{t}
+              </button>
+            ))}
+          </div>
 
-                {entry.tags.length > 0 && (
-                  <div className="mt-5 flex flex-wrap gap-2">
+          <div className="relative flex-1 sm:w-64">
+            <Search size={14} className="absolute left-3 top-2.5 text-[#918793]" />
+            <input
+              type="text"
+              placeholder="Search diary thoughts..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-[#efe8e1] bg-white pl-8 pr-3 py-1.5 text-xs font-medium text-[#403842] shadow-2xs outline-none"
+            />
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════
+            ENTRIES MASONRY / GRID
+        ═══════════════════════════════════════ */}
+        {filteredEntries.length === 0 ? (
+          <Card className="!bg-[#f7e0cc] !border-[#edcfb5] p-8 text-center glow-peach">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs">
+              🌷
+            </div>
+            <h3 className="font-caveat text-2xl font-bold text-[#493b33]">
+              No entries found
+            </h3>
+            <p className="mt-1 text-xs text-[#766d78]">
+              Write down your thoughts in the box above to start filling your diary.
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {filteredEntries.map((entry) => (
+              <Card
+                key={entry.id}
+                className="group relative flex flex-col justify-between !bg-white/90 !border-[#efe8e1] p-5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#766d78]">
+                      <CalendarDays size={13} />
+                      <span>{formatDate(entry.createdAt)}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#f7e0cc] text-base border border-[#edcfb5]"
+                        title={entry.mood}
+                      >
+                        {entry.mood || "😊"}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(entry.id)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#918793] hover:text-red-500 hover:bg-red-50 transition opacity-0 group-hover:opacity-100"
+                        title="Delete entry"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 className="font-bold text-sm text-[#403842] leading-snug">
+                    {entry.title}
+                  </h3>
+
+                  <p className="mt-2 text-xs font-medium text-[#574c5d] leading-relaxed whitespace-pre-wrap">
+                    {entry.content}
+                  </p>
+                </div>
+
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="mt-4 pt-2.5 border-t border-[#efe8e1] flex flex-wrap gap-1.5">
                     {entry.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full bg-[#fff3f7] px-3 py-1 text-xs font-semibold text-[#c76d90]"
+                        className="rounded-md bg-[#faf8f6] border border-[#efe8e1] px-2 py-0.5 text-[10px] font-bold text-[#ae6e42]"
                       >
                         #{tag}
                       </span>
                     ))}
                   </div>
                 )}
-              </article>
+              </Card>
             ))}
           </div>
         )}
       </div>
-
-      {/* Editor Modal */}
-      {showEditor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#3f3340]/30 px-4 py-6 backdrop-blur-sm">
-          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl md:p-8">
-
-            {/* Modal Header */}
-            <div className="mb-7 flex items-start justify-between">
-              <div>
-                <p className="mb-1 text-sm font-semibold text-[#d895a9]">
-                  Take a little moment 🌷
-                </p>
-
-                <h2 className="text-2xl font-extrabold text-[#3f3340]">
-                  New Diary Entry
-                </h2>
-              </div>
-
-              <button
-                onClick={() => setShowEditor(false)}
-                className="rounded-xl p-2 text-[#a18f99] transition hover:bg-[#fff2f6] hover:text-[#d66b91]"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Title */}
-            <label className="mb-2 block text-sm font-bold text-[#4d3d48]">
-              Title
-            </label>
-
-            <input
-              type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Give today a little title..."
-              className="mb-6 w-full rounded-2xl border border-[#eadde4] bg-[#fffafd] px-4 py-3 text-sm text-[#3f3340] outline-none transition focus:border-[#e7a2bd] focus:ring-2 focus:ring-[#fbe0ea]"
-            />
-
-            {/* Mood */}
-            <label className="mb-3 block text-sm font-bold text-[#4d3d48]">
-              How are you feeling?
-            </label>
-
-            <div className="mb-6 flex flex-wrap gap-2">
-              {moods.map((mood) => (
-                <button
-                  key={mood.label}
-                  onClick={() => setSelectedMood(mood.emoji)}
-                  className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm transition ${
-                    selectedMood === mood.emoji
-                      ? "border-[#e9a3bd] bg-[#fff0f6] shadow-sm"
-                      : "border-[#eee2e8] bg-white hover:bg-[#fff8fb]"
-                  }`}
-                >
-                  <span className="text-lg">{mood.emoji}</span>
-                  <span className="font-semibold text-[#756670]">
-                    {mood.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            {/* Content */}
-            <label className="mb-2 block text-sm font-bold text-[#4d3d48]">
-              Your thoughts
-            </label>
-
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              placeholder="Write whatever is on your mind..."
-              rows={8}
-              className="mb-6 w-full resize-none rounded-2xl border border-[#eadde4] bg-[#fffafd] px-4 py-4 text-sm leading-7 text-[#3f3340] outline-none transition focus:border-[#e7a2bd] focus:ring-2 focus:ring-[#fbe0ea]"
-            />
-
-            {/* Tags */}
-            <label className="mb-3 block text-sm font-bold text-[#4d3d48]">
-              Add some tags
-            </label>
-
-            <div className="mb-7 flex flex-wrap gap-2">
-              {suggestedTags.map((tag) => {
-                const selected = selectedTags.includes(tag);
-
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                      selected
-                        ? "border-[#e8a1bb] bg-[#fff0f6] text-[#c76d90]"
-                        : "border-[#eee2e8] text-[#9b8992] hover:bg-[#fff8fb]"
-                    }`}
-                  >
-                    #{tag}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                onClick={() => setShowEditor(false)}
-                className="rounded-2xl px-5 py-3 text-sm font-bold text-[#8f7d88] transition hover:bg-[#faf3f7]"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSave}
-                disabled={!title.trim() && !content.trim()}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-[#e879a9] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#df6d9f] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Heart size={17} />
-                Save Entry
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
-export default Diary;

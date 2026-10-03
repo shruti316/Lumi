@@ -1,45 +1,397 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss";
 
 :root {
-  font-family: "Nunito Sans", sans-serif;
-  color: #3f3340;
-  background: #fffafd;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+
+  color: #34323a;
+
+  /* LUMI warm atmospheric canvas */
+  background-color: #e9e6e3;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* ═══════════════════════════════════════════════
+     LUMI MATURE COORDINATED PALETTE
+  ═══════════════════════════════════════════════ */
+
+  --lumi-bg: #e9e6e3;
+  --lumi-surface: #f8f5f2;
+  --lumi-text: #34323a;
+  --lumi-secondary: #706c72;
+  --lumi-muted: #8e8a90;
+  --lumi-border: #d8d4cd;
+
+  /* Lavender */
+  --lumi-lavender: #e5e0ec;
+  --lumi-lavender-border: #d2cadb;
+  --lumi-lavender-accent: #786a9b;
+
+  /* Dusty Blue */
+  --lumi-blue: #dce8ec;
+  --lumi-blue-border: #c5d8e0;
+  --lumi-blue-accent: #638da0;
+
+  /* Sage */
+  --lumi-sage: #dce6de;
+  --lumi-sage-border: #c4d7c8;
+  --lumi-sage-accent: #668c72;
+
+  /* Terracotta / Peach */
+  --lumi-peach: #ebd9cd;
+  --lumi-peach-border: #dcbfad;
+  --lumi-peach-accent: #a96f51;
+
+  /* Dusty Rose */
+  --lumi-rose: #ebd8df;
+  --lumi-rose-border: #d8bdc7;
+  --lumi-rose-accent: #a95c78;
 }
+
+/* ═══════════════════════════════════════════════
+   GLOBAL BOX MODEL
+═══════════════════════════════════════════════ */
 
 * {
   box-sizing: border-box;
 }
 
+/* ═══════════════════════════════════════════════
+   HTML
+═══════════════════════════════════════════════ */
+
 html {
   scroll-behavior: smooth;
+  background-color: #e9e6e3;
 }
+
+/* ═══════════════════════════════════════════════
+   BODY
+═══════════════════════════════════════════════ */
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: "Nunito Sans", sans-serif;
-  background: #fffafd;
+
+  font-family: "Manrope", sans-serif;
+  color: #34323a;
+
+  background-color: #e9e6e3;
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+/* ═══════════════════════════════════════════════
+   LUMI ATMOSPHERIC CANVAS
+
+   The background itself carries colour.
+
+   Lavender → top left
+   Dusty blue → top right
+   Sage → bottom left
+   Terracotta → bottom right
+   Soft lavender/rose → center
+
+   IMPORTANT:
+   There is intentionally NO large white
+   center overlay. The colour should remain
+   visible between the cards.
+═══════════════════════════════════════════════ */
+
+.lumi-page-atmosphere {
+  position: relative;
+
+  background-color: #e9e6e3;
+
+  background-image:
+    /* ─────────────────────────────────────────
+       TOP LEFT — LAVENDER
+    ───────────────────────────────────────── */
+    radial-gradient(
+      ellipse 700px 650px at 4% 5%,
+      rgba(184, 174, 211, 0.72) 0%,
+      rgba(198, 190, 218, 0.52) 35%,
+      rgba(214, 208, 225, 0.25) 62%,
+      transparent 82%
+    ),
+
+    /* ─────────────────────────────────────────
+       TOP RIGHT — DUSTY BLUE
+    ───────────────────────────────────────── */
+    radial-gradient(
+      ellipse 760px 680px at 98% 8%,
+      rgba(171, 202, 215, 0.68) 0%,
+      rgba(190, 214, 223, 0.48) 36%,
+      rgba(208, 222, 227, 0.22) 64%,
+      transparent 84%
+    ),
+
+    /* ─────────────────────────────────────────
+       BOTTOM LEFT — SAGE
+    ───────────────────────────────────────── */
+    radial-gradient(
+      ellipse 760px 700px at 4% 98%,
+      rgba(182, 207, 190, 0.66) 0%,
+      rgba(199, 217, 204, 0.46) 38%,
+      rgba(216, 225, 217, 0.20) 65%,
+      transparent 85%
+    ),
+
+    /* ─────────────────────────────────────────
+       BOTTOM RIGHT — MUTED TERRACOTTA
+    ───────────────────────────────────────── */
+    radial-gradient(
+      ellipse 780px 700px at 98% 98%,
+      rgba(220, 187, 168, 0.64) 0%,
+      rgba(228, 201, 186, 0.44) 38%,
+      rgba(235, 215, 203, 0.20) 66%,
+      transparent 86%
+    ),
+
+    /* ─────────────────────────────────────────
+       CENTER — SOFT LAVENDER ATMOSPHERE
+
+       This is NOT white.
+       It gently connects the four corners.
+    ───────────────────────────────────────── */
+    radial-gradient(
+      ellipse 850px 500px at 48% 35%,
+      rgba(211, 201, 221, 0.30) 0%,
+      rgba(220, 211, 222, 0.18) 48%,
+      transparent 78%
+    );
+
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
-button {
-  cursor: pointer;
+/* ═══════════════════════════════════════════════
+   FONT UTILITIES
+═══════════════════════════════════════════════ */
+
+.font-handwriting,
+.font-caveat {
+  font-family: "Caveat", cursive, sans-serif;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.font-manrope {
+  font-family: "Manrope", sans-serif;
+}
+
+/* ═══════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+═══════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d8d2cb;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c2bbb3;
+}
+
+/* ═══════════════════════════════════════════════
+   LUMI CARD SHADOWS & AMBIENT GLOW
+═══════════════════════════════════════════════ */
+
+.glow-blue {
+  box-shadow:
+    0 4px 20px -2px rgba(99, 141, 160, 0.16),
+    0 2px 6px -1px rgba(99, 141, 160, 0.08);
+}
+
+.glow-blue:hover {
+  box-shadow:
+    0 8px 26px -3px rgba(99, 141, 160, 0.24),
+    0 3px 8px -2px rgba(99, 141, 160, 0.12);
+}
+
+.glow-pink {
+  box-shadow:
+    0 4px 20px -2px rgba(169, 92, 120, 0.16),
+    0 2px 6px -1px rgba(169, 92, 120, 0.08);
+}
+
+.glow-pink:hover {
+  box-shadow:
+    0 8px 26px -3px rgba(169, 92, 120, 0.24),
+    0 3px 8px -2px rgba(169, 92, 120, 0.12);
+}
+
+.glow-green {
+  box-shadow:
+    0 4px 20px -2px rgba(102, 140, 114, 0.16),
+    0 2px 6px -1px rgba(102, 140, 114, 0.08);
+}
+
+.glow-green:hover {
+  box-shadow:
+    0 8px 26px -3px rgba(102, 140, 114, 0.24),
+    0 3px 8px -2px rgba(102, 140, 114, 0.12);
+}
+
+.glow-peach {
+  box-shadow:
+    0 4px 20px -2px rgba(169, 111, 81, 0.16),
+    0 2px 6px -1px rgba(169, 111, 81, 0.08);
+}
+
+.glow-peach:hover {
+  box-shadow:
+    0 8px 26px -3px rgba(169, 111, 81, 0.24),
+    0 3px 8px -2px rgba(169, 111, 81, 0.12);
+}
+
+.glow-lavender {
+  box-shadow:
+    0 4px 20px -2px rgba(120, 106, 155, 0.16),
+    0 2px 6px -1px rgba(120, 106, 155, 0.08);
+}
+
+.glow-lavender:hover {
+  box-shadow:
+    0 8px 26px -3px rgba(120, 106, 155, 0.24),
+    0 3px 8px -2px rgba(120, 106, 155, 0.12);
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS & STAGGERED ENTRANCE
+═══════════════════════════════════════════════ */
+
+@keyframes lumi-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.995);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lumi-animate-fade-up {
+  animation:
+    lumi-fade-up
+    0.4s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+}
+
+.delay-1 {
+  animation-delay: 40ms;
+}
+
+.delay-2 {
+  animation-delay: 80ms;
+}
+
+.delay-3 {
+  animation-delay: 120ms;
+}
+
+.delay-4 {
+  animation-delay: 160ms;
+}
+
+.delay-5 {
+  animation-delay: 200ms;
+}
+
+.delay-6 {
+  animation-delay: 240ms;
+}
+
+.delay-7 {
+  animation-delay: 280ms;
+}
+
+.delay-8 {
+  animation-delay: 320ms;
+}
+
+.delay-9 {
+  animation-delay: 360ms;
+}
+
+.delay-10 {
+  animation-delay: 400ms;
+}
+
+/* ═══════════════════════════════════════════════
+   ICON WIGGLE
+═══════════════════════════════════════════════ */
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-10deg);
+  }
+
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+.group:hover .group-hover\:animate-wiggle {
+  animation: wiggle 0.4s ease-in-out;
+}
+
+/* ═══════════════════════════════════════════════
+   WEEKLY CHART DRAW
+═══════════════════════════════════════════════ */
+
+@keyframes chartDraw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.lumi-chart-line {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+
+  animation:
+    chartDraw
+    1.4s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    forwards;
+}
+
+/* ═══════════════════════════════════════════════
+   REDUCED MOTION
+═══════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
