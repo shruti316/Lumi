@@ -115,11 +115,11 @@ export default function Dashboard() {
               {formattedDate}
             </p>
 
-            <h1 className="font-serif text-3xl font-bold italic tracking-[-0.025em] text-[#16131F] md:text-[39px]">
+            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#16131F] md:text-5xl">
               {greeting}, Shru!
             </h1>
 
-            <p className="mt-1.5 font-serif text-[15px] font-bold italic text-[#806C79]">
+            <p className="mt-1 font-caveat text-xl sm:text-2xl font-bold text-[#806C79]">
               Here’s what’s happening today.
             </p>
           </div>
@@ -206,7 +206,7 @@ export default function Dashboard() {
                   Overview
                 </p>
 
-                <h2 className="mt-1 text-[21px] font-extrabold tracking-[-0.025em] text-[#312A44]">
+                <h2 className="mt-0.5 font-caveat text-3xl font-bold text-[#312A44]">
                   Weekly overview
                 </h2>
               </div>
@@ -256,7 +256,7 @@ export default function Dashboard() {
                 Schedule
               </p>
 
-              <h2 className="mt-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#312A44]">
+              <h2 className="mt-0.5 font-caveat text-3xl font-bold text-[#312A44]">
                 Today’s plan
               </h2>
             </div>
@@ -309,7 +309,7 @@ export default function Dashboard() {
                   Today
                 </p>
 
-                <h2 className="mt-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#312A44]">
+                <h2 className="mt-0.5 font-caveat text-3xl font-bold text-[#312A44]">
                   My tasks
                 </h2>
               </div>
@@ -367,7 +367,7 @@ export default function Dashboard() {
                   Routine
                 </p>
 
-                <h2 className="mt-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#16131F]">
+                <h2 className="mt-0.5 font-caveat text-3xl font-bold text-[#16131F]">
                   Habits
                 </h2>
               </div>
@@ -451,7 +451,7 @@ export default function Dashboard() {
                   Library
                 </p>
 
-                <h2 className="mt-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#16131F]">
+                <h2 className="mt-0.5 font-caveat text-3xl font-bold text-[#16131F]">
                   Reading
                 </h2>
               </div>
@@ -484,7 +484,7 @@ export default function Dashboard() {
 
             <Link
               to="/reading"
-              className="mt-4 flex items-center justify-between rounded-xl bg-[#BAB0C8] px-3 py-2.5 text-[11px] font-extrabold text-[#16131F] hover:bg-[#C1A0AC]"
+              className="mt-4 flex items-center justify-between rounded-xl bg-[#BAB0C8] px-3.5 py-2.5 text-[11px] font-extrabold text-[#16131F] hover:bg-[#C1A0AC]"
             >
               Open library
               <ArrowRight size={14} />
@@ -504,7 +504,7 @@ export default function Dashboard() {
                   Personal
                 </p>
 
-                <h2 className="mt-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#16131F]">
+                <h2 className="mt-0.5 font-caveat text-3xl font-bold text-[#16131F]">
                   Diary
                 </h2>
               </div>
@@ -522,7 +522,7 @@ export default function Dashboard() {
 
             <Link
               to="/diary"
-              className="mt-4 flex items-center justify-between rounded-xl bg-[#C1A0AC] px-3 py-2.5 text-[11px] font-extrabold text-[#16131F] hover:bg-[#D7C5D2]"
+              className="mt-4 flex items-center justify-between rounded-xl bg-[#C1A0AC] px-3.5 py-2.5 text-[11px] font-extrabold text-[#16131F] hover:bg-[#D7C5D2]"
             >
               Write today
               <PenLine size={14} />
@@ -542,7 +542,7 @@ export default function Dashboard() {
                   Coming up
                 </p>
 
-                <h2 className="mt-1 text-[20px] font-extrabold tracking-[-0.02em] text-[#16131F]">
+                <h2 className="mt-0.5 font-caveat text-3xl font-bold text-[#16131F]">
                   Upcoming
                 </h2>
               </div>
@@ -555,16 +555,19 @@ export default function Dashboard() {
 
             <div className="mt-4 space-y-3">
               <UpcomingItem
+                to="/exams"
                 title="DAA Exam"
                 date="Oct 8"
               />
 
               <UpcomingItem
+                to="/projects"
                 title="Project Review"
                 date="Oct 10"
               />
 
               <UpcomingItem
+                to="/reflection"
                 title="Weekly Reflection"
                 date="Oct 12"
               />
@@ -590,7 +593,7 @@ export default function Dashboard() {
                 A little Lumi reminder
               </p>
 
-              <p className="mt-0.5 font-serif text-sm font-bold italic text-[#806C79]">
+              <p className="mt-0.5 font-caveat text-xl font-bold text-[#806C79]">
                 Small progress is still progress.
               </p>
             </div>
@@ -611,38 +614,59 @@ export default function Dashboard() {
           <div className="absolute bottom-[calc(100%+12px)] left-1/2 w-56 -translate-x-1/2 rounded-2xl border border-[#312A44] bg-[#16131F]/98 p-2.5 shadow-[0_18px_45px_rgba(22,19,31,0.4)] backdrop-blur-xl">
 
             <DockMenuItem
+              to="/notes"
               label="Notes"
               icon="📝"
+              onClick={() => setShowDockMenu(false)}
             />
 
             <DockMenuItem
+              to="/brain-dump"
               label="Brain Dump"
               icon="🧠"
+              onClick={() => setShowDockMenu(false)}
             />
 
             <DockMenuItem
+              to="/memories"
               label="Memories"
               icon="💭"
+              onClick={() => setShowDockMenu(false)}
             />
 
             <DockMenuItem
+              to="/reflection"
+              label="Reflection"
+              icon="💡"
+              onClick={() => setShowDockMenu(false)}
+            />
+
+            <DockMenuItem
+              to="/calendar"
               label="Calendar"
               icon="📅"
+              onClick={() => setShowDockMenu(false)}
             />
 
             <DockMenuItem
+              to="/music"
               label="Music"
               icon="🎵"
+              onClick={() => setShowDockMenu(false)}
             />
 
             <DockMenuItem
+              to="/exams"
               label="Exams"
               icon="📚"
+              onClick={() => setShowDockMenu(false)}
             />
 
             <DockMenuItem
+              to="/focus"
               label="Focus"
               icon="⏱️"
+              onClick={() => setShowDockMenu(false)}
             />
 
           </div>
@@ -701,8 +725,8 @@ export default function Dashboard() {
             }
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
               showDockMenu
-                ? "bg-[#312A44] text-[#F4F0EB]"
-                : "text-[#BAB0C8] hover:bg-[#211C2B] hover:text-[#F4F0EB]"
+                ? "bg-[#312A44] text-white"
+                : "text-[#FAF8FC] hover:bg-[#211C2B] hover:text-white"
             }`}
             aria-label="More Lumi tools"
           >
@@ -755,7 +779,7 @@ function MiniStat({
       border: "!border-[#C1A0AC]",
       icon: "bg-[#D7C5D2] text-[#16131F]",
       accent: "bg-[#806C79]",
-      label: "text-[#4A3F4B]",
+      label: "text-[#16131F]",
       value: "text-[#16131F]",
     },
 
@@ -764,7 +788,7 @@ function MiniStat({
       border: "!border-[#BAB0C8]",
       icon: "bg-[#BAB0C8] text-[#16131F]",
       accent: "bg-[#806C79]",
-      label: "text-[#4A3F4B]",
+      label: "text-[#16131F]",
       value: "text-[#16131F]",
     },
 
@@ -773,7 +797,7 @@ function MiniStat({
       border: "!border-[#BAB0C8]",
       icon: "bg-[#DAD4DF] text-[#16131F]",
       accent: "bg-[#4A6E53]",
-      label: "text-[#4A3F4B]",
+      label: "text-[#16131F]",
       value: "text-[#16131F]",
     },
 
@@ -782,7 +806,7 @@ function MiniStat({
       border: "!border-[#BAB0C8]",
       icon: "bg-[#D7C5D2] text-[#16131F]",
       accent: "bg-[#806C79]",
-      label: "text-[#4A3F4B]",
+      label: "text-[#16131F]",
       value: "text-[#16131F]",
     },
 
@@ -801,7 +825,7 @@ function MiniStat({
         <div className="min-w-0">
 
           <p
-            className={`text-[14px] font-extrabold italic uppercase tracking-[0.1em] ${current.label}`}
+            className={`text-[15px] sm:text-[16px] font-extrabold italic uppercase tracking-[0.12em] ${current.label}`}
           >
             {label}
           </p>
@@ -1059,14 +1083,14 @@ function HabitRow({
 function UpcomingItem({
   title,
   date,
+  to,
 }: {
   title: string;
   date: string;
+  to?: string;
 }) {
-
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-[#BAB0C8] bg-[#F4F0EB]/60 px-3 py-2.5">
-
+  const content = (
+    <div className="flex items-center justify-between rounded-xl border border-[#BAB0C8] bg-[#F4F0EB]/60 px-3 py-2.5 transition duration-200 hover:-translate-y-0.5 hover:bg-[#F4F0EB] hover:shadow-2xs">
       <span className="text-[11px] font-bold text-[#312A44]">
         {title}
       </span>
@@ -1074,9 +1098,18 @@ function UpcomingItem({
       <span className="text-[10px] font-extrabold text-[#4A3F4B]">
         {date}
       </span>
-
     </div>
   );
+
+  if (to) {
+    return (
+      <Link to={to} className="block group">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }
 
 
@@ -1123,8 +1156,8 @@ function DockLink({
       title={label}
       className={`group flex h-10 min-w-10 items-center justify-center rounded-xl px-2.5 transition ${
         active
-          ? "bg-[#DAD4DF] text-[#312A44]"
-          : "text-[#806C79] hover:bg-[#DAD4DF] hover:text-[#4A3F4B]"
+          ? "bg-[#DAD4DF] text-[#16131F] font-bold shadow-2xs"
+          : "text-[#FAF8FC] hover:bg-[#211C2B] hover:text-white"
       }`}
     >
 
@@ -1146,25 +1179,30 @@ function DockLink({
 ═══════════════════════════════════════════════ */
 
 function DockMenuItem({
+  to,
   label,
   icon,
+  onClick,
 }: {
+  to: string;
   label: string;
   icon: string;
+  onClick?: () => void;
 }) {
 
   return (
-    <button
-      type="button"
-      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-semibold text-[#806C79] transition hover:bg-[#DAD4DF]"
+    <Link
+      to={to}
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-semibold text-[#FAF8FC] transition hover:bg-[#312A44] hover:text-white"
     >
 
       <span className="text-sm">
         {icon}
       </span>
 
-      {label}
+      <span>{label}</span>
 
-    </button>
+    </Link>
   );
 }

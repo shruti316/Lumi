@@ -194,12 +194,28 @@ export interface ReflectionEntry {
 
 const REFLECTIONS_KEY = "lumi_reflections";
 
+const DEFAULT_REFLECTIONS: ReflectionEntry[] = [
+  {
+    id: "ref-1",
+    weekOf: "Week 5 • Calm Midterm Sprint",
+    wentWell: "Maintained a steady 2-hour morning focus routine and shipped lab builds on time.",
+    wasDifficult: "Late-night screen time • Focus: Wind down 30 minutes earlier.",
+    learned: "Consistent small daily habits compound much better than all-nighters.",
+    nextWeekIntention: "Protect morning deep work blocks and drink more water throughout lectures.",
+    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+];
+
 export function getReflections(): ReflectionEntry[] {
   try {
     const data = localStorage.getItem(REFLECTIONS_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data) {
+      saveReflections(DEFAULT_REFLECTIONS);
+      return DEFAULT_REFLECTIONS;
+    }
+    return JSON.parse(data);
   } catch {
-    return [];
+    return DEFAULT_REFLECTIONS;
   }
 }
 

@@ -210,10 +210,10 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
             🌷
           </div>
           <div>
-            <h1 className="font-caveat text-2xl font-bold tracking-wider text-[#F4F0EB] leading-none">
+            <h1 className="font-caveat text-2xl font-bold tracking-wider text-white leading-none">
               LUMI
             </h1>
-            <p className="mt-1 text-[11px] font-semibold text-[#BAB0C8] tracking-wide font-sans">
+            <p className="mt-1 text-[11px] font-semibold text-[#FAF8FC]/80 tracking-wide font-sans">
               your little life OS
             </p>
           </div>
@@ -231,8 +231,8 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
               onClick={() => onNavigate(item.path)}
               className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
                 isActive
-                  ? `${item.activeBg} ${item.activeBorder} text-[#F4F0EB] shadow-2xs font-bold`
-                  : "border-transparent text-[#BAB0C8] hover:bg-[#211C2B] hover:text-[#F4F0EB] hover:shadow-2xs"
+                  ? `${item.activeBg} ${item.activeBorder} text-white shadow-2xs font-bold`
+                  : "border-transparent text-[#FAF8FC] hover:bg-[#211C2B] hover:text-white hover:shadow-2xs"
               }`}
             >
               {/* Active Indicator Dot */}
@@ -243,7 +243,7 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
                 className={`transition-all duration-200 group-hover:translate-x-0.5 ${
                   isActive
                     ? item.colorClass
-                    : `${item.colorClass} opacity-80 group-hover:opacity-100`
+                    : `${item.colorClass} opacity-95 group-hover:opacity-100`
                 }`}
               >
                 {item.icon}
@@ -256,7 +256,7 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
 
       {/* UTILITY NAVIGATION AREA */}
       <div className="relative z-10 border-t border-[#312A44] px-3 py-3">
-        <div className="mb-1.5 px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#806C79]">
+        <div className="mb-1.5 px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#FAF8FC]/70">
           Quick Tools
         </div>
         <div className="space-y-0.5">
@@ -269,13 +269,13 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
                 onClick={() => onNavigate(item.path)}
                 className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition duration-200 border ${
                   isActive
-                    ? `${item.activeBg} ${item.activeBorder} text-[#F4F0EB] font-bold`
-                    : "border-transparent text-[#BAB0C8] hover:bg-[#211C2B] hover:text-[#F4F0EB]"
+                    ? `${item.activeBg} ${item.activeBorder} text-white font-bold`
+                    : "border-transparent text-[#FAF8FC] hover:bg-[#211C2B] hover:text-white"
                 }`}
               >
                 <span
                   className={`transition-transform duration-200 group-hover:translate-x-0.5 ${
-                    isActive ? item.colorClass : `${item.colorClass} opacity-80 group-hover:opacity-100`
+                    isActive ? item.colorClass : `${item.colorClass} opacity-95 group-hover:opacity-100`
                   }`}
                 >
                   {item.icon}
@@ -290,14 +290,14 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
       {/* PROFILE / USER FOOTER */}
       <div className="relative z-10 border-t border-[#312A44] p-3">
         <div className="flex items-center gap-3 rounded-xl bg-[#211C2B] p-2.5 border border-[#312A44] shadow-2xs">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#312A44] text-[#F0D9E4] font-bold text-xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#312A44] text-white font-bold text-xs">
             S
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-bold text-[#F4F0EB]">Shru</p>
-            <p className="truncate text-[10px] text-[#BAB0C8]">College Life OS</p>
+            <p className="truncate text-xs font-bold text-white">Shru</p>
+            <p className="truncate text-[10px] text-[#FAF8FC]/75">College Life OS</p>
           </div>
-          <Sparkles size={14} className="text-[#806C79]" />
+          <Sparkles size={14} className="text-[#FAF8FC]/80" />
         </div>
       </div>
     </aside>

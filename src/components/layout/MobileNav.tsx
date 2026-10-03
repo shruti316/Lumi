@@ -56,8 +56,8 @@ export function MobileNav({
               onClick={() => onNavigate(item.path)}
               className={`flex min-w-14 flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-semibold transition ${
                 isActive
-                  ? "bg-[#312A44] text-[#F0D9E4] border border-[#4A3F4B] font-bold"
-                  : "text-[#BAB0C8] hover:text-[#F4F0EB]"
+                  ? "bg-[#312A44] text-white border border-[#4A3F4B] font-bold"
+                  : "text-[#FAF8FC] hover:text-white"
               }`}
             >
               <Icon size={18} strokeWidth={2} />
