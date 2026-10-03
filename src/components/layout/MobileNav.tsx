@@ -44,7 +44,7 @@ export function MobileNav({
   onNavigate,
 }: MobileNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#DDD8D1] bg-[#FAF7F4]/95 px-3 py-2 backdrop-blur-md md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#312A44] bg-[#16131F]/98 px-3 py-2 backdrop-blur-md md:hidden">
       <div className="flex items-center justify-around">
         {navigation.map((item) => {
           const Icon = item.icon;
@@ -56,8 +56,8 @@ export function MobileNav({
               onClick={() => onNavigate(item.path)}
               className={`flex min-w-14 flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-semibold transition ${
                 isActive
-                  ? "bg-[#E5E0EC] text-[#786A9B] font-bold"
-                  : "text-[#706C72] hover:text-[#34323A]"
+                  ? "bg-[#312A44] text-[#F0D9E4] border border-[#4A3F4B] font-bold"
+                  : "text-[#BAB0C8] hover:text-[#F4F0EB]"
               }`}
             >
               <Icon size={18} strokeWidth={2} />

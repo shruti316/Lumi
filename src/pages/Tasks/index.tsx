@@ -67,17 +67,17 @@ export default function Tasks() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl p-6 md:p-8">
+    <div className="mx-auto max-w-5xl p-6 md:p-8 text-[#16131F]">
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#b5577f]">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#806C79]">
             Task Execution Center
           </p>
-          <h1 className="font-caveat text-4xl font-bold text-[#403842]">
+          <h1 className="font-caveat text-4xl font-bold text-[#16131F]">
             My Action Tasks ✓
           </h1>
-          <p className="font-caveat text-xl text-[#766d78]">
+          <p className="font-caveat text-xl text-[#806C79]">
             Get things done, stay organized & execute your daily checklist.
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function Tasks() {
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 rounded-2xl bg-[#f7dce7] border border-[#e8c5d5] px-4 py-2.5 text-xs font-bold text-[#b5577f] shadow-2xs transition hover:bg-[#efcbdc] active:scale-95 w-fit"
+          className="flex items-center gap-2 rounded-2xl bg-[#F0D9E4] border border-[#C1A0AC] px-4 py-2.5 text-xs font-bold text-[#16131F] shadow-2xs transition hover:bg-[#D7C5D2] active:scale-95 w-fit"
         >
           <Plus size={16} />
           <span>New Task</span>
@@ -94,41 +94,41 @@ export default function Tasks() {
 
       {/* Mini Stats Bar */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Card className="!bg-[#f7dce7] !border-[#e8c5d5] p-3.5 glow-pink">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#b5577f]">
+        <Card className="!bg-[#F0D9E4] !border-[#C1A0AC] p-3.5 glow-pink">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#806C79]">
             Total Tasks
           </p>
-          <p className="text-2xl font-extrabold text-[#473640] mt-0.5">{tasks.length}</p>
+          <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">{tasks.length}</p>
         </Card>
-        <Card className="!bg-[#deeee0] !border-[#c6dccc] p-3.5 glow-green">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#5e8668]">
+        <Card className="!bg-[#DCE8E0] !border-[#BAB0C8] p-3.5 glow-green">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A6E53]">
             Completed
           </p>
-          <p className="text-2xl font-extrabold text-[#304639] mt-0.5">{completedCount}</p>
+          <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">{completedCount}</p>
         </Card>
-        <Card className="!bg-[#f7e0cc] !border-[#edcfb5] p-3.5 glow-peach">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#ae6e42]">
+        <Card className="!bg-[#F2DFD0] !border-[#BAB0C8] p-3.5 glow-peach">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#806C79]">
             Pending
           </p>
-          <p className="text-2xl font-extrabold text-[#493b33] mt-0.5">{pendingCount}</p>
+          <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">{pendingCount}</p>
         </Card>
-        <Card className="!bg-[#eee9f8] !border-[#dcd5ed] p-3.5 glow-lavender">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7564af]">
+        <Card className="!bg-[#DAD4DF] !border-[#BAB0C8] p-3.5 glow-lavender">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A3F4B]">
             High Priority
           </p>
-          <p className="text-2xl font-extrabold text-[#40364a] mt-0.5">{highPriorityCount}</p>
+          <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">{highPriorityCount}</p>
         </Card>
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-6 rounded-2xl border border-[#e8c5d5] bg-[#f7dce7]/40 p-4">
-        <div className="flex items-center justify-between text-xs font-bold text-[#473640] mb-1.5">
+      <div className="mb-6 rounded-2xl border border-[#C1A0AC] bg-[#F0D9E4]/60 p-4">
+        <div className="flex items-center justify-between text-xs font-bold text-[#16131F] mb-1.5">
           <span>Execution Rate</span>
           <span>{progress}% ({completedCount}/{tasks.length})</span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-white/80">
+        <div className="h-2 overflow-hidden rounded-full bg-[#DAD4DF]">
           <div
-            className="h-full rounded-full bg-[#b5577f] transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-[#806C79] transition-all duration-700 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -137,7 +137,7 @@ export default function Tasks() {
       {/* Filters & Search */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Tabs */}
-        <div className="flex gap-1.5 rounded-2xl border border-[#efe8e1] bg-white/80 p-1 w-fit shadow-2xs">
+        <div className="flex gap-1.5 rounded-2xl border border-[#DAD4DF] bg-[#F4F0EB] p-1 w-fit shadow-2xs">
           {(["all", "today", "completed"] as const).map((tab) => (
             <button
               key={tab}
@@ -145,8 +145,8 @@ export default function Tasks() {
               onClick={() => setActiveTab(tab)}
               className={`rounded-xl px-3.5 py-1.5 text-xs font-bold capitalize transition ${
                 activeTab === tab
-                  ? "bg-[#f7dce7] text-[#b5577f] shadow-2xs"
-                  : "text-[#766d78] hover:text-[#403842]"
+                  ? "bg-[#F0D9E4] text-[#16131F] shadow-2xs"
+                  : "text-[#806C79] hover:text-[#16131F]"
               }`}
             >
               {tab === "all" ? "All Tasks" : tab === "today" ? "To-Do" : "Done"}
@@ -159,7 +159,7 @@ export default function Tasks() {
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value as any)}
-            className="rounded-xl border border-[#efe8e1] bg-white px-3 py-2 text-xs font-bold text-[#403842] shadow-2xs"
+            className="rounded-xl border border-[#DAD4DF] bg-[#F4F0EB] px-3 py-2 text-xs font-bold text-[#16131F] shadow-2xs"
           >
             <option value="all">All Priorities</option>
             <option value="high">🔥 High</option>
@@ -168,13 +168,13 @@ export default function Tasks() {
           </select>
 
           <div className="relative flex-1 sm:w-48">
-            <Search size={14} className="absolute left-3 top-2.5 text-[#918793]" />
+            <Search size={14} className="absolute left-3 top-2.5 text-[#806C79]" />
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-[#efe8e1] bg-white pl-8 pr-3 py-1.5 text-xs font-medium text-[#403842] shadow-2xs"
+              className="w-full rounded-xl border border-[#DAD4DF] bg-[#F4F0EB] pl-8 pr-3 py-1.5 text-xs font-medium text-[#16131F] shadow-2xs outline-none focus:border-[#BAB0C8]"
             />
           </div>
         </div>
@@ -182,14 +182,14 @@ export default function Tasks() {
 
       {/* Task List */}
       {filteredTasks.length === 0 ? (
-        <Card className="!bg-[#f7dce7] !border-[#e8c5d5] p-8 text-center glow-pink">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-2xs">
+        <Card className="!bg-[#F0D9E4] !border-[#C1A0AC] p-8 text-center glow-pink">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F4F0EB] text-xl shadow-2xs border border-[#C1A0AC]">
             ✓
           </div>
-          <h3 className="font-caveat text-2xl font-bold text-[#473640]">
+          <h3 className="font-caveat text-2xl font-bold text-[#16131F]">
             No tasks in this view
           </h3>
-          <p className="mt-1 text-xs font-medium text-[#766d78]">
+          <p className="mt-1 text-xs font-medium text-[#806C79]">
             Click "New Task" above to add items to your execution list.
           </p>
         </Card>
@@ -198,7 +198,7 @@ export default function Tasks() {
           {filteredTasks.map((task) => (
             <Card
               key={task.id}
-              className={`!bg-white/80 !border-[#e8c5d5] p-3.5 flex items-center justify-between gap-3 transition duration-200 hover:-translate-y-0.5 hover:bg-white ${
+              className={`!bg-[#F4F0EB] !border-[#DAD4DF] p-3.5 flex items-center justify-between gap-3 transition duration-200 hover:-translate-y-0.5 hover:border-[#BAB0C8] ${
                 task.completed ? "opacity-75" : ""
               }`}
             >
@@ -208,8 +208,8 @@ export default function Tasks() {
                   onClick={() => handleToggle(task)}
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition duration-200 ${
                     task.completed
-                      ? "bg-[#5c8766] text-white shadow-2xs"
-                      : "border border-[#e8c5d5] bg-white hover:border-[#b5577f]"
+                      ? "bg-[#4A6E53] text-white shadow-2xs"
+                      : "border border-[#BAB0C8] bg-[#F4F0EB] hover:border-[#806C79]"
                   }`}
                 >
                   {task.completed && <Check size={12} />}
@@ -217,7 +217,7 @@ export default function Tasks() {
 
                 <span
                   className={`text-xs font-medium truncate ${
-                    task.completed ? "line-through text-[#918793]" : "text-[#473640]"
+                    task.completed ? "line-through text-[#806C79]" : "text-[#16131F]"
                   }`}
                 >
                   {task.title}
@@ -228,10 +228,10 @@ export default function Tasks() {
                 <span
                   className={`rounded-md px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${
                     task.priority === "high"
-                      ? "bg-[#f7dce7] text-[#b5577f]"
+                      ? "bg-[#F0D9E4] text-[#806C79]"
                       : task.priority === "medium"
-                      ? "bg-[#f7e0cc] text-[#ae6e42]"
-                      : "bg-[#deeee0] text-[#5c8766]"
+                      ? "bg-[#F2DFD0] text-[#806C79]"
+                      : "bg-[#DCE8E0] text-[#4A6E53]"
                   }`}
                 >
                   {task.priority}
@@ -240,7 +240,7 @@ export default function Tasks() {
                 <button
                   type="button"
                   onClick={() => handleDelete(task.id)}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[#918793] hover:text-red-500 hover:bg-red-50 transition"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[#806C79] hover:text-[#C1A0AC] hover:bg-[#F0D9E4] transition"
                   title="Delete task"
                 >
                   <Trash2 size={13} />
@@ -260,7 +260,7 @@ export default function Tasks() {
       >
         <form onSubmit={handleCreateTask} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#473640] mb-1">
+            <label className="block text-xs font-bold text-[#16131F] mb-1">
               Task Name
             </label>
             <input
@@ -268,13 +268,13 @@ export default function Tasks() {
               placeholder="e.g. Finish chemistry lab assignment"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-[#e8c5d5] bg-white px-3.5 py-2 text-xs font-medium text-[#403842] focus:border-[#b5577f]"
+              className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#312A44] outline-none"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#473640] mb-1">
+            <label className="block text-xs font-bold text-[#16131F] mb-1">
               Priority
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -285,8 +285,8 @@ export default function Tasks() {
                   onClick={() => setPriority(p)}
                   className={`rounded-xl border py-2 text-xs font-bold capitalize transition ${
                     priority === p
-                      ? "bg-[#f7dce7] border-[#b5577f] text-[#b5577f] shadow-2xs"
-                      : "bg-white border-[#efe8e1] text-[#766d78]"
+                      ? "bg-[#F0D9E4] border-[#C1A0AC] text-[#16131F] shadow-2xs"
+                      : "bg-[#F4F0EB] border-[#DAD4DF] text-[#806C79]"
                   }`}
                 >
                   {p}
@@ -299,13 +299,13 @@ export default function Tasks() {
             <button
               type="button"
               onClick={() => setShowModal(false)}
-              className="rounded-xl px-4 py-2 text-xs font-bold text-[#766d78] hover:bg-white/50"
+              className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-[#DAD4DF]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-[#b5577f] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#a14b70]"
+              className="rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-[#F4F0EB] shadow-2xs hover:bg-[#4A3F4B]"
             >
               Add Task
             </button>

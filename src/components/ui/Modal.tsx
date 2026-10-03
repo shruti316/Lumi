@@ -21,18 +21,18 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs animate-fade-up select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#16131F]/50 p-4 backdrop-blur-xs animate-fade-up select-none">
       <div
-        className={`relative w-full ${maxWidth} rounded-3xl border border-[#DDD8D1] bg-[#FAF7F4] p-6 shadow-2xl transition-all`}
+        className={`relative w-full ${maxWidth} rounded-3xl border border-[#DAD4DF] bg-[#F4F0EB] p-6 shadow-2xl transition-all`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h3 className="font-caveat text-3xl font-bold text-[#34323A] leading-tight">
+            <h3 className="font-caveat text-3xl font-bold text-[#16131F] leading-tight">
               {title}
             </h3>
             {subtitle && (
-              <p className="font-caveat text-lg text-[#706C72] mt-0.5">
+              <p className="font-caveat text-lg text-[#806C79] mt-0.5">
                 {subtitle}
               </p>
             )}
@@ -40,7 +40,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F2F0ED] text-[#706C72] shadow-2xs hover:bg-[#EEEAE6] hover:text-[#34323A] transition active:scale-95 border border-[#DDD8D1]"
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#DAD4DF] text-[#4A3F4B] shadow-2xs hover:bg-[#C1A0AC] hover:text-[#16131F] transition active:scale-95 border border-[#BAB0C8]"
           >
             <X size={16} />
           </button>

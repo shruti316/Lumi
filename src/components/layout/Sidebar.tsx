@@ -39,109 +39,109 @@ const PRIMARY_NAV: NavItemConfig[] = [
     icon: <Home size={17} />,
     label: "Home",
     path: "/",
-    colorClass: "text-[#786A9B]",
-    activeBg: "bg-[#E5E0EC]",
-    activeBorder: "border-[#D2CADB]",
-    dotColor: "bg-[#786A9B]",
+    colorClass: "text-[#BAB0C8]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#BAB0C8]",
   },
   {
     icon: <CalendarDays size={17} />,
     label: "Planner",
     path: "/planner",
-    colorClass: "text-[#638DA0]",
-    activeBg: "bg-[#DCE8EC]",
-    activeBorder: "border-[#C5D8E0]",
-    dotColor: "bg-[#638DA0]",
+    colorClass: "text-[#DDEAF0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DDEAF0]",
   },
   {
     icon: <CheckSquare size={17} />,
     label: "Tasks",
     path: "/tasks",
-    colorClass: "text-[#A95C78]",
-    activeBg: "bg-[#EBD8DF]",
-    activeBorder: "border-[#D8BDC7]",
-    dotColor: "bg-[#A95C78]",
+    colorClass: "text-[#F0D9E4]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#F0D9E4]",
   },
   {
     icon: <Flame size={17} />,
     label: "Habits",
     path: "/habits",
-    colorClass: "text-[#668C72]",
-    activeBg: "bg-[#DCE6DE]",
-    activeBorder: "border-[#C4D7C8]",
-    dotColor: "bg-[#668C72]",
+    colorClass: "text-[#DCE8E0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DCE8E0]",
   },
   {
     icon: <Target size={17} />,
     label: "Goals",
     path: "/goals",
-    colorClass: "text-[#786A9B]",
-    activeBg: "bg-[#E5E0EC]",
-    activeBorder: "border-[#D2CADB]",
-    dotColor: "bg-[#786A9B]",
+    colorClass: "text-[#DDEAF0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DDEAF0]",
   },
   {
     icon: <FolderKanban size={17} />,
     label: "Projects",
     path: "/projects",
-    colorClass: "text-[#A96F51]",
-    activeBg: "bg-[#EBD9CD]",
-    activeBorder: "border-[#DCBFAD]",
-    dotColor: "bg-[#A96F51]",
+    colorClass: "text-[#F2DFD0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#F2DFD0]",
   },
   {
     icon: <BookOpen size={17} />,
     label: "Reading",
     path: "/reading",
-    colorClass: "text-[#786A9B]",
-    activeBg: "bg-[#E5E0EC]",
-    activeBorder: "border-[#D2CADB]",
-    dotColor: "bg-[#786A9B]",
+    colorClass: "text-[#DAD4DF]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DAD4DF]",
   },
   {
     icon: <FileText size={17} />,
     label: "Notes",
     path: "/notes",
-    colorClass: "text-[#638DA0]",
-    activeBg: "bg-[#DCE8EC]",
-    activeBorder: "border-[#C5D8E0]",
-    dotColor: "bg-[#638DA0]",
+    colorClass: "text-[#DDEAF0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DDEAF0]",
   },
   {
     icon: <PenLine size={17} />,
     label: "Diary",
     path: "/diary",
-    colorClass: "text-[#A96F51]",
-    activeBg: "bg-[#EBD9CD]",
-    activeBorder: "border-[#DCBFAD]",
-    dotColor: "bg-[#A96F51]",
+    colorClass: "text-[#F2DFD0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#F2DFD0]",
   },
   {
     icon: <Heart size={17} />,
     label: "Memories",
     path: "/memories",
-    colorClass: "text-[#A95C78]",
-    activeBg: "bg-[#EBD8DF]",
-    activeBorder: "border-[#D8BDC7]",
-    dotColor: "bg-[#A95C78]",
+    colorClass: "text-[#F0D9E4]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#F0D9E4]",
   },
   {
     icon: <Brain size={17} />,
     label: "Brain Dump",
     path: "/brain-dump",
-    colorClass: "text-[#786A9B]",
-    activeBg: "bg-[#E5E0EC]",
-    activeBorder: "border-[#D2CADB]",
-    dotColor: "bg-[#786A9B]",
+    colorClass: "text-[#DAD4DF]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DAD4DF]",
   },
   {
     icon: <Lightbulb size={17} />,
     label: "Reflection",
     path: "/reflection",
-    colorClass: "text-[#668C72]",
-    activeBg: "bg-[#DCE6DE]",
-    activeBorder: "border-[#C4D7C8]",
-    dotColor: "bg-[#668C72]",
+    colorClass: "text-[#DCE8E0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DCE8E0]",
   },
 ];
 
@@ -150,54 +150,54 @@ const UTILITY_NAV: NavItemConfig[] = [
     icon: <Calendar size={15} />,
     label: "Calendar",
     path: "/calendar",
-    colorClass: "text-[#638DA0]",
-    activeBg: "bg-[#DCE8EC]",
-    activeBorder: "border-[#C5D8E0]",
-    dotColor: "bg-[#638DA0]",
+    colorClass: "text-[#DDEAF0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DDEAF0]",
   },
   {
     icon: <Music size={15} />,
     label: "Music",
     path: "/music",
-    colorClass: "text-[#786A9B]",
-    activeBg: "bg-[#E5E0EC]",
-    activeBorder: "border-[#D2CADB]",
-    dotColor: "bg-[#786A9B]",
+    colorClass: "text-[#BAB0C8]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#BAB0C8]",
   },
   {
     icon: <GraduationCap size={15} />,
     label: "Exams",
     path: "/exams",
-    colorClass: "text-[#638DA0]",
-    activeBg: "bg-[#DCE8EC]",
-    activeBorder: "border-[#C5D8E0]",
-    dotColor: "bg-[#638DA0]",
+    colorClass: "text-[#DDEAF0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#DDEAF0]",
   },
   {
     icon: <Clock size={15} />,
     label: "Study / Focus",
     path: "/focus",
-    colorClass: "text-[#A96F51]",
-    activeBg: "bg-[#EBD9CD]",
-    activeBorder: "border-[#DCBFAD]",
-    dotColor: "bg-[#A96F51]",
+    colorClass: "text-[#F2DFD0]",
+    activeBg: "bg-[#312A44]",
+    activeBorder: "border-[#4A3F4B]",
+    dotColor: "bg-[#F2DFD0]",
   },
 ];
 
 export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
   return (
     <aside
-      className="relative hidden w-60 shrink-0 border-r border-[#D8D4CD] bg-[#E8E7E5]/95 backdrop-blur-xl md:flex md:flex-col min-h-screen select-none z-20 shadow-2xs overflow-hidden"
+      className="relative hidden w-60 shrink-0 border-r border-[#312A44] bg-[#16131F]/98 backdrop-blur-xl md:flex md:flex-col min-h-screen select-none z-20 shadow-2xs overflow-hidden"
       style={{
         backgroundImage:
-          "linear-gradient(180deg, rgba(216, 210, 230, 0.75) 0%, rgba(232, 231, 229, 0.6) 28%, rgba(201, 221, 228, 0.65) 65%, rgba(209, 223, 211, 0.75) 100%)",
+          "linear-gradient(180deg, rgba(33, 28, 43, 0.98) 0%, rgba(22, 19, 31, 0.98) 40%, rgba(49, 42, 68, 0.95) 100%)",
       }}
     >
       {/* Sidebar Atmospheric Tints */}
-      <div className="pointer-events-none absolute -top-10 -left-10 h-48 w-48 rounded-full bg-[#D8D2E6]/80 blur-2xl" />
-      <div className="pointer-events-none absolute top-1/3 -right-10 h-48 w-48 rounded-full bg-[#C9DDE4]/80 blur-2xl" />
-      <div className="pointer-events-none absolute top-2/3 -left-10 h-44 w-44 rounded-full bg-[#E3D0C5]/75 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-10 right-0 h-48 w-48 rounded-full bg-[#D1DFD3]/80 blur-2xl" />
+      <div className="pointer-events-none absolute -top-10 -left-10 h-48 w-48 rounded-full bg-[#312A44]/40 blur-2xl" />
+      <div className="pointer-events-none absolute top-1/3 -right-10 h-48 w-48 rounded-full bg-[#4A3F4B]/35 blur-2xl" />
+      <div className="pointer-events-none absolute top-2/3 -left-10 h-44 w-44 rounded-full bg-[#806C79]/25 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-10 right-0 h-48 w-48 rounded-full bg-[#312A44]/40 blur-2xl" />
 
       {/* BRAND HEADER */}
       <div className="relative z-10 px-5 pt-6 pb-4">
@@ -206,14 +206,14 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
           onClick={() => onNavigate("/")}
           className="flex items-center gap-3 group text-left w-full"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E5E0EC] border border-[#D2CADB] text-lg shadow-2xs group-hover:scale-105 transition-transform duration-200">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#211C2B] border border-[#312A44] text-lg shadow-2xs group-hover:scale-105 transition-transform duration-200">
             🌷
           </div>
           <div>
-            <h1 className="font-caveat text-2xl font-bold tracking-wider text-[#34323A] leading-none">
+            <h1 className="font-caveat text-2xl font-bold tracking-wider text-[#F4F0EB] leading-none">
               LUMI
             </h1>
-            <p className="mt-1 text-[11px] font-semibold text-[#706C72] tracking-wide font-sans">
+            <p className="mt-1 text-[11px] font-semibold text-[#BAB0C8] tracking-wide font-sans">
               your little life OS
             </p>
           </div>
@@ -231,8 +231,8 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
               onClick={() => onNavigate(item.path)}
               className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200 border ${
                 isActive
-                  ? `${item.activeBg} ${item.activeBorder} text-[#34323A] shadow-2xs font-bold`
-                  : "border-transparent text-[#706C72] hover:bg-[#F8F5F2] hover:text-[#34323A] hover:shadow-2xs"
+                  ? `${item.activeBg} ${item.activeBorder} text-[#F4F0EB] shadow-2xs font-bold`
+                  : "border-transparent text-[#BAB0C8] hover:bg-[#211C2B] hover:text-[#F4F0EB] hover:shadow-2xs"
               }`}
             >
               {/* Active Indicator Dot */}
@@ -255,8 +255,8 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
       </nav>
 
       {/* UTILITY NAVIGATION AREA */}
-      <div className="relative z-10 border-t border-[#DDD8D1] px-3 py-3">
-        <div className="mb-1.5 px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#8E8A90]">
+      <div className="relative z-10 border-t border-[#312A44] px-3 py-3">
+        <div className="mb-1.5 px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#806C79]">
           Quick Tools
         </div>
         <div className="space-y-0.5">
@@ -269,8 +269,8 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
                 onClick={() => onNavigate(item.path)}
                 className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-[11px] font-medium transition duration-200 border ${
                   isActive
-                    ? `${item.activeBg} ${item.activeBorder} text-[#34323A] font-bold`
-                    : "border-transparent text-[#706C72] hover:bg-[#F8F5F2] hover:text-[#34323A]"
+                    ? `${item.activeBg} ${item.activeBorder} text-[#F4F0EB] font-bold`
+                    : "border-transparent text-[#BAB0C8] hover:bg-[#211C2B] hover:text-[#F4F0EB]"
                 }`}
               >
                 <span
@@ -288,16 +288,16 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
       </div>
 
       {/* PROFILE / USER FOOTER */}
-      <div className="relative z-10 border-t border-[#DDD8D1] p-3">
-        <div className="flex items-center gap-3 rounded-xl bg-[#F8F5F2] p-2.5 border border-[#DDD8D1] shadow-2xs">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#DCE6DE] text-[#668C72] font-bold text-xs">
+      <div className="relative z-10 border-t border-[#312A44] p-3">
+        <div className="flex items-center gap-3 rounded-xl bg-[#211C2B] p-2.5 border border-[#312A44] shadow-2xs">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#312A44] text-[#F0D9E4] font-bold text-xs">
             S
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-bold text-[#34323A]">Shru</p>
-            <p className="truncate text-[10px] text-[#706C72]">College Life OS</p>
+            <p className="truncate text-xs font-bold text-[#F4F0EB]">Shru</p>
+            <p className="truncate text-[10px] text-[#BAB0C8]">College Life OS</p>
           </div>
-          <Sparkles size={14} className="text-[#8E8A90]" />
+          <Sparkles size={14} className="text-[#806C79]" />
         </div>
       </div>
     </aside>

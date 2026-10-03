@@ -52,17 +52,17 @@ export default function Exams() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-6 md:p-8">
+    <div className="mx-auto max-w-5xl p-6 md:p-8 text-[#16131F]">
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#57839d]">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#4F7386]">
             Life OS Space
           </p>
-          <h1 className="font-caveat text-4xl font-bold text-[#403842]">
+          <h1 className="font-caveat text-4xl font-bold text-[#16131F]">
             Exams & Tests 📚
           </h1>
-          <p className="font-caveat text-xl text-[#766d78]">
+          <p className="font-caveat text-xl text-[#806C79]">
             Midterms, finals, quizzes & study preparation progress.
           </p>
         </div>
@@ -70,7 +70,7 @@ export default function Exams() {
         <button
           type="button"
           onClick={() => setShowForm((prev) => !prev)}
-          className="flex items-center gap-2 rounded-xl bg-[#e2f1f6] border border-[#c8dfeb] px-4 py-2.5 text-xs font-bold text-[#57839d] shadow-2xs transition hover:bg-[#d8ecf4] active:scale-95 w-fit"
+          className="flex items-center gap-2 rounded-xl bg-[#DDEAF0] border border-[#C5DAE3] px-4 py-2.5 text-xs font-bold text-[#312A44] shadow-2xs transition hover:bg-[#CDE0E9] active:scale-95 w-fit"
         >
           <Plus size={16} />
           <span>Add Exam</span>
@@ -79,14 +79,14 @@ export default function Exams() {
 
       {/* Creation Modal */}
       {showForm && (
-        <Card className="mb-6 !bg-[#e2f1f6] !border-[#c8dfeb] p-5 shadow-md">
-          <h3 className="font-caveat text-2xl font-bold text-[#364750] mb-3">
+        <Card className="mb-6 !bg-[#DDEAF0] !border-[#C5DAE3] p-5 shadow-md">
+          <h3 className="font-caveat text-2xl font-bold text-[#16131F] mb-3">
             Add an Exam / Test
           </h3>
           <form onSubmit={handleCreateExam} className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-[#364750] mb-1">
+                <label className="block text-xs font-bold text-[#16131F] mb-1">
                   Exam / Test Name
                 </label>
                 <input
@@ -94,13 +94,13 @@ export default function Exams() {
                   placeholder="e.g. DAA Midterm Exam"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-xl border border-[#c8dfeb] bg-white px-3.5 py-2 text-xs font-medium text-[#403842]"
+                  className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#364750] mb-1">
+                <label className="block text-xs font-bold text-[#16131F] mb-1">
                   Subject / Course
                 </label>
                 <input
@@ -108,7 +108,7 @@ export default function Exams() {
                   placeholder="e.g. Algorithms & Data Structures"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full rounded-xl border border-[#c8dfeb] bg-white px-3.5 py-2 text-xs font-medium text-[#403842]"
+                  className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
                   required
                 />
               </div>
@@ -116,20 +116,20 @@ export default function Exams() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-[#364750] mb-1">
+                <label className="block text-xs font-bold text-[#16131F] mb-1">
                   Date
                 </label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#c8dfeb] bg-white px-3.5 py-2 text-xs font-medium text-[#403842]"
+                  className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#364750] mb-1">
+                <label className="block text-xs font-bold text-[#16131F] mb-1">
                   Time
                 </label>
                 <input
@@ -137,13 +137,13 @@ export default function Exams() {
                   placeholder="e.g. 10:00 AM - 12:00 PM"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#c8dfeb] bg-white px-3.5 py-2 text-xs font-medium text-[#403842]"
+                  className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#364750] mb-1">
+              <label className="block text-xs font-bold text-[#16131F] mb-1">
                 Syllabus & Notes
               </label>
               <textarea
@@ -151,12 +151,12 @@ export default function Exams() {
                 placeholder="Key topics: Dynamic programming, Graphs, Greedy algorithms..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full rounded-xl border border-[#c8dfeb] bg-white px-3.5 py-2 text-xs font-medium text-[#403842]"
+                className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
               />
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-bold text-[#364750] mb-1">
+              <div className="flex justify-between text-xs font-bold text-[#16131F] mb-1">
                 <span>Preparation Progress</span>
                 <span>{preparationProgress}%</span>
               </div>
@@ -166,7 +166,7 @@ export default function Exams() {
                 max="100"
                 value={preparationProgress}
                 onChange={(e) => setPreparationProgress(Number(e.target.value))}
-                className="w-full accent-[#57839d]"
+                className="w-full accent-[#4F7386]"
               />
             </div>
 
@@ -174,13 +174,13 @@ export default function Exams() {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-[#766d78] hover:bg-white/50"
+                className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-white/50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded-xl bg-[#57839d] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#487188]"
+                className="rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#211C2B]"
               >
                 Save Exam
               </button>
@@ -191,19 +191,19 @@ export default function Exams() {
 
       {/* Summary Cards */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <Card className="!bg-[#e2f1f6] !border-[#c8dfeb] p-4 glow-blue">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#57839d]">
+        <Card className="!bg-[#DDEAF0] !border-[#C5DAE3] p-4 glow-blue">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#4F7386]">
             Upcoming Exams
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-[#364750]">
+          <p className="mt-1 text-2xl font-extrabold text-[#312A44]">
             {exams.length}
           </p>
         </Card>
-        <Card className="!bg-[#eee9f8] !border-[#dcd5ed] p-4 glow-lavender">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#7564af]">
+        <Card className="!bg-[#DAD4DF] !border-[#BAB0C8] p-4 glow-lavender">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#4A3F4B]">
             Avg Preparation
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-[#40364a]">
+          <p className="mt-1 text-2xl font-extrabold text-[#312A44]">
             {exams.length > 0
               ? Math.round(
                   exams.reduce((acc, e) => acc + e.preparationProgress, 0) /
@@ -217,14 +217,14 @@ export default function Exams() {
 
       {/* Exam List */}
       {exams.length === 0 ? (
-        <Card className="!bg-[#e2f1f6] !border-[#c8dfeb] p-8 text-center glow-blue">
+        <Card className="!bg-[#DDEAF0] !border-[#C5DAE3] p-8 text-center glow-blue">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-2xs">
             📚
           </div>
-          <h3 className="font-caveat text-2xl font-bold text-[#364750]">
+          <h3 className="font-caveat text-2xl font-bold text-[#16131F]">
             No upcoming exams scheduled
           </h3>
-          <p className="mt-1 text-xs font-medium text-[#766d78]">
+          <p className="mt-1 text-xs font-medium text-[#806C79]">
             Click "Add Exam" to track test dates, syllabus, and study progress.
           </p>
         </Card>
@@ -233,14 +233,14 @@ export default function Exams() {
           {exams.map((exam) => (
             <Card
               key={exam.id}
-              className="!bg-[#e2f1f6] !border-[#c8dfeb] p-5 glow-blue transition hover:-translate-y-0.5"
+              className="!bg-[#DDEAF0] !border-[#C5DAE3] p-5 glow-blue transition hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className="rounded-md bg-white/80 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#57839d]">
+                  <span className="rounded-md bg-white/80 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[#4F7386]">
                     {exam.subject}
                   </span>
-                  <h3 className="mt-2 text-base font-bold text-[#364750]">
+                  <h3 className="mt-2 text-base font-bold text-[#16131F]">
                     {exam.name}
                   </h3>
                 </div>
@@ -248,33 +248,33 @@ export default function Exams() {
                 <button
                   type="button"
                   onClick={() => handleDelete(exam.id)}
-                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/60 text-[#918793] hover:bg-white hover:text-red-500 transition"
+                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/60 text-[#806C79] hover:bg-white hover:text-rose-500 transition"
                   title="Delete Exam"
                 >
                   <Trash2 size={14} />
                 </button>
               </div>
 
-              <div className="mt-2 flex items-center gap-3 text-xs font-medium text-[#766d78]">
+              <div className="mt-2 flex items-center gap-3 text-xs font-medium text-[#806C79]">
                 <span>📅 {exam.date}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1"><Clock size={12} /> {exam.time}</span>
               </div>
 
               {exam.notes && (
-                <p className="mt-2.5 text-xs text-[#57839d] bg-white/60 rounded-xl p-2.5 line-clamp-2">
+                <p className="mt-2.5 text-xs text-[#4F7386] bg-white/60 rounded-xl p-2.5 line-clamp-2">
                   {exam.notes}
                 </p>
               )}
 
               <div className="mt-4">
-                <div className="flex items-center justify-between text-xs font-bold text-[#364750] mb-1">
+                <div className="flex items-center justify-between text-xs font-bold text-[#16131F] mb-1">
                   <span>Preparation</span>
                   <span>{exam.preparationProgress}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/70">
                   <div
-                    className="h-full rounded-full bg-[#57839d] transition-all duration-500"
+                    className="h-full rounded-full bg-[#4F7386] transition-all duration-500"
                     style={{ width: `${exam.preparationProgress}%` }}
                   />
                 </div>
