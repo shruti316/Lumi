@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Clock } from "lucide-react";
+import { Plus, Trash2, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import {
   getCalendarEvents,
@@ -46,159 +46,179 @@ export default function Calendar() {
     setEvents(getCalendarEvents());
   }
 
+  const typeColors: Record<CalendarEvent["type"], { bg: string; text: string; border: string }> = {
+    Exam: { bg: "bg-[#FDF0F6]", text: "text-[#9A4E70]", border: "border-[#F2D8E4]" },
+    Assignment: { bg: "bg-[#EEF3FA]", text: "text-[#4A729A]", border: "border-[#D9E7F2]" },
+    Project: { bg: "bg-[#FDF3EC]", text: "text-[#9A644D]", border: "border-[#F1D2C9]" },
+    Class: { bg: "bg-[#EEEAFE]", text: "text-[#6B5BA5]", border: "border-[#DCD8F2]" },
+    Personal: { bg: "bg-[#EEF8F4]", text: "text-[#3E7D5C]", border: "border-[#CCE5DC]" },
+  };
+
   return (
-    <div className="mx-auto max-w-5xl p-6 md:p-8 text-[#16131F]">
-      {/* Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-[#4F7386]">
-            Life OS Space
-          </p>
-          <h1 className="font-caveat text-4xl font-bold text-[#16131F]">
-            Calendar & Schedule 📅
-          </h1>
-          <p className="font-caveat text-xl text-[#806C79]">
-            All your deadlines, exams & events in one view.
-          </p>
+    <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
+      <div className="mx-auto max-w-5xl px-5 py-6 md:px-8 md:py-8">
+        {/* Header */}
+        <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#B8D4E8]" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792]">
+                Schedule & Milestones
+              </p>
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
+              Calendar & <span className="font-editorial-italic font-normal text-[#9E96D8]">Schedule</span>
+            </h1>
+            <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
+              All your key deadlines, exam dates, coursework reviews & events in one timeline.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowForm((prev) => !prev)}
+            className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 w-fit cursor-pointer"
+          >
+            <Plus size={16} />
+            <span>Add Event</span>
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowForm((prev) => !prev)}
-          className="flex items-center gap-2 rounded-xl bg-[#DDEAF0] border border-[#C5DAE3] px-4 py-2.5 text-xs font-bold text-[#312A44] shadow-2xs transition hover:bg-[#CDE0E9] active:scale-95 w-fit"
-        >
-          <Plus size={16} />
-          <span>Add Event</span>
-        </button>
-      </div>
-
-      {/* Event Creation Form */}
-      {showForm && (
-        <Card className="mb-6 !bg-[#DDEAF0] !border-[#C5DAE3] p-5 shadow-md">
-          <h3 className="font-caveat text-2xl font-bold text-[#16131F] mb-3">
-            Add Calendar Event / Deadline
-          </h3>
-          <form onSubmit={handleCreateEvent} className="space-y-3">
-            <input
-              type="text"
-              placeholder="Event Title (e.g. DAA Midterm Exam)"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
-              required
-            />
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
-                  Type
-                </label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value as CalendarEvent["type"])}
-                  className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
-                >
-                  <option value="Exam">Exam</option>
-                  <option value="Assignment">Assignment</option>
-                  <option value="Project">Project</option>
-                  <option value="Class">Class</option>
-                  <option value="Personal">Personal</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
-                  Time
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 10:00 AM"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full rounded-xl border border-[#C5DAE3] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F]"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-white/50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#211C2B]"
-              >
-                Save Event
-              </button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      {/* Event List */}
-      {events.length === 0 ? (
-        <Card className="!bg-[#DDEAF0] !border-[#C5DAE3] p-8 text-center glow-blue">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-xl shadow-2xs">
-            📅
-          </div>
-          <h3 className="font-caveat text-2xl font-bold text-[#16131F]">
-            No calendar events scheduled
-          </h3>
-          <p className="mt-1 text-xs font-medium text-[#806C79]">
-            Click "Add Event" to track midterm dates, project deadlines, or classes.
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {events.map((evt) => (
-            <Card
-              key={evt.id}
-              className="!bg-[#DDEAF0] !border-[#C5DAE3] p-4 glow-blue flex items-center justify-between gap-4 transition hover:-translate-y-0.5"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#4F7386] font-bold text-xs shadow-2xs">
-                  {evt.type[0]}
+        {/* Event Creation Form */}
+        {showForm && (
+          <Card variant="blue" hoverEffect className="mb-7 p-6 border-[#D9E7F2] shadow-sm">
+            <h3 className="font-serif text-2xl font-bold text-[#17151C] mb-4">
+              Add Calendar Event / Deadline
+            </h3>
+            <form onSubmit={handleCreateEvent} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Event Title (e.g. DAA Midterm Exam)"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full rounded-xl border border-white/80 bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
+                required
+              />
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                    Type
+                  </label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value as CalendarEvent["type"])}
+                    className="w-full rounded-xl border border-white/80 bg-white px-3.5 py-2.5 text-xs font-semibold text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                  >
+                    <option value="Exam">Exam</option>
+                    <option value="Assignment">Assignment</option>
+                    <option value="Project">Project</option>
+                    <option value="Class">Class</option>
+                    <option value="Personal">Personal</option>
+                  </select>
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xs font-bold text-[#16131F]">{evt.title}</h3>
-                    <span className="rounded-md bg-white/80 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#4F7386]">
-                      {evt.type}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 flex items-center gap-2 text-[11px] font-medium text-[#806C79]">
-                    <span>📅 {evt.date}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1"><Clock size={11} /> {evt.time}</span>
-                  </p>
+                  <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full rounded-xl border border-white/80 bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 10:00 AM"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="w-full rounded-xl border border-white/80 bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                  />
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleDelete(evt.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/60 text-[#806C79] hover:bg-white hover:text-rose-500 transition"
-              >
-                <Trash2 size={14} />
-              </button>
-            </Card>
-          ))}
-        </div>
-      )}
+              <div className="flex justify-end gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:bg-white/60 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] cursor-pointer"
+                >
+                  Save Event
+                </button>
+              </div>
+            </form>
+          </Card>
+        )}
+
+        {/* Event List */}
+        {events.length === 0 ? (
+          <Card variant="blue" className="p-10 text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#4A729A] text-2xl shadow-2xs border border-white">
+              📅
+            </div>
+            <h3 className="font-serif text-3xl font-bold text-[#17151C]">
+              No calendar events scheduled
+            </h3>
+            <p className="mt-1 text-xs font-normal text-[#5F5965]">
+              Click "Add Event" to track midterm dates, project deadlines, or special events.
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {events.map((evt) => {
+              const currentTypeStyle = typeColors[evt.type] || typeColors.Personal;
+
+              return (
+                <Card
+                  key={evt.id}
+                  variant="glass"
+                  hoverEffect
+                  className="p-4 border-[#E8E3F0] bg-white/95 flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#EEEAFE] to-[#EEF3FA] text-[#17151C] font-bold text-xs border border-[#E8E3F0] shadow-2xs">
+                      <CalendarIcon size={16} className="text-[#9E96D8]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-serif font-bold text-sm text-[#17151C]">{evt.title}</h3>
+                        <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${currentTypeStyle.bg} ${currentTypeStyle.text} ${currentTypeStyle.border}`}>
+                          {evt.type}
+                        </span>
+                      </div>
+                      <p className="mt-1 flex items-center gap-2 text-xs font-medium text-[#8D8792]">
+                        <span>{evt.date}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1"><Clock size={11} className="text-[#9E96D8]" /> {evt.time}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(evt.id)}
+                    className="flex h-8 w-8 items-center justify-center rounded-xl text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
+                    title="Delete event"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

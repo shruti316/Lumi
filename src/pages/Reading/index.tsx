@@ -62,7 +62,6 @@ export default function Reading() {
   const [books, setBooks] = useState<Book[]>(() => {
     const existing = getBooks();
     if (existing.length === 0) {
-      // Initialize with starter books so library is never a barren void
       const starters = STARTER_BOOKS.map((b) => ({
         ...b,
         id: crypto.randomUUID(),
@@ -129,7 +128,6 @@ export default function Reading() {
   const completedList = books.filter((b) => b.status === "completed");
 
   const totalPagesRead = books.reduce((acc, b) => acc + (b.currentPage || 0), 0);
-
   const featuredBook = currentlyReadingList.length > 0 ? currentlyReadingList[0] : null;
 
   const filteredBooks = books.filter((book) => {
@@ -143,21 +141,24 @@ export default function Reading() {
   });
 
   return (
-    <div className="min-h-screen pb-24 text-[#16131F]">
+    <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
       <div className="mx-auto max-w-6xl px-5 py-6 md:px-8 md:py-8">
         {/* ═══════════════════════════════════════
             HEADER
         ═══════════════════════════════════════ */}
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#806C79]">
-              My Cozy Digital Library 📚
-            </p>
-            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#16131F] sm:text-5xl">
-              Reading & Books
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#B8B3E8]" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792]">
+                Curated Digital Library
+              </p>
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
+              Reading & <span className="font-editorial-italic font-normal text-[#9E96D8]">Literature</span>
             </h1>
-            <p className="font-caveat text-xl text-[#806C79]">
-              Track the books you're exploring, the wisdom gained & stories on your shelf.
+            <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
+              Track the books you explore, quotes that resonate, and wisdom for your shelf.
             </p>
           </div>
 
@@ -167,7 +168,7 @@ export default function Reading() {
               setForm(EMPTY_BOOK_FORM);
               setShowModal(true);
             }}
-            className="flex items-center gap-2 rounded-2xl bg-[#DAD4DF] border border-[#BAB0C8] px-4 py-2.5 text-xs font-bold text-[#16131F] shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:bg-[#C1A0AC] active:scale-95 w-fit"
+            className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 w-fit cursor-pointer"
           >
             <Plus size={16} />
             <span>Add a Book</span>
@@ -177,53 +178,53 @@ export default function Reading() {
         {/* ═══════════════════════════════════════
             TOP STATS BAR
         ═══════════════════════════════════════ */}
-        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card className="!bg-[#DAD4DF] !border-[#BAB0C8] p-3.5 glow-lavender">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A3F4B]">
+        <section className="mb-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+          <Card variant="lavender" hoverEffect className="p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
               Currently Reading
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">
+            <p className="text-2xl font-bold text-[#17151C] mt-1">
               {currentlyReadingList.length}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-[#806C79]">
-              Active reads
+            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
+              Active titles
             </p>
           </Card>
 
-          <Card className="!bg-[#DCE8E0] !border-[#BAB0C8] p-3.5 glow-green">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A6E53]">
+          <Card variant="default" hoverEffect className="p-4 border-[#CCE5DC] bg-gradient-to-br from-[#EEF8F4] to-white">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A7D63]">
               Completed Books
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5 flex items-center gap-1">
-              <CheckCircle2 size={18} className="text-[#4A6E53]" />
+            <p className="text-2xl font-bold text-[#17151C] mt-1 flex items-center gap-1.5">
+              <CheckCircle2 size={18} className="text-[#528D6F]" />
               {completedList.length}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-[#806C79]">
-              Finished stories
+            <p className="mt-1 text-[11px] font-medium text-[#4A7D63]">
+              Finished reads
             </p>
           </Card>
 
-          <Card className="!bg-[#F0D9E4] !border-[#C1A0AC] p-3.5 glow-pink">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#806C79]">
+          <Card variant="pink" hoverEffect className="p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
               Want to Read
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">
+            <p className="text-2xl font-bold text-[#17151C] mt-1">
               {wantToReadList.length}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-[#806C79]">
+            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
               On reading wishlist
             </p>
           </Card>
 
-          <Card className="!bg-[#F2DFD0] !border-[#BAB0C8] p-3.5 glow-peach">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#806C79]">
+          <Card variant="peach" hoverEffect className="p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
               Total Pages Logged
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5 flex items-center gap-1">
-              <Sparkles size={18} className="text-[#806C79]" />
+            <p className="text-2xl font-bold text-[#17151C] mt-1 flex items-center gap-1.5">
+              <Sparkles size={18} className="text-[#D99BB8]" />
               {totalPagesRead}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-[#806C79]">
+            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
               Pages absorbed
             </p>
           </Card>
@@ -233,54 +234,58 @@ export default function Reading() {
             FEATURED CURRENT READ SPOTLIGHT
         ═══════════════════════════════════════ */}
         {featuredBook && (
-          <Card className="mb-6 !bg-gradient-to-r !from-[#DAD4DF] !to-[#F2DFD0] !border-[#BAB0C8] p-5 shadow-sm glow-lavender">
-            <div className="flex flex-col md:flex-row items-center gap-5">
+          <Card
+            variant="mixed"
+            hoverEffect
+            className="mb-7 p-6 border-[#DDD8F2] shadow-sm"
+          >
+            <div className="flex flex-col md:flex-row items-center gap-6">
               {featuredBook.cover ? (
                 <img
                   src={featuredBook.cover}
                   alt={featuredBook.title}
-                  className="h-32 w-24 object-cover rounded-xl shadow-md shrink-0"
+                  className="h-36 w-26 object-cover rounded-xl shadow-md shrink-0 border border-white/80"
                 />
               ) : (
-                <div className="flex h-32 w-24 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#16131F] to-[#806C79] text-xs font-bold text-[#F4F0EB] shadow-md">
+                <div className="flex h-36 w-26 shrink-0 items-center justify-center rounded-xl bg-[#17151C] text-xs font-bold text-white shadow-md border border-white/30">
                   📖 BOOK
                 </div>
               )}
 
               <div className="min-w-0 flex-1 w-full">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-[#DAD4DF] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#312A44] border border-[#BAB0C8]">
+                  <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#17151C] border border-[#E8E3F0] shadow-2xs">
                     Current Spotlight
                   </span>
                   {featuredBook.rating > 0 && (
-                    <div className="flex items-center gap-0.5 text-[#806C79]">
+                    <div className="flex items-center gap-0.5 text-[#D99BB8]">
                       {Array.from({ length: featuredBook.rating }).map((_, i) => (
-                        <Star key={i} size={12} className="fill-[#806C79]" />
+                        <Star key={i} size={12} className="fill-[#D99BB8]" />
                       ))}
                     </div>
                   )}
                 </div>
 
-                <h2 className="mt-1.5 font-caveat text-3xl font-bold text-[#16131F] truncate">
+                <h2 className="mt-2 font-serif text-2xl md:text-3xl font-bold text-[#17151C] truncate">
                   {featuredBook.title}
                 </h2>
-                <p className="text-xs font-semibold text-[#806C79]">
+                <p className="text-xs font-medium text-[#5F5965]">
                   by {featuredBook.author}
                 </p>
 
                 {featuredBook.favoriteQuote && (
-                  <p className="mt-2 text-xs italic text-[#4A3F4B] bg-[#F4F0EB]/70 p-2 rounded-lg border border-[#DAD4DF]">
-                    "{featuredBook.favoriteQuote}"
+                  <p className="mt-2.5 text-xs italic text-[#17151C] bg-white/70 p-2.5 rounded-xl border border-white/80 leading-relaxed font-serif">
+                    “{featuredBook.favoriteQuote}”
                   </p>
                 )}
 
                 {/* Live progress slider & page control */}
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs font-bold text-[#16131F] mb-1">
+                <div className="mt-3.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#17151C] mb-1.5">
                     <span>
                       Page {featuredBook.currentPage} of {featuredBook.totalPages || 300}
                     </span>
-                    <span>
+                    <span className="text-[#9E96D8]">
                       {featuredBook.totalPages > 0
                         ? Math.round(
                             (featuredBook.currentPage / featuredBook.totalPages) * 100
@@ -298,7 +303,7 @@ export default function Reading() {
                       onChange={(e) =>
                         handleQuickUpdatePage(featuredBook, Number(e.target.value))
                       }
-                      className="w-full accent-[#312A44] cursor-pointer"
+                      className="w-full accent-[#17151C] cursor-pointer"
                     />
                     <button
                       type="button"
@@ -308,7 +313,7 @@ export default function Reading() {
                           featuredBook.currentPage + 10
                         )
                       }
-                      className="rounded-lg bg-[#F4F0EB] border border-[#BAB0C8] px-2.5 py-1 text-[11px] font-bold text-[#16131F] hover:bg-[#DAD4DF] shrink-0 shadow-2xs"
+                      className="rounded-xl bg-white border border-[#E8E3F0] px-3 py-1 text-[11px] font-semibold text-[#17151C] hover:bg-[#EEEAFE] shrink-0 shadow-2xs cursor-pointer transition"
                     >
                       +10 pgs
                     </button>
@@ -323,7 +328,7 @@ export default function Reading() {
             FILTERS & SEARCH
         ═══════════════════════════════════════ */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-1.5 rounded-2xl border border-[#DAD4DF] bg-[#F4F0EB] p-1 w-fit shadow-2xs">
+          <div className="flex flex-wrap gap-1.5 rounded-xl border border-[#E8E3F0] bg-white/90 p-1 w-fit shadow-2xs">
             {(
               [
                 { id: "all", label: "All Books" },
@@ -336,10 +341,10 @@ export default function Reading() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveFilter(tab.id)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                   activeFilter === tab.id
-                    ? "bg-[#DAD4DF] text-[#16131F] shadow-2xs"
-                    : "text-[#806C79] hover:text-[#16131F]"
+                    ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
+                    : "text-[#5F5965] hover:text-[#17151C]"
                 }`}
               >
                 {tab.label}
@@ -348,13 +353,13 @@ export default function Reading() {
           </div>
 
           <div className="relative flex-1 sm:w-64">
-            <Search size={14} className="absolute left-3 top-2.5 text-[#806C79]" />
+            <Search size={14} className="absolute left-3.5 top-3 text-[#8D8792]" />
             <input
               type="text"
               placeholder="Search title or author..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-[#DAD4DF] bg-[#F4F0EB] pl-8 pr-3 py-1.5 text-xs font-medium text-[#16131F] shadow-2xs outline-none focus:border-[#BAB0C8]"
+              className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] shadow-2xs outline-none focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30"
             />
           </div>
         </div>
@@ -363,20 +368,20 @@ export default function Reading() {
             BOOK CARDS GRID
         ═══════════════════════════════════════ */}
         {filteredBooks.length === 0 ? (
-          <Card className="!bg-[#DAD4DF] !border-[#BAB0C8] p-8 text-center glow-lavender">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F4F0EB] text-2xl shadow-2xs border border-[#BAB0C8]">
+          <Card variant="lavender" className="p-10 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#9E96D8] text-2xl shadow-2xs border border-white">
               📚
             </div>
-            <h3 className="font-caveat text-2xl font-bold text-[#16131F]">
+            <h3 className="font-serif text-2xl font-bold text-[#17151C]">
               No books found in this view
             </h3>
-            <p className="mt-1 text-xs text-[#806C79]">
+            <p className="mt-1 text-xs text-[#5F5965]">
               Add new books to your shelf or adjust the filter above.
             </p>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredBooks.map((book) => {
+          <div className="grid gap-4.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredBooks.map((book, idx) => {
               const progress =
                 book.totalPages > 0
                   ? Math.min(
@@ -385,14 +390,25 @@ export default function Reading() {
                     )
                   : 0;
 
+              const pastelSurfaces: ("default" | "lavender" | "pink" | "blue" | "peach")[] = [
+                "lavender",
+                "pink",
+                "blue",
+                "peach",
+                "default",
+              ];
+              const cardVariant = pastelSurfaces[idx % pastelSurfaces.length];
+
               return (
                 <Card
                   key={book.id}
-                  className="group relative flex flex-col justify-between overflow-hidden !bg-[#F4F0EB] !border-[#DAD4DF] p-4 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                  variant={cardVariant}
+                  hoverEffect
+                  className="group relative flex flex-col justify-between overflow-hidden p-4.5 border-[#E8E3F0]"
                 >
                   <div>
                     {/* Top cover / icon banner */}
-                    <div className="relative mb-3 h-36 w-full overflow-hidden rounded-xl bg-gradient-to-br from-[#DAD4DF] to-[#F0D9E4] flex items-center justify-center">
+                    <div className="relative mb-3 h-40 w-full overflow-hidden rounded-xl bg-gradient-to-br from-[#EEEAFE] to-[#F8E8F0] flex items-center justify-center border border-white/60">
                       {book.cover ? (
                         <img
                           src={book.cover}
@@ -400,16 +416,16 @@ export default function Reading() {
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <BookOpen size={36} className="text-[#312A44]" />
+                        <BookOpen size={36} className="text-[#9E96D8]" />
                       )}
 
                       <span
-                        className={`absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider backdrop-blur-md ${
+                        className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur-md shadow-2xs border ${
                           book.status === "reading"
-                            ? "bg-[#DAD4DF]/90 text-[#312A44]"
+                            ? "bg-white/90 text-[#17151C] border-[#DDD8F2]"
                             : book.status === "completed"
-                            ? "bg-[#DCE8E0]/90 text-[#4A6E53]"
-                            : "bg-[#F0D9E4]/90 text-[#806C79]"
+                            ? "bg-[#EEF8F4]/90 text-[#3E7D5C] border-[#CCE5DC]"
+                            : "bg-[#FDF0F6]/90 text-[#9A4E70] border-[#F2D8E4]"
                         }`}
                       >
                         {book.status === "reading"
@@ -422,30 +438,30 @@ export default function Reading() {
                       <button
                         type="button"
                         onClick={() => handleDelete(book.id)}
-                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F0EB]/90 text-[#806C79] hover:text-[#C1A0AC] hover:bg-[#F0D9E4] transition shadow-2xs opacity-0 group-hover:opacity-100"
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-[#8D8792] hover:text-[#D99BB8] hover:bg-white transition shadow-2xs opacity-0 group-hover:opacity-100 cursor-pointer"
                         title="Delete book"
                       >
                         <Trash2 size={13} />
                       </button>
                     </div>
 
-                    <h3 className="font-bold text-sm text-[#16131F] truncate">
+                    <h3 className="font-serif font-bold text-base text-[#17151C] truncate tracking-tight">
                       {book.title}
                     </h3>
-                    <p className="text-xs text-[#806C79] truncate">
+                    <p className="text-xs text-[#5F5965] truncate font-medium">
                       by {book.author}
                     </p>
 
                     {book.rating > 0 && (
-                      <div className="mt-1.5 flex items-center gap-0.5 text-[#806C79]">
+                      <div className="mt-2 flex items-center gap-0.5 text-[#D99BB8]">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
                             size={11}
                             className={
                               i < book.rating
-                                ? "fill-[#806C79]"
-                                : "text-[#BAB0C8]"
+                                ? "fill-[#D99BB8]"
+                                : "text-[#E8E3F0]"
                             }
                           />
                         ))}
@@ -453,23 +469,23 @@ export default function Reading() {
                     )}
 
                     {book.whyIPickedIt && (
-                      <p className="mt-2 text-[11px] text-[#806C79] line-clamp-2 italic bg-[#F4F0EB] border border-[#DAD4DF] p-2 rounded-lg">
+                      <p className="mt-2 text-xs text-[#5F5965] line-clamp-2 italic bg-white/70 border border-white/80 p-2 rounded-lg">
                         "{book.whyIPickedIt}"
                       </p>
                     )}
                   </div>
 
                   {/* Progress & Quick Page Counter */}
-                  <div className="mt-3 pt-2.5 border-t border-[#DAD4DF]">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-[#806C79] mb-1">
+                  <div className="mt-3.5 pt-2.5 border-t border-black/5">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-[#5F5965] mb-1.5">
                       <span>
                         {book.currentPage} / {book.totalPages || 0} pgs
                       </span>
-                      <span className="text-[#312A44]">{progress}%</span>
+                      <span className="text-[#17151C] font-bold">{progress}%</span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-[#DAD4DF]">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/80">
                       <div
-                        className="h-full rounded-full bg-[#806C79] transition-all duration-500"
+                        className="h-full rounded-full bg-gradient-to-r from-[#9E96D8] to-[#E8B9CD] transition-all duration-500"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -487,12 +503,12 @@ export default function Reading() {
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           title="Add a Book to Library"
-          subtitle="Track and reflect on what you read."
+          subtitle="Track, reflect, and capture wisdom on what you read."
         >
           <form onSubmit={handleSaveBook} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Book Title *
                 </label>
                 <input
@@ -500,13 +516,13 @@ export default function Reading() {
                   placeholder="e.g. The Psychology of Money"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#312A44] outline-none"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Author *
                 </label>
                 <input
@@ -514,7 +530,7 @@ export default function Reading() {
                   placeholder="e.g. Morgan Housel"
                   value={form.author}
                   onChange={(e) => setForm({ ...form, author: e.target.value })}
-                  className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#312A44] outline-none"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                   required
                 />
               </div>
@@ -522,7 +538,7 @@ export default function Reading() {
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Status
                 </label>
                 <select
@@ -530,7 +546,7 @@ export default function Reading() {
                   onChange={(e) =>
                     setForm({ ...form, status: e.target.value as Book["status"] })
                   }
-                  className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3 py-2 text-xs font-bold text-[#16131F] focus:border-[#312A44] outline-none"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3 py-2 text-xs font-semibold text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 >
                   <option value="reading">Reading</option>
                   <option value="want-to-read">Want to Read</option>
@@ -539,7 +555,7 @@ export default function Reading() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Current Page
                 </label>
                 <input
@@ -549,12 +565,12 @@ export default function Reading() {
                   onChange={(e) =>
                     setForm({ ...form, currentPage: Number(e.target.value) })
                   }
-                  className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#312A44] outline-none"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Total Pages
                 </label>
                 <input
@@ -564,51 +580,51 @@ export default function Reading() {
                   onChange={(e) =>
                     setForm({ ...form, totalPages: Number(e.target.value) })
                   }
-                  className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#312A44] outline-none"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
                 Cover Image URL (Optional)
               </label>
               <input
                 type="text"
-                placeholder="https://..."
+                placeholder="https://images.unsplash.com/..."
                 value={form.cover}
                 onChange={(e) => setForm({ ...form, cover: e.target.value })}
-                className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#312A44] outline-none"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
-                Why I Picked It / Notes
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                Why I Picked It / Reflections
               </label>
               <textarea
-                placeholder="What drawn you to this book..."
+                placeholder="What drew you to this book..."
                 value={form.whyIPickedIt}
                 onChange={(e) =>
                   setForm({ ...form, whyIPickedIt: e.target.value })
                 }
                 rows={2}
-                className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#312A44] outline-none resize-none"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none resize-none shadow-2xs"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-[#DAD4DF]"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:bg-[#EEEAFE] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!form.title.trim() || !form.author.trim()}
-                className="rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-[#F4F0EB] shadow-2xs hover:bg-[#4A3F4B] disabled:opacity-50"
+                className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
               >
                 Add to Library
               </button>

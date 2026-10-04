@@ -61,7 +61,6 @@ export default function Notes() {
     setNotes(getNotes());
   }
 
-  // Extract all unique tags
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags)));
 
   const filteredNotes = notes.filter((n) => {
@@ -80,28 +79,31 @@ export default function Notes() {
   const pinnedCount = notes.filter((n) => n.pinned).length;
 
   return (
-    <div className="min-h-screen pb-24 text-[#16131F]">
+    <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
       <div className="mx-auto max-w-5xl px-5 py-6 md:px-8 md:py-8">
         {/* ═══════════════════════════════════════
             HEADER
         ═══════════════════════════════════════ */}
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#4F7386]">
-              Knowledge Space 📝
-            </p>
-            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#16131F] sm:text-5xl">
-              Notes
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#B8D4E8]" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792]">
+                Knowledge & Reference
+              </p>
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
+              Notes & <span className="font-editorial-italic font-normal text-[#9E96D8]">Knowledge</span>
             </h1>
-            <p className="font-caveat text-xl text-[#806C79]">
-              Capture college lecture summaries, formulas, ideas & key takeaways.
+            <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
+              Capture lecture summaries, key takeaways, formulas & conceptual notes.
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-[#DDEAF0] border border-[#C5DAE3] px-4 py-2.5 text-xs font-bold text-[#312A44] shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:bg-[#CDE0E9] active:scale-95 w-fit"
+            className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 w-fit cursor-pointer"
           >
             <Plus size={16} />
             <span>New Note</span>
@@ -112,18 +114,17 @@ export default function Notes() {
             FILTER & SEARCH ROW
         ═══════════════════════════════════════ */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* Tabs: All, Pinned, Recent */}
-          <div className="flex gap-1.5 rounded-2xl border border-[#DAD4DF] bg-white/80 p-1 w-fit shadow-2xs">
+          <div className="flex gap-1.5 rounded-xl border border-[#E8E3F0] bg-white/90 p-1 w-fit shadow-2xs">
             <button
               type="button"
               onClick={() => {
                 setActiveTab("all");
                 setSelectedTag(null);
               }}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "all" && !selectedTag
-                  ? "bg-[#DDEAF0] text-[#312A44] shadow-2xs"
-                  : "text-[#806C79] hover:text-[#16131F]"
+                  ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
+                  : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
               All Notes ({notes.length})
@@ -131,45 +132,44 @@ export default function Notes() {
             <button
               type="button"
               onClick={() => setActiveTab("pinned")}
-              className={`flex items-center gap-1 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "pinned"
-                  ? "bg-[#DDEAF0] text-[#312A44] shadow-2xs"
-                  : "text-[#806C79] hover:text-[#16131F]"
+                  ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
+                  : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
-              <Pin size={12} />
+              <Pin size={12} className={activeTab === "pinned" ? "text-[#9E96D8]" : ""} />
               <span>Pinned ({pinnedCount})</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("recent")}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "recent"
-                  ? "bg-[#DDEAF0] text-[#312A44] shadow-2xs"
-                  : "text-[#806C79] hover:text-[#16131F]"
+                  ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
+                  : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
               Recent
             </button>
           </div>
 
-          {/* Search Input */}
           <div className="relative flex-1 sm:w-64">
-            <Search size={14} className="absolute left-3 top-2.5 text-[#806C79]" />
+            <Search size={14} className="absolute left-3.5 top-3 text-[#8D8792]" />
             <input
               type="text"
               placeholder="Search notes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-[#DAD4DF] bg-white pl-8 pr-3 py-1.5 text-xs font-medium text-[#16131F] shadow-2xs outline-none focus:border-[#4F7386]"
+              className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] shadow-2xs outline-none focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30"
             />
           </div>
         </div>
 
-        {/* Tags bar if tags exist */}
+        {/* Tags bar */}
         {allTags.length > 0 && (
           <div className="mb-6 flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#4F7386] mr-1 flex items-center gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#8D8792] mr-1 flex items-center gap-1">
               <Tag size={11} /> Filter:
             </span>
             {allTags.map((t) => (
@@ -177,10 +177,10 @@ export default function Notes() {
                 key={t}
                 type="button"
                 onClick={() => setSelectedTag(selectedTag === t ? null : t)}
-                className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition ${
+                className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition cursor-pointer ${
                   selectedTag === t
-                    ? "bg-[#C5DAE3] border-[#4F7386] text-[#16131F] shadow-2xs"
-                    : "bg-white border-[#DAD4DF] text-[#806C79] hover:bg-[#F4F0EB]"
+                    ? "bg-[#EEEAFE] border-[#DDD8F2] text-[#17151C] shadow-2xs"
+                    : "bg-white border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
                 }`}
               >
                 #{t}
@@ -190,71 +190,72 @@ export default function Notes() {
         )}
 
         {/* ═══════════════════════════════════════
-            NOTES LIST / COMPACT EMPTY STATE
+            NOTES LIST / EMPTY STATE
         ═══════════════════════════════════════ */}
         {filteredNotes.length === 0 ? (
           <div className="space-y-6">
-            <Card className="!bg-[#DDEAF0] !border-[#C5DAE3] p-7 text-center glow-blue">
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs">
+            <Card variant="blue" className="p-10 text-center">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-white">
                 📝
               </div>
-              <h3 className="font-caveat text-3xl font-bold text-[#16131F]">
+              <h3 className="font-serif text-3xl font-bold text-[#17151C]">
                 Your notes will live here
               </h3>
-              <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#806C79] leading-relaxed">
+              <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#5F5965] leading-relaxed">
                 Capture college notes, ideas, reminders, exam formulas, and anything worth remembering in one clean space.
               </p>
               <button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#4F7386] px-5 py-2.5 text-xs font-bold text-white shadow-2xs transition hover:bg-[#3B5B6D]"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#17151C] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2D263B] cursor-pointer"
               >
                 <Plus size={15} />
                 <span>Create Note</span>
               </button>
             </Card>
 
-            {/* Quick Starter Topics */}
-            <div className="rounded-2xl border border-[#DAD4DF] bg-white/70 p-4">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#4F7386] flex items-center gap-1.5 mb-2.5">
-                <BookMarked size={14} /> Quick Note Starters
+            <Card variant="pearl" className="p-5 border-[#E8E3F0]">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#5F5965] flex items-center gap-1.5 mb-3">
+                <BookMarked size={14} className="text-[#9E96D8]" /> Quick Note Starters
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="rounded-xl border border-[#DAD4DF] bg-white p-3 text-xs">
-                  <p className="font-bold text-[#16131F]">📖 Lecture Takeaways</p>
-                  <p className="mt-1 text-[11px] text-[#806C79]">Key terms & bullet points from today's classes.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="rounded-xl border border-[#E8E3F0] bg-white p-3.5 text-xs shadow-2xs">
+                  <p className="font-semibold text-xs text-[#17151C]">📖 Lecture Takeaways</p>
+                  <p className="mt-1 text-[11px] text-[#5F5965]">Key terms & bullet points from today's classes.</p>
                 </div>
-                <div className="rounded-xl border border-[#DAD4DF] bg-white p-3 text-xs">
-                  <p className="font-bold text-[#16131F]">⚡ Formula Cheatsheet</p>
-                  <p className="mt-1 text-[11px] text-[#806C79]">Quick formulas & algorithms to memorize.</p>
+                <div className="rounded-xl border border-[#E8E3F0] bg-white p-3.5 text-xs shadow-2xs">
+                  <p className="font-semibold text-xs text-[#17151C]">⚡ Formula Cheatsheet</p>
+                  <p className="mt-1 text-[11px] text-[#5F5965]">Quick formulas & algorithms to memorize.</p>
                 </div>
-                <div className="rounded-xl border border-[#DAD4DF] bg-white p-3 text-xs">
-                  <p className="font-bold text-[#16131F]">💡 Spontaneous Ideas</p>
-                  <p className="mt-1 text-[11px] text-[#806C79]">Project concepts & college event plans.</p>
+                <div className="rounded-xl border border-[#E8E3F0] bg-white p-3.5 text-xs shadow-2xs">
+                  <p className="font-semibold text-xs text-[#17151C]">💡 Spontaneous Ideas</p>
+                  <p className="mt-1 text-[11px] text-[#5F5965]">Project concepts & college event plans.</p>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4.5 md:grid-cols-2 lg:grid-cols-3">
             {filteredNotes.map((note) => (
               <Card
                 key={note.id}
-                className="group relative flex flex-col justify-between !bg-white/90 !border-[#DAD4DF] p-4.5 shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:shadow-xs"
+                variant="glass"
+                hoverEffect
+                className="group relative flex flex-col justify-between p-5 border-[#E8E3F0] bg-white/95"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-bold text-sm text-[#16131F] leading-snug truncate">
+                  <div className="flex items-start justify-between gap-2 mb-2.5">
+                    <h3 className="font-serif font-bold text-base text-[#17151C] leading-snug truncate">
                       {note.title}
                     </h3>
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => handleTogglePin(note)}
-                        className={`flex h-7 w-7 items-center justify-center rounded-lg transition ${
+                        className={`flex h-7 w-7 items-center justify-center rounded-lg transition cursor-pointer ${
                           note.pinned
-                            ? "bg-[#DDEAF0] text-[#4F7386] shadow-2xs"
-                            : "bg-[#F4F0EB] text-[#806C79] hover:text-[#4F7386]"
+                            ? "bg-[#EEEAFE] text-[#9E96D8] border border-[#DDD8F2] shadow-2xs"
+                            : "bg-[#F7F5F8] text-[#8D8792] hover:text-[#17151C]"
                         }`}
                         title={note.pinned ? "Unpin" : "Pin to top"}
                       >
@@ -263,7 +264,7 @@ export default function Notes() {
                       <button
                         type="button"
                         onClick={() => handleDelete(note.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F0EB] text-[#806C79] hover:text-rose-500 hover:bg-rose-50 transition"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
                         title="Delete note"
                       >
                         <Trash2 size={12} />
@@ -271,23 +272,23 @@ export default function Notes() {
                     </div>
                   </div>
 
-                  <p className="text-xs font-medium text-[#4A3F4B] line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-xs font-normal text-[#5F5965] line-clamp-4 leading-relaxed whitespace-pre-wrap">
                     {note.content}
                   </p>
                 </div>
 
-                <div className="mt-4 pt-2.5 border-t border-[#DAD4DF] flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                <div className="mt-4 pt-3 border-t border-[#E8E3F0] flex flex-wrap items-center justify-between gap-1 text-[10px]">
                   <div className="flex flex-wrap gap-1">
                     {note.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-md bg-[#DDEAF0] px-2 py-0.5 font-bold text-[#4F7386]"
+                        className="rounded-md bg-[#EEEAFE] border border-[#DDD8F2] px-2 py-0.5 font-semibold text-[#5F5965]"
                       >
                         #{tag}
                       </span>
                     ))}
                   </div>
-                  <span className="font-semibold text-[#806C79]">
+                  <span className="font-medium text-[#8D8792]">
                     {new Date(note.createdAt).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -305,12 +306,12 @@ export default function Notes() {
         <Modal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          title="Create New Note 📝"
-          subtitle="Capture knowledge, lecture summaries & formulas."
+          title="Create New Note"
+          subtitle="Capture knowledge, lecture summaries, and formulas."
         >
           <form onSubmit={handleCreateNote} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
                 Title *
               </label>
               <input
@@ -319,13 +320,13 @@ export default function Notes() {
                 placeholder="e.g. Dynamic Programming Memoization Notes"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-xl border border-[#C5DAE3] bg-[#F4F0EB] px-3.5 py-2.5 text-xs font-medium text-[#16131F] focus:border-[#4F7386] focus:bg-white outline-none"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
                 Note Content *
               </label>
               <textarea
@@ -333,13 +334,13 @@ export default function Notes() {
                 placeholder="Write your notes, formulas, or summaries here..."
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full rounded-xl border border-[#C5DAE3] bg-[#F4F0EB] p-3 text-xs font-medium text-[#16131F] focus:border-[#4F7386] focus:bg-white outline-none resize-none leading-relaxed"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white p-3 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none resize-none leading-relaxed shadow-2xs"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
                 Tags (Comma separated)
               </label>
               <input
@@ -347,9 +348,9 @@ export default function Notes() {
                 placeholder="e.g. algorithms, cs, midterm"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
-                className="w-full rounded-xl border border-[#C5DAE3] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#4F7386] focus:bg-white outline-none"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
               />
-              <div className="mt-1.5 flex flex-wrap gap-1">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {QUICK_TAGS.map((t) => (
                   <button
                     key={t}
@@ -359,7 +360,7 @@ export default function Notes() {
                         prev ? `${prev}, ${t}` : t
                       )
                     }
-                    className="rounded-md bg-white border border-[#DAD4DF] px-2 py-0.5 text-[10px] font-bold text-[#4F7386] hover:bg-[#DDEAF0]"
+                    className="rounded-lg bg-white border border-[#E8E3F0] px-2 py-0.5 text-[10px] font-semibold text-[#5F5965] hover:bg-[#EEEAFE] cursor-pointer"
                   >
                     +{t}
                   </button>
@@ -367,18 +368,18 @@ export default function Notes() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-white/50"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:bg-[#EEEAFE] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!title.trim() && !content.trim()}
-                className="rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#211C2B] disabled:opacity-50"
+                className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
               >
                 Save Note
               </button>

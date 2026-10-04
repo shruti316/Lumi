@@ -433,3 +433,71 @@ export function deleteScheduleBlock(id: string) {
   saveScheduleBlocks(getScheduleBlocks().filter((b) => b.id !== id));
 }
 
+// MOOD CHECK-INS
+export interface MoodCheckin {
+  id: string;
+  mood: "Serene" | "Inspired" | "Focused" | "Grateful" | "Reflective" | "Overwhelmed";
+  energy: number; // 1 to 5
+  tags: string[];
+  note: string;
+  date: string; // YYYY-MM-DD
+  createdAt: string;
+}
+
+const MOOD_KEY = "lumi_mood_checkins";
+
+const DEFAULT_MOODS: MoodCheckin[] = [
+  {
+    id: "mood-1",
+    mood: "Serene",
+    energy: 4,
+    tags: ["Morning Sun", "Herbal Tea", "Gentle Pace"],
+    note: "Started the morning with quiet contemplation and felt peaceful throughout the day.",
+    date: new Date().toISOString().split("T")[0],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "mood-2",
+    mood: "Inspired",
+    energy: 5,
+    tags: ["Deep Focus", "Creative Flow", "Music"],
+    note: "Made incredible headway on architectural concepts and interface designs.",
+    date: new Date(Date.now() - 86400000).toISOString().split("T")[0],
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: "mood-3",
+    mood: "Grateful",
+    energy: 4,
+    tags: ["Connection", "Good Food", "Evening Walk"],
+    note: "Had a delightful conversation with family and enjoyed a calm evening stroll.",
+    date: new Date(Date.now() - 2 * 86400000).toISOString().split("T")[0],
+    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+];
+
+export function getMoodCheckins(): MoodCheckin[] {
+  try {
+    const data = localStorage.getItem(MOOD_KEY);
+    if (!data) {
+      saveMoodCheckins(DEFAULT_MOODS);
+      return DEFAULT_MOODS;
+    }
+    return JSON.parse(data);
+  } catch {
+    return DEFAULT_MOODS;
+  }
+}
+
+export function saveMoodCheckins(checkins: MoodCheckin[]) {
+  localStorage.setItem(MOOD_KEY, JSON.stringify(checkins));
+}
+
+export function addMoodCheckin(checkin: MoodCheckin) {
+  saveMoodCheckins([checkin, ...getMoodCheckins()]);
+}
+
+export function deleteMoodCheckin(id: string) {
+  saveMoodCheckins(getMoodCheckins().filter((m) => m.id !== id));
+}
+

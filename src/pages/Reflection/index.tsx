@@ -59,25 +59,28 @@ export default function Reflection() {
   }
 
   return (
-    <div className="min-h-screen pb-24 text-[#16131F]">
+    <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
       <div className="mx-auto max-w-4xl px-5 py-6 md:px-8 md:py-8">
         {/* ═══════════════════════════════════════
             HEADER
         ═══════════════════════════════════════ */}
-        <header className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#4A6E53] flex items-center gap-1.5">
-              <HeartHandshake size={14} /> Weekly Mindful Check-in 💡
-            </p>
-            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#16131F] sm:text-5xl">
-              Weekly Reflection
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#528D6F]" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792] flex items-center gap-1.5">
+                <HeartHandshake size={14} className="text-[#528D6F]" /> Mindful Growth
+              </p>
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
+              Weekly <span className="font-editorial-italic font-normal text-[#9E96D8]">Reflection</span>
             </h1>
-            <p className="font-caveat text-xl text-[#806C79]">
-              Pause, celebrate small wins, examine challenges & set a calm intention for next week.
+            <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
+              Pause, celebrate small wins, examine challenges, and set calm intentions.
             </p>
           </div>
 
-          <span className="rounded-2xl border border-[#C7DDD0] bg-[#DCE8E0]/70 px-3.5 py-1.5 text-xs font-bold text-[#16131F] w-fit shadow-2xs">
+          <span className="rounded-xl border border-[#CCE5DC] bg-[#EEF8F4] px-3.5 py-1.5 text-xs font-semibold text-[#3E7D5C] w-fit shadow-2xs">
             🌿 {reflections.length} reflections logged
           </span>
         </header>
@@ -85,31 +88,35 @@ export default function Reflection() {
         {/* ═══════════════════════════════════════
             STRUCTURED WEEKLY PROMPTS FORM
         ═══════════════════════════════════════ */}
-        <Card className="mb-8 !bg-gradient-to-br !from-[#DCE8E0] !via-[#F4F0EB] !to-[#DAD4DF] !border-[#C7DDD0] p-6 shadow-sm glow-green">
+        <Card
+          variant="default"
+          hoverEffect
+          className="mb-8 p-6 border-[#CCE5DC] bg-gradient-to-br from-[#EEF8F4] via-white to-[#FDF3EC] shadow-sm"
+        >
           <div
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setIsEditorOpen((prev) => !prev)}
           >
             <div>
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#4A6E53] flex items-center gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#4A7D63] flex items-center gap-1.5">
                 <Sparkles size={13} /> Weekly Growth Journal
               </span>
-              <h2 className="font-caveat text-2xl font-bold text-[#16131F]">
+              <h2 className="font-serif text-2xl font-bold text-[#17151C] mt-0.5">
                 Reflect on this week
               </h2>
             </div>
             <button
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/80 text-[#4A6E53] shadow-2xs hover:bg-white"
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-[#4A7D63] shadow-2xs border border-[#CCE5DC] hover:bg-[#EEF8F4] cursor-pointer"
             >
               {isEditorOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
           </div>
 
           {isEditorOpen && (
-            <form onSubmit={handleCreateReflection} className="mt-4 space-y-4">
+            <form onSubmit={handleCreateReflection} className="mt-5 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Week Label (Optional)
                 </label>
                 <input
@@ -117,13 +124,13 @@ export default function Reflection() {
                   placeholder="e.g. Week 6 • Midterm Sprint"
                   value={weekOf}
                   onChange={(e) => setWeekOf(e.target.value)}
-                  className="w-full rounded-xl border border-[#C7DDD0] bg-white px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#4A6E53] outline-none shadow-2xs"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                 />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold text-[#16131F] mb-1">
+                  <label className="block text-xs font-semibold text-[#17151C] mb-1">
                     ✨ What went well?
                   </label>
                   <textarea
@@ -131,12 +138,12 @@ export default function Reflection() {
                     placeholder="Milestones achieved, positive habits, good moments..."
                     value={wentWell}
                     onChange={(e) => setWentWell(e.target.value)}
-                    className="w-full rounded-xl border border-[#C7DDD0] bg-white p-3 text-xs font-medium text-[#16131F] leading-relaxed focus:border-[#4A6E53] outline-none shadow-2xs resize-none"
+                    className="w-full rounded-xl border border-[#E8E3F0] bg-white p-3 text-xs font-medium text-[#17151C] leading-relaxed focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs resize-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#16131F] mb-1">
+                  <label className="block text-xs font-semibold text-[#17151C] mb-1">
                     🌱 What was difficult?
                   </label>
                   <textarea
@@ -144,14 +151,14 @@ export default function Reflection() {
                     placeholder="Obstacles, distractions, or difficult concepts..."
                     value={wasDifficult}
                     onChange={(e) => setWasDifficult(e.target.value)}
-                    className="w-full rounded-xl border border-[#C7DDD0] bg-white p-3 text-xs font-medium text-[#16131F] leading-relaxed focus:border-[#4A6E53] outline-none shadow-2xs resize-none"
+                    className="w-full rounded-xl border border-[#E8E3F0] bg-white p-3 text-xs font-medium text-[#17151C] leading-relaxed focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs resize-none"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-bold text-[#16131F] mb-1">
+                  <label className="block text-xs font-semibold text-[#17151C] mb-1">
                     💡 What did I learn?
                   </label>
                   <textarea
@@ -159,12 +166,12 @@ export default function Reflection() {
                     placeholder="Academic insights, mindset shifts, life lessons..."
                     value={learned}
                     onChange={(e) => setLearned(e.target.value)}
-                    className="w-full rounded-xl border border-[#C7DDD0] bg-white p-3 text-xs font-medium text-[#16131F] leading-relaxed focus:border-[#4A6E53] outline-none shadow-2xs resize-none"
+                    className="w-full rounded-xl border border-[#E8E3F0] bg-white p-3 text-xs font-medium text-[#17151C] leading-relaxed focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs resize-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#16131F] mb-1">
+                  <label className="block text-xs font-semibold text-[#17151C] mb-1">
                     🎯 What do I want to improve?
                   </label>
                   <textarea
@@ -172,25 +179,25 @@ export default function Reflection() {
                     placeholder="Sleep schedule, time management, focus habits..."
                     value={improve}
                     onChange={(e) => setImprove(e.target.value)}
-                    className="w-full rounded-xl border border-[#C7DDD0] bg-white p-3 text-xs font-medium text-[#16131F] leading-relaxed focus:border-[#4A6E53] outline-none shadow-2xs resize-none"
+                    className="w-full rounded-xl border border-[#E8E3F0] bg-white p-3 text-xs font-medium text-[#17151C] leading-relaxed focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs resize-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
-                  🌟 Next week's intention
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                  🌟 Next week's guiding intention
                 </label>
                 <input
                   type="text"
                   placeholder="One core guiding priority for next week (e.g. Protect my 2-hour morning focus block)..."
                   value={nextWeekIntention}
                   onChange={(e) => setNextWeekIntention(e.target.value)}
-                  className="w-full rounded-xl border border-[#C7DDD0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#16131F] focus:border-[#4A6E53] outline-none shadow-2xs"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex justify-end gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -200,14 +207,14 @@ export default function Reflection() {
                     setImprove("");
                     setNextWeekIntention("");
                   }}
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-white/50"
+                  className="rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:bg-white cursor-pointer"
                 >
                   Clear
                 </button>
                 <button
                   type="submit"
                   disabled={!wentWell.trim() && !learned.trim() && !nextWeekIntention.trim()}
-                  className="flex items-center gap-1.5 rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#211C2B] disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
                 >
                   <CheckCircle2 size={14} />
                   <span>Save Reflection</span>
@@ -218,37 +225,39 @@ export default function Reflection() {
         </Card>
 
         {/* ═══════════════════════════════════════
-            PREVIOUS REFLECTIONS LIST
+            PAST REFLECTIONS ARCHIVE
         ═══════════════════════════════════════ */}
         {reflections.length === 0 ? (
-          <Card className="!bg-[#DCE8E0] !border-[#C7DDD0] p-7 text-center glow-green">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs">
+          <Card variant="pearl" className="p-8 text-center border-[#E8E3F0]">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-[#E8E3F0]">
               💡
             </div>
-            <h3 className="font-caveat text-2xl font-bold text-[#16131F]">
+            <h3 className="font-serif text-2xl font-bold text-[#17151C]">
               No reflections recorded yet
             </h3>
-            <p className="mt-1 text-xs max-w-sm mx-auto font-medium text-[#806C79]">
+            <p className="mt-1 text-xs max-w-sm mx-auto font-normal text-[#5F5965]">
               Take 5 minutes at the end of the week to fill out the prompts above and build your growth journal.
             </p>
           </Card>
         ) : (
           <div className="space-y-4">
-            <div className="px-1 text-[11px] font-extrabold uppercase tracking-wider text-[#4A6E53]">
+            <div className="px-1 text-xs font-bold uppercase tracking-wider text-[#8D8792]">
               Past Reflections Archive ({reflections.length})
             </div>
 
             {reflections.map((ref) => (
               <Card
                 key={ref.id}
-                className="group !bg-white/90 !border-[#DAD4DF] p-5 shadow-2xs transition hover:-translate-y-0.5 hover:shadow-xs"
+                variant="glass"
+                hoverEffect
+                className="group p-6 border-[#E8E3F0] bg-white/95"
               >
-                <div className="flex items-center justify-between border-b border-[#DAD4DF] pb-2.5 mb-3">
-                  <h3 className="font-caveat text-2xl font-bold text-[#16131F]">
+                <div className="flex items-center justify-between border-b border-[#E8E3F0] pb-3 mb-4">
+                  <h3 className="font-serif text-xl font-bold text-[#17151C]">
                     {ref.weekOf}
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-semibold text-[#806C79]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-medium text-[#8D8792]">
                       {new Date(ref.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -258,7 +267,7 @@ export default function Reflection() {
                     <button
                       type="button"
                       onClick={() => handleDelete(ref.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-[#806C79] hover:text-rose-500 hover:bg-rose-50 transition opacity-0 group-hover:opacity-100"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition opacity-0 group-hover:opacity-100 cursor-pointer"
                       title="Delete reflection"
                     >
                       <Trash2 size={13} />
@@ -266,46 +275,46 @@ export default function Reflection() {
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 text-xs">
+                <div className="grid gap-3.5 sm:grid-cols-2 text-xs">
                   {ref.wentWell && (
-                    <div className="rounded-xl bg-[#DCE8E0]/40 border border-[#C7DDD0]/50 p-3">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#4A6E53]">
+                    <div className="rounded-xl bg-[#EEF8F4] border border-[#CCE5DC] p-3.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#3E7D5C]">
                         ✨ What Went Well
                       </p>
-                      <p className="mt-1 text-xs font-medium text-[#16131F] leading-relaxed">
+                      <p className="mt-1 text-xs font-medium text-[#17151C] leading-relaxed">
                         {ref.wentWell}
                       </p>
                     </div>
                   )}
 
                   {ref.wasDifficult && (
-                    <div className="rounded-xl bg-[#F2DFD0]/40 border border-[#E4CEBC]/50 p-3">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#806C79]">
+                    <div className="rounded-xl bg-[#FDF3EC] border border-[#F1D2C9] p-3.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#9A644D]">
                         🌱 Challenges & Growth
                       </p>
-                      <p className="mt-1 text-xs font-medium text-[#16131F] leading-relaxed">
+                      <p className="mt-1 text-xs font-medium text-[#17151C] leading-relaxed">
                         {ref.wasDifficult}
                       </p>
                     </div>
                   )}
 
                   {ref.learned && (
-                    <div className="rounded-xl bg-[#DAD4DF]/40 border border-[#BAB0C8]/50 p-3">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#4A3F4B]">
+                    <div className="rounded-xl bg-[#EEEAFE] border border-[#DDD8F2] p-3.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#6B5BA5]">
                         💡 Key Takeaways
                       </p>
-                      <p className="mt-1 text-xs font-medium text-[#16131F] leading-relaxed">
+                      <p className="mt-1 text-xs font-medium text-[#17151C] leading-relaxed">
                         {ref.learned}
                       </p>
                     </div>
                   )}
 
                   {ref.nextWeekIntention && (
-                    <div className="rounded-xl bg-[#DDEAF0]/40 border border-[#C5DAE3]/50 p-3">
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-[#4F7386]">
+                    <div className="rounded-xl bg-[#EEF3FA] border border-[#D9E7F2] p-3.5">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A729A]">
                         🎯 Guiding Intention
                       </p>
-                      <p className="mt-1 text-xs font-medium text-[#16131F] leading-relaxed">
+                      <p className="mt-1 text-xs font-medium text-[#17151C] leading-relaxed">
                         {ref.nextWeekIntention}
                       </p>
                     </div>

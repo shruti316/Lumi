@@ -50,7 +50,6 @@ function getTodayString() {
   return new Date().toISOString().split("T")[0];
 }
 
-// Generate last 7 days list
 function getLast7Days() {
   const days: { dateStr: string; label: string; dayNum: number; isToday: boolean }[] = [];
   const todayStr = getTodayString();
@@ -77,9 +76,7 @@ function calculateStreak(habit: Habit) {
 
   while (true) {
     const dateString = date.toISOString().split("T")[0];
-    if (!completed.has(dateString)) {
-      break;
-    }
+    if (!completed.has(dateString)) break;
     streak++;
     date.setDate(date.getDate() - 1);
   }
@@ -107,7 +104,6 @@ export default function Habits() {
   const streaks = habits.map((h) => calculateStreak(h));
   const bestStreak = streaks.length > 0 ? Math.max(...streaks) : 0;
 
-  // Calculate weekly consistency rate
   const totalPossibleChecks = habits.length * 7;
   let totalActualChecks = 0;
   if (totalPossibleChecks > 0) {
@@ -144,7 +140,6 @@ export default function Habits() {
   }
 
   function handleQuickAdd(suggested: { emoji: string; name: string }) {
-    // Check if already exists
     const exists = habits.some(
       (h) => h.name.toLowerCase() === suggested.name.toLowerCase()
     );
@@ -179,28 +174,31 @@ export default function Habits() {
   }
 
   return (
-    <div className="min-h-screen pb-24 text-[#16131F]">
+    <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
       <div className="mx-auto max-w-5xl px-5 py-6 md:px-8 md:py-8">
         {/* ═══════════════════════════════════════
             HEADER
         ═══════════════════════════════════════ */}
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#4A6E53]">
-              Daily Rituals & Consistency 🌱
-            </p>
-            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#16131F] sm:text-5xl">
-              My Habits
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#528D6F]" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792]">
+                Daily Rituals & Consistency
+              </p>
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
+              Daily <span className="font-editorial-italic font-normal text-[#9E96D8]">Habits</span>
             </h1>
-            <p className="font-caveat text-xl text-[#806C79]">
-              Small positive habits compound into remarkable lifelong changes.
+            <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
+              Small positive rituals compound quietly into remarkable personal growth.
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-[#DCE8E0] border border-[#BAB0C8] px-4 py-2.5 text-xs font-bold text-[#16131F] shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:bg-[#DAD4DF] active:scale-95 w-fit"
+            className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 w-fit cursor-pointer"
           >
             <Plus size={16} />
             <span>New Habit</span>
@@ -210,56 +208,56 @@ export default function Habits() {
         {/* ═══════════════════════════════════════
             TOP STATS BAR
         ═══════════════════════════════════════ */}
-        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card className="!bg-[#DCE8E0] !border-[#BAB0C8] p-3.5 glow-green">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A6E53]">
+        <section className="mb-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+          <Card variant="default" hoverEffect className="p-4 border-[#CCE5DC] bg-gradient-to-br from-[#EEF8F4] to-white">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A7D63]">
               Today's Completion
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">
+            <p className="text-2xl font-bold text-[#17151C] mt-1">
               {completedTodayCount}/{habits.length}
             </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#BAB0C8]">
+            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#E5EFEA]">
               <div
-                className="h-full rounded-full bg-[#4A6E53] transition-all duration-500"
+                className="h-full rounded-full bg-[#528D6F] transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </Card>
 
-          <Card className="!bg-[#F2DFD0] !border-[#BAB0C8] p-3.5 glow-peach">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#806C79]">
+          <Card variant="peach" hoverEffect className="p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
               Best Streak
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5 flex items-center gap-1">
-              <Flame size={20} className="text-[#806C79]" />
+            <p className="text-2xl font-bold text-[#17151C] mt-1 flex items-center gap-1.5">
+              <Flame size={19} className="text-[#D99BB8]" />
               {bestStreak} {bestStreak === 1 ? "day" : "days"}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-[#806C79]">
-              Keep the fire burning
+            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
+              Keep momentum high
             </p>
           </Card>
 
-          <Card className="!bg-[#DAD4DF] !border-[#BAB0C8] p-3.5 glow-lavender">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A3F4B]">
+          <Card variant="lavender" hoverEffect className="p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
               Active Habits
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">
+            <p className="text-2xl font-bold text-[#17151C] mt-1">
               {habits.length}
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-[#806C79]">
-              Tracked routines
+            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
+              Tracked daily
             </p>
           </Card>
 
-          <Card className="!bg-[#DDEAF0] !border-[#BAB0C8] p-3.5 glow-blue">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4F7386]">
+          <Card variant="blue" hoverEffect className="p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
               7-Day Consistency
             </p>
-            <p className="text-2xl font-extrabold text-[#16131F] mt-0.5 flex items-center gap-1">
-              <TrendingUp size={18} className="text-[#4F7386]" />
+            <p className="text-2xl font-bold text-[#17151C] mt-1 flex items-center gap-1.5">
+              <TrendingUp size={18} className="text-[#6B9AB8]" />
               {weeklyConsistency}%
             </p>
-            <p className="mt-1 text-[10px] font-semibold text-[#806C79]">
+            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
               Weekly adherence
             </p>
           </Card>
@@ -270,8 +268,8 @@ export default function Habits() {
         ═══════════════════════════════════════ */}
         <section className="mb-6">
           <div className="flex items-center gap-1.5 mb-2.5">
-            <Sparkles size={14} className="text-[#4A6E53]" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#4A6E53]">
+            <Sparkles size={14} className="text-[#9E96D8]" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#8D8792]">
               Quick Habit Ideas • Click to Add
             </span>
           </div>
@@ -286,18 +284,18 @@ export default function Habits() {
                   type="button"
                   onClick={() => !alreadyAdded && handleQuickAdd(s)}
                   disabled={alreadyAdded}
-                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                     alreadyAdded
-                      ? "border-[#BAB0C8] bg-[#DCE8E0]/60 text-[#4A6E53] opacity-60 cursor-default"
-                      : "border-[#DAD4DF] bg-[#F4F0EB] text-[#16131F] shadow-2xs hover:-translate-y-0.5 hover:bg-[#DCE8E0] hover:border-[#BAB0C8]"
+                      ? "border-[#E8E3F0] bg-[#EEEAFE]/50 text-[#8D8792] opacity-60 cursor-default"
+                      : "border-[#E8E3F0] bg-white/90 text-[#17151C] shadow-2xs hover:-translate-y-0.5 hover:bg-[#EEEAFE] hover:border-[#DDD8F2]"
                   }`}
                 >
                   <span>{s.emoji}</span>
                   <span>{s.name}</span>
                   {alreadyAdded ? (
-                    <Check size={12} className="text-[#4A6E53]" />
+                    <Check size={12} className="text-[#528D6F]" />
                   ) : (
-                    <Plus size={12} className="text-[#806C79]" />
+                    <Plus size={12} className="text-[#8D8792]" />
                   )}
                 </button>
               );
@@ -309,20 +307,20 @@ export default function Habits() {
             HABITS LIST / 7-DAY MATRIX
         ═══════════════════════════════════════ */}
         {habits.length === 0 ? (
-          <Card className="!bg-[#DCE8E0] !border-[#BAB0C8] p-8 text-center glow-green">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F4F0EB] text-3xl shadow-2xs border border-[#BAB0C8]">
+          <Card variant="lavender" className="p-10 text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl shadow-2xs border border-white">
               🌱
             </div>
-            <h3 className="font-caveat text-3xl font-bold text-[#16131F]">
+            <h3 className="font-serif text-3xl font-bold text-[#17151C]">
               No habits created yet
             </h3>
-            <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#806C79]">
+            <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#5F5965]">
               Pick from the quick ideas above or create your own custom habit to start building your daily streak!
             </p>
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#312A44] px-4 py-2 text-xs font-bold text-[#F4F0EB] shadow-2xs transition hover:bg-[#4A3F4B]"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#17151C] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2D263B] cursor-pointer"
             >
               <Plus size={15} />
               <span>Create My First Habit</span>
@@ -331,14 +329,14 @@ export default function Habits() {
         ) : (
           <div className="space-y-3">
             {/* 7-Day Header guide on desktop */}
-            <div className="hidden md:flex items-center justify-between px-4 text-[10px] font-extrabold uppercase tracking-wider text-[#806C79]">
+            <div className="hidden md:flex items-center justify-between px-5 text-[10px] font-bold uppercase tracking-wider text-[#8D8792]">
               <span>Habit Details</span>
               <div className="flex items-center gap-2 pr-12">
                 {last7Days.map((d) => (
                   <div
                     key={d.dateStr}
                     className={`w-8 text-center ${
-                      d.isToday ? "font-black text-[#4A6E53]" : ""
+                      d.isToday ? "font-bold text-[#9E96D8]" : ""
                     }`}
                   >
                     <div>{d.label}</div>
@@ -355,33 +353,34 @@ export default function Habits() {
               return (
                 <Card
                   key={habit.id}
-                  className="group !bg-[#F4F0EB] !border-[#DAD4DF] p-4 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs"
+                  variant="glass"
+                  className="group p-4 shadow-2xs border-[#E8E3F0] transition-all duration-200 hover:-translate-y-0.5 bg-white/90"
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     {/* Habit Info & Today Check */}
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#DCE8E0] text-xl border border-[#BAB0C8] shadow-2xs">
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#EEEAFE] to-[#F8E8F0] text-xl border border-[#E8E3F0] shadow-2xs">
                         {habit.emoji}
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-sm text-[#16131F] truncate">
+                          <h3 className="font-semibold text-sm text-[#17151C] truncate">
                             {habit.name}
                           </h3>
                           {isDoneToday && (
-                            <span className="rounded-full bg-[#DCE8E0] px-2 py-0.5 text-[9px] font-extrabold text-[#4A6E53]">
+                            <span className="rounded-full bg-[#EEF8F4] border border-[#CCE5DC] px-2 py-0.5 text-[9px] font-bold text-[#3E7D5C]">
                               Done today
                             </span>
                           )}
                         </div>
 
-                        <div className="mt-1 flex items-center gap-3 text-xs text-[#806C79]">
-                          <span className="flex items-center gap-1 font-semibold">
+                        <div className="mt-1 flex items-center gap-2.5 text-xs text-[#8D8792]">
+                          <span className="flex items-center gap-1 font-medium text-[#5F5965]">
                             <Flame
                               size={13}
                               className={
-                                streak > 0 ? "text-[#806C79]" : "text-[#BAB0C8]"
+                                streak > 0 ? "text-[#D99BB8]" : "text-[#8D8792]"
                               }
                             />
                             {streak} {streak === 1 ? "day streak" : "days streak"}
@@ -395,7 +394,7 @@ export default function Habits() {
                     </div>
 
                     {/* 7-Day Completion matrix + Actions */}
-                    <div className="flex items-center justify-between md:justify-end gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-[#DAD4DF]">
+                    <div className="flex items-center justify-between md:justify-end gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-[#E8E3F0]">
                       {/* 7 Day checks */}
                       <div className="flex items-center gap-1.5 md:gap-2">
                         {last7Days.map((day) => {
@@ -407,19 +406,19 @@ export default function Habits() {
                               key={day.dateStr}
                               type="button"
                               onClick={() => handleToggleDate(habit, day.dateStr)}
-                              className={`flex flex-col items-center justify-center h-8 w-8 rounded-xl border text-xs font-bold transition-transform active:scale-90 ${
+                              className={`flex flex-col items-center justify-center h-8 w-8 rounded-lg border text-xs font-semibold transition-all active:scale-90 cursor-pointer ${
                                 isChecked
-                                  ? "bg-[#4A6E53] border-[#4A6E53] text-white shadow-2xs"
+                                  ? "bg-[#528D6F] border-[#528D6F] text-white shadow-2xs"
                                   : day.isToday
-                                  ? "bg-[#DCE8E0] border-[#BAB0C8] text-[#16131F] hover:bg-[#DAD4DF]"
-                                  : "bg-[#F4F0EB] border-[#DAD4DF] text-[#806C79] hover:bg-[#EAE5E0]"
+                                  ? "bg-[#EEEAFE] border-[#DDD8F2] text-[#17151C] hover:bg-[#E3DCFA]"
+                                  : "bg-white border-[#E8E3F0] text-[#8D8792] hover:bg-[#F7F5F8]"
                               }`}
                               title={`${habit.name} - ${day.label} ${day.dayNum}`}
                             >
                               {isChecked ? (
-                                <Check size={14} strokeWidth={3} />
+                                <Check size={14} strokeWidth={2.5} />
                               ) : (
-                                <span className="text-[9px]">{day.dayNum}</span>
+                                <span className="text-[10px]">{day.dayNum}</span>
                               )}
                             </button>
                           );
@@ -430,10 +429,10 @@ export default function Habits() {
                       <button
                         type="button"
                         onClick={() => handleDelete(habit.id)}
-                        className="ml-2 flex h-8 w-8 items-center justify-center rounded-xl text-[#806C79] hover:text-[#C1A0AC] hover:bg-[#F0D9E4] transition"
+                        className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
                         title="Delete habit"
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
@@ -450,12 +449,12 @@ export default function Habits() {
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           title="Create New Habit"
-          subtitle="One small step every day builds momentum."
+          subtitle="One small step every day builds lasting momentum."
         >
           <form onSubmit={handleCreateHabit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
-                What habit do you want to build?
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                What habit do you want to build? *
               </label>
               <input
                 type="text"
@@ -463,13 +462,13 @@ export default function Habits() {
                 placeholder="e.g. Morning stretch & 10 pushups"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2.5 text-xs font-medium text-[#16131F] focus:border-[#4A6E53] outline-none"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1.5">
+              <label className="block text-xs font-semibold text-[#17151C] mb-1.5">
                 Pick an icon
               </label>
               <div className="grid grid-cols-5 gap-2">
@@ -478,10 +477,10 @@ export default function Habits() {
                     key={item}
                     type="button"
                     onClick={() => setEmoji(item)}
-                    className={`flex h-10 items-center justify-center rounded-xl border text-lg transition ${
+                    className={`flex h-10 items-center justify-center rounded-xl border text-lg transition cursor-pointer ${
                       emoji === item
-                        ? "border-[#4A6E53] bg-[#DCE8E0] shadow-2xs scale-105"
-                        : "border-[#DAD4DF] bg-[#F4F0EB] hover:bg-[#DAD4DF]"
+                        ? "border-[#9E96D8] bg-[#EEEAFE] shadow-2xs scale-105"
+                        : "border-[#E8E3F0] bg-white hover:bg-[#F7F5F8]"
                     }`}
                   >
                     {item}
@@ -490,18 +489,18 @@ export default function Habits() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-[#DAD4DF]"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:bg-[#EEEAFE] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!name.trim()}
-                className="rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-[#F4F0EB] shadow-2xs hover:bg-[#4A3F4B] disabled:opacity-50"
+                className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
               >
                 Add Habit
               </button>

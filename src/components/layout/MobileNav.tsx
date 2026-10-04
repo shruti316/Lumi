@@ -2,7 +2,7 @@ import {
   BookOpen,
   CalendarDays,
   Home,
-  Leaf,
+  Flame,
   PenLine,
 } from "lucide-react";
 
@@ -25,7 +25,7 @@ const navigation = [
   {
     label: "Habits",
     path: "/habits",
-    icon: Leaf,
+    icon: Flame,
   },
   {
     label: "Reading",
@@ -44,7 +44,7 @@ export function MobileNav({
   onNavigate,
 }: MobileNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#312A44] bg-[#16131F]/98 px-3 py-2 backdrop-blur-md md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#E8E3F0] bg-white/90 px-3 py-2 backdrop-blur-xl md:hidden shadow-[0_-4px_20px_rgba(80,70,120,0.06)]">
       <div className="flex items-center justify-around">
         {navigation.map((item) => {
           const Icon = item.icon;
@@ -54,14 +54,14 @@ export function MobileNav({
             <button
               key={item.path}
               onClick={() => onNavigate(item.path)}
-              className={`flex min-w-14 flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-semibold transition ${
+              className={`flex min-w-14 flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-[11px] font-medium transition cursor-pointer ${
                 isActive
-                  ? "bg-[#312A44] text-white border border-[#4A3F4B] font-bold"
-                  : "text-[#FAF8FC] hover:text-white"
+                  ? "bg-[#EEEAFE] text-[#17151C] border border-[#DDD8F2] font-semibold shadow-2xs"
+                  : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
-              <Icon size={18} strokeWidth={2} />
-              <span>{item.label}</span>
+              <Icon size={17} strokeWidth={isActive ? 2.2 : 1.8} className={isActive ? "text-[#9E96D8]" : "text-[#8D8792]"} />
+              <span className="truncate">{item.label}</span>
             </button>
           );
         })}

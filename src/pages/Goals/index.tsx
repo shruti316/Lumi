@@ -76,28 +76,31 @@ export default function Goals() {
   const inProgressCount = goals.length - completedCount;
 
   return (
-    <div className="min-h-screen pb-24 text-[#16131F]">
+    <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
       <div className="mx-auto max-w-5xl px-5 py-6 md:px-8 md:py-8">
         {/* ═══════════════════════════════════════
             HEADER
         ═══════════════════════════════════════ */}
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#4F7386]">
-              Life OS Vision 🎯
-            </p>
-            <h1 className="font-caveat text-4xl font-bold tracking-tight text-[#16131F] sm:text-5xl">
-              Goals
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9E96D8]" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792]">
+                Life OS Vision
+              </p>
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
+              Milestones & <span className="font-editorial-italic font-normal text-[#9E96D8]">Goals</span>
             </h1>
-            <p className="font-caveat text-xl text-[#806C79]">
-              What are you working toward? Set milestones & track your progress.
+            <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
+              Define what you are working toward, track milestones & celebrate progress.
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 rounded-2xl bg-[#DDEAF0] border border-[#BAB0C8] px-4 py-2.5 text-xs font-bold text-[#16131F] shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:bg-[#DAD4DF] active:scale-95 w-fit"
+            className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 w-fit cursor-pointer"
           >
             <Plus size={16} />
             <span>New Goal</span>
@@ -105,31 +108,31 @@ export default function Goals() {
         </header>
 
         {/* ═══════════════════════════════════════
-            SUMMARY METRICS BAR (Compact)
+            SUMMARY METRICS BAR
         ═══════════════════════════════════════ */}
         {goals.length > 0 && (
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Card className="!bg-[#DDEAF0] !border-[#BAB0C8] p-3.5 glow-blue">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#4F7386]">
+          <div className="mb-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3">
+            <Card variant="blue" hoverEffect className="p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
                 Total Goals
               </p>
-              <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">
+              <p className="text-2xl font-bold text-[#17151C] mt-1">
                 {goals.length}
               </p>
             </Card>
-            <Card className="!bg-[#DCE8E0] !border-[#BAB0C8] p-3.5 glow-green">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A6E53]">
+            <Card variant="default" hoverEffect className="p-4 border-[#CCE5DC] bg-gradient-to-br from-[#EEF8F4] to-white">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A7D63]">
                 Completed
               </p>
-              <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">
+              <p className="text-2xl font-bold text-[#17151C] mt-1">
                 {completedCount}
               </p>
             </Card>
-            <Card className="!bg-[#F2DFD0] !border-[#BAB0C8] p-3.5 glow-peach col-span-2 sm:col-span-1">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#806C79]">
+            <Card variant="peach" hoverEffect className="p-4 col-span-2 sm:col-span-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
                 In Progress
               </p>
-              <p className="text-2xl font-extrabold text-[#16131F] mt-0.5">
+              <p className="text-2xl font-bold text-[#17151C] mt-1">
                 {inProgressCount}
               </p>
             </Card>
@@ -137,50 +140,48 @@ export default function Goals() {
         )}
 
         {/* ═══════════════════════════════════════
-            GOALS LIST / COMPACT EMPTY STATE
+            GOALS LIST / EMPTY STATE
         ═══════════════════════════════════════ */}
         {goals.length === 0 ? (
           <div className="space-y-6">
-            {/* Compact Useful Empty Card */}
-            <Card className="!bg-[#DDEAF0] !border-[#BAB0C8] p-7 text-center glow-blue">
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F4F0EB] text-2xl shadow-2xs border border-[#BAB0C8]">
+            <Card variant="lavender" className="p-10 text-center">
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-white">
                 🎯
               </div>
-              <h3 className="font-caveat text-3xl font-bold text-[#16131F]">
+              <h3 className="font-serif text-3xl font-bold text-[#17151C]">
                 Nothing you're chasing yet
               </h3>
-              <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#806C79] leading-relaxed">
-                Create your first goal and start tracking your progress, milestones, and personal growth.
+              <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#5F5965] leading-relaxed">
+                Create your first goal and start tracking your milestones, vision, and personal growth.
               </p>
               <button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#312A44] px-5 py-2.5 text-xs font-bold text-[#F4F0EB] shadow-2xs transition hover:bg-[#4A3F4B]"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#17151C] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2D263B] cursor-pointer"
               >
                 <Plus size={15} />
                 <span>Create Goal</span>
               </button>
             </Card>
 
-            {/* Quick Start Category Suggestions */}
             <div>
               <div className="flex items-center gap-1.5 mb-3 px-1">
-                <Sparkles size={14} className="text-[#4F7386]" />
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#4F7386]">
+                <Sparkles size={14} className="text-[#9E96D8]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8D8792]">
                   Quick Start Categories
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat.name}
                     type="button"
                     onClick={() => handleQuickStart(cat.name as Goal["category"])}
-                    className="flex flex-col items-start rounded-2xl border border-[#DAD4DF] bg-[#F4F0EB] p-3.5 text-left shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:bg-[#DDEAF0] hover:border-[#BAB0C8]"
+                    className="flex flex-col items-start rounded-2xl border border-[#E8E3F0] bg-white/90 p-4 text-left shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:bg-[#EEEAFE] hover:border-[#DDD8F2] cursor-pointer"
                   >
-                    <span className="text-xl mb-1">{cat.icon}</span>
-                    <span className="text-xs font-bold text-[#16131F]">{cat.name}</span>
-                    <span className="mt-0.5 text-[10px] text-[#806C79] line-clamp-1">{cat.desc}</span>
+                    <span className="text-2xl mb-1.5">{cat.icon}</span>
+                    <span className="text-xs font-bold text-[#17151C]">{cat.name}</span>
+                    <span className="mt-0.5 text-[11px] text-[#5F5965] line-clamp-1">{cat.desc}</span>
                   </button>
                 ))}
               </div>
@@ -191,20 +192,22 @@ export default function Goals() {
             {goals.map((goal) => (
               <Card
                 key={goal.id}
-                className={`!bg-[#DDEAF0]/70 !border-[#BAB0C8] p-5 shadow-2xs transition duration-200 hover:-translate-y-0.5 hover:shadow-xs ${
-                  goal.status === "Completed" ? "opacity-85" : ""
+                variant="glass"
+                hoverEffect
+                className={`p-5 border-[#E8E3F0] bg-white/95 transition duration-200 ${
+                  goal.status === "Completed" ? "opacity-80" : ""
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="rounded-md bg-[#DAD4DF] px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#312A44]">
+                    <span className="rounded-md bg-[#EEEAFE] border border-[#DDD8F2] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
                       {goal.category}
                     </span>
                     <h3
-                      className={`mt-2 text-sm font-bold ${
+                      className={`mt-2.5 font-serif text-base font-bold tracking-tight ${
                         goal.status === "Completed"
-                          ? "line-through text-[#806C79]"
-                          : "text-[#16131F]"
+                          ? "line-through text-[#8D8792]"
+                          : "text-[#17151C]"
                       }`}
                     >
                       {goal.title}
@@ -215,10 +218,10 @@ export default function Goals() {
                     <button
                       type="button"
                       onClick={() => handleToggleStatus(goal)}
-                      className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-xl transition cursor-pointer ${
                         goal.status === "Completed"
-                          ? "bg-[#4A6E53] text-white shadow-2xs"
-                          : "bg-[#F4F0EB] border border-[#DAD4DF] text-[#806C79] hover:text-[#312A44]"
+                          ? "bg-[#528D6F] text-white shadow-2xs"
+                          : "bg-white border border-[#E8E3F0] text-[#8D8792] hover:text-[#17151C] hover:bg-[#EEEAFE]"
                       }`}
                       title={
                         goal.status === "Completed"
@@ -232,7 +235,7 @@ export default function Goals() {
                     <button
                       type="button"
                       onClick={() => handleDelete(goal.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl text-[#806C79] hover:text-[#C1A0AC] hover:bg-[#F0D9E4] transition"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
                       title="Delete goal"
                     >
                       <Trash2 size={15} />
@@ -241,21 +244,21 @@ export default function Goals() {
                 </div>
 
                 {goal.description && (
-                  <p className="mt-2 text-xs font-medium text-[#4A3F4B] line-clamp-2 leading-relaxed">
+                  <p className="mt-2 text-xs font-normal text-[#5F5965] line-clamp-2 leading-relaxed">
                     {goal.description}
                   </p>
                 )}
 
-                <div className="mt-4 pt-2 border-t border-[#BAB0C8]">
-                  <div className="flex items-center justify-between text-xs font-bold text-[#16131F] mb-1">
-                    <span className="flex items-center gap-1 text-[11px] text-[#806C79]">
-                      <Clock size={12} /> {goal.deadline}
+                <div className="mt-4 pt-3 border-t border-[#E8E3F0]">
+                  <div className="flex items-center justify-between text-xs font-semibold text-[#17151C] mb-1.5">
+                    <span className="flex items-center gap-1 text-[11px] text-[#8D8792]">
+                      <Clock size={12} className="text-[#9E96D8]" /> {goal.deadline}
                     </span>
-                    <span className="text-[#312A44]">{goal.progress}%</span>
+                    <span className="text-[#9E96D8] font-bold">{goal.progress}%</span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-[#DAD4DF]">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-[#EEEAFE]">
                     <div
-                      className="h-full rounded-full bg-[#312A44] transition-all duration-500"
+                      className="h-full rounded-full bg-gradient-to-r from-[#9E96D8] to-[#E8B9CD] transition-all duration-500"
                       style={{ width: `${goal.progress}%` }}
                     />
                   </div>
@@ -271,12 +274,12 @@ export default function Goals() {
         <Modal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          title="Create New Goal 🎯"
-          subtitle="Set meaningful milestones for your college journey."
+          title="Create New Goal"
+          subtitle="Set meaningful milestones for your personal journey."
         >
           <form onSubmit={handleCreateGoal} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
                 Goal Title *
               </label>
               <input
@@ -285,14 +288,14 @@ export default function Goals() {
                 placeholder="e.g. Master DSA & Algorithms for Summer Internship"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2.5 text-xs font-medium text-[#16131F] focus:border-[#4F7386] outline-none"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                 required
               />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Category
                 </label>
                 <select
@@ -300,7 +303,7 @@ export default function Goals() {
                   onChange={(e) =>
                     setCategory(e.target.value as Goal["category"])
                   }
-                  className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2.5 text-xs font-bold text-[#16131F] focus:border-[#4F7386] outline-none"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-semibold text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 >
                   <option value="Academic">Academic</option>
                   <option value="Career">Career</option>
@@ -310,20 +313,20 @@ export default function Goals() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#16131F] mb-1">
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Target Deadline
                 </label>
                 <input
                   type="date"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
-                  className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#4F7386] outline-none"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#16131F] mb-1">
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
                 Why is this goal important to you?
               </label>
               <textarea
@@ -331,14 +334,14 @@ export default function Goals() {
                 placeholder="Add context, milestones, or notes..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-xl border border-[#BAB0C8] bg-[#F4F0EB] px-3.5 py-2 text-xs font-medium text-[#16131F] focus:border-[#4F7386] outline-none resize-none"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none resize-none shadow-2xs"
               />
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-bold text-[#16131F] mb-1">
+              <div className="flex justify-between text-xs font-semibold text-[#17151C] mb-1">
                 <span>Initial Progress</span>
-                <span className="text-[#312A44]">{progress}%</span>
+                <span className="text-[#9E96D8] font-bold">{progress}%</span>
               </div>
               <input
                 type="range"
@@ -346,22 +349,22 @@ export default function Goals() {
                 max="100"
                 value={progress}
                 onChange={(e) => setProgress(Number(e.target.value))}
-                className="w-full accent-[#312A44] cursor-pointer"
+                className="w-full accent-[#17151C] cursor-pointer"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="rounded-xl px-4 py-2 text-xs font-bold text-[#806C79] hover:bg-[#DAD4DF]"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:bg-[#EEEAFE] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!title.trim()}
-                className="rounded-xl bg-[#312A44] px-5 py-2 text-xs font-bold text-[#F4F0EB] shadow-2xs hover:bg-[#4A3F4B] disabled:opacity-50"
+                className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
               >
                 Save Goal
               </button>
