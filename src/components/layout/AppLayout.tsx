@@ -1,10 +1,26 @@
+import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
+import { CommandPalette } from "../common/CommandPalette";
+import { QuickActions } from "../common/QuickActions";
 
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
+
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandOpen((prev) => !prev);
+      }
+    }
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   return (
     <div
@@ -27,6 +43,7 @@ export function AppLayout() {
         <Sidebar
           currentPath={location.pathname}
           onNavigate={navigate}
+          onOpenSearch={() => setIsCommandOpen(true)}
         />
 
         <main className="min-w-0 flex-1 pb-24 md:pb-8">
@@ -38,6 +55,15 @@ export function AppLayout() {
         currentPath={location.pathname}
         onNavigate={navigate}
       />
+
+      {/* Global Command Palette (Ctrl+K / Cmd+K) */}
+      <CommandPalette
+        isOpen={isCommandOpen}
+        onClose={() => setIsCommandOpen(false)}
+      />
+
+      {/* Global Quick Actions Floating Action Menu */}
+      <QuickActions />
     </div>
   );
 }

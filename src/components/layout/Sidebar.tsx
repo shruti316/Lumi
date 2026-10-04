@@ -22,6 +22,7 @@ import type { ReactNode } from "react";
 interface SidebarProps {
   currentPath: string;
   onNavigate: (path: string) => void;
+  onOpenSearch?: () => void;
 }
 
 interface NavItemConfig {
@@ -52,7 +53,7 @@ const UTILITY_NAV: NavItemConfig[] = [
   { icon: <Clock size={15} strokeWidth={1.8} />, label: "Study / Focus", path: "/focus" },
 ];
 
-export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
+export function Sidebar({ currentPath, onNavigate, onOpenSearch }: SidebarProps) {
   return (
     <aside className="relative hidden w-64 shrink-0 border-r border-[#E8E3F0] bg-white/80 backdrop-blur-xl md:flex md:flex-col min-h-screen select-none z-20 shadow-[0_4px_24px_rgba(80,70,120,0.04)] overflow-hidden">
       {/* Subtle Pastel Ambient Blobs Behind Sidebar */}
@@ -61,7 +62,7 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
       <div className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full bg-[#EEF3FA]/60 blur-3xl" />
 
       {/* BRAND HEADER */}
-      <div className="relative z-10 px-6 pt-7 pb-5">
+      <div className="relative z-10 px-6 pt-7 pb-4">
         <button
           type="button"
           onClick={() => onNavigate("/dashboard")}
@@ -79,6 +80,23 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
             </p>
           </div>
         </button>
+
+        {/* Global Search / Command Trigger in Sidebar */}
+        {onOpenSearch && (
+          <button
+            type="button"
+            onClick={onOpenSearch}
+            className="mt-4 flex w-full items-center justify-between rounded-xl bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-2 text-xs text-[#8D8792] hover:border-[#9E96D8]/50 hover:bg-white transition cursor-pointer shadow-2xs"
+          >
+            <span className="flex items-center gap-2 font-medium">
+              <Sparkles size={13} className="text-[#9E96D8]" />
+              <span>Search / Command</span>
+            </span>
+            <kbd className="rounded border border-[#DDD8F2] bg-[#EEEAFE] px-1.5 py-0.5 text-[10px] font-semibold text-[#6B5BA5]">
+              ⌘K
+            </kbd>
+          </button>
+        )}
       </div>
 
       {/* PRIMARY NAVIGATION */}

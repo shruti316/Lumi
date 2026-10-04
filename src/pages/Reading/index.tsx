@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BookOpen,
   Plus,
@@ -7,6 +7,12 @@ import {
   Trash2,
   Sparkles,
   CheckCircle2,
+  Clock,
+  Play,
+  Pause,
+  RotateCcw,
+  BookMarked,
+  Quote,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
@@ -74,12 +80,31 @@ export default function Reading() {
   });
 
   const [showModal, setShowModal] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<
     "all" | "reading" | "want-to-read" | "completed"
   >("all");
 
   const [form, setForm] = useState(EMPTY_BOOK_FORM);
+
+  // Mini Reading Session Timer
+  const [sessionMinutes, setSessionMinutes] = useState(20);
+  const [sessionSecondsLeft, setSessionSecondsLeft] = useState(20 * 60);
+  const [isSessionActive, setIsSessionActive] = useState(false);
+  const [showReadingTimer, setShowReadingTimer] = useState(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval>;
+    if (isSessionActive && sessionSecondsLeft > 0) {
+      timer = setInterval(() => {
+        setSessionSecondsLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (isSessionActive && sessionSecondsLeft === 0) {
+      setIsSessionActive(false);
+    }
+    return () => clearInterval(timer);
+  }, [isSessionActive, sessionSecondsLeft]);
 
   function handleSaveBook(e: React.FormEvent) {
     e.preventDefault();
@@ -116,11 +141,17 @@ export default function Reading() {
     };
     updateBook(updated);
     setBooks(getBooks());
+    if (selectedBook?.id === book.id) {
+      setSelectedBook(updated);
+    }
   }
 
   function handleDelete(id: string) {
     deleteBook(id);
     setBooks(getBooks());
+    if (selectedBook?.id === id) {
+      setSelectedBook(null);
+    }
   }
 
   const currentlyReadingList = books.filter((b) => b.status === "reading");
@@ -139,6 +170,12 @@ export default function Reading() {
     if (activeFilter === "all") return true;
     return book.status === activeFilter;
   });
+
+  const formatTimer = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   return (
     <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
@@ -162,18 +199,100 @@ export default function Reading() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setForm(EMPTY_BOOK_FORM);
-              setShowModal(true);
-            }}
-            className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 w-fit cursor-pointer"
-          >
-            <Plus size={16} />
-            <span>Add a Book</span>
-          </button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowReadingTimer(!showReadingTimer)}
+              className="flex items-center gap-2 rounded-xl bg-white border border-[#E8E3F0] px-4 py-2.5 text-xs font-semibold text-[#5F5965] hover:bg-[#EEEAFE] hover:text-[#17151C] shadow-2xs transition cursor-pointer"
+            >
+              <Clock size={15} className="text-[#9E96D8]" />
+              <span>{showReadingTimer ? "Hide Timer" : "Reading Session"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setForm(EMPTY_BOOK_FORM);
+                setShowModal(true);
+              }}
+              className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 cursor-pointer"
+            >
+              <Plus size={16} />
+              <span>Add a Book</span>
+            </button>
+          </div>
         </header>
+
+        {/* ═══════════════════════════════════════
+            READING SESSION TIMER (EXPANDABLE)
+        ═══════════════════════════════════════ */}
+        {showReadingTimer && (
+          <Card variant="pearl" className="mb-6 p-5 border-[#DDD8F2] shadow-sm animate-lumi-fade-up">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEEAFE] text-[#9E96D8] border border-[#DDD8F2]">
+                  <BookMarked size={18} />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#17151C]">
+                    Mindful Reading Sprint
+                  </h3>
+                  <p className="text-xs text-[#5F5965]">
+                    {isSessionActive ? "Immersed in peaceful reading flow..." : "Set an uninterrupted block for quiet reading."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="font-serif text-2xl sm:text-3xl font-bold text-[#17151C]">
+                  {formatTimer(sessionSecondsLeft)}
+                </div>
+
+                <div className="flex gap-1.5">
+                  {[15, 20, 30].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => {
+                        setSessionMinutes(mins);
+                        setSessionSecondsLeft(mins * 60);
+                        setIsSessionActive(false);
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                        sessionMinutes === mins
+                          ? "bg-[#17151C] text-white"
+                          : "bg-white text-[#5F5965] border border-[#E8E3F0] hover:bg-[#EEEAFE]"
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSessionActive(!isSessionActive)}
+                  className="flex h-9 items-center gap-1.5 px-3.5 rounded-xl bg-[#17151C] text-xs font-semibold text-white hover:bg-[#2D263B] transition cursor-pointer"
+                >
+                  {isSessionActive ? <Pause size={14} /> : <Play size={14} />}
+                  <span>{isSessionActive ? "Pause" : "Start"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSessionActive(false);
+                    setSessionSecondsLeft(sessionMinutes * 60);
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#EEEAFE] transition cursor-pointer"
+                  title="Reset session"
+                >
+                  <RotateCcw size={14} />
+                </button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* ═══════════════════════════════════════
             TOP STATS BAR
@@ -244,10 +363,14 @@ export default function Reading() {
                 <img
                   src={featuredBook.cover}
                   alt={featuredBook.title}
-                  className="h-36 w-26 object-cover rounded-xl shadow-md shrink-0 border border-white/80"
+                  className="h-36 w-26 object-cover rounded-xl shadow-md shrink-0 border border-white/80 cursor-pointer"
+                  onClick={() => setSelectedBook(featuredBook)}
                 />
               ) : (
-                <div className="flex h-36 w-26 shrink-0 items-center justify-center rounded-xl bg-[#17151C] text-xs font-bold text-white shadow-md border border-white/30">
+                <div
+                  onClick={() => setSelectedBook(featuredBook)}
+                  className="flex h-36 w-26 shrink-0 items-center justify-center rounded-xl bg-[#17151C] text-xs font-bold text-white shadow-md border border-white/30 cursor-pointer"
+                >
                   📖 BOOK
                 </div>
               )}
@@ -266,7 +389,10 @@ export default function Reading() {
                   )}
                 </div>
 
-                <h2 className="mt-2 font-serif text-2xl md:text-3xl font-bold text-[#17151C] truncate">
+                <h2
+                  onClick={() => setSelectedBook(featuredBook)}
+                  className="mt-2 font-serif text-2xl md:text-3xl font-bold text-[#17151C] truncate tracking-tight hover:text-[#9E96D8] transition-colors cursor-pointer"
+                >
                   {featuredBook.title}
                 </h2>
                 <p className="text-xs font-medium text-[#5F5965]">
@@ -274,8 +400,9 @@ export default function Reading() {
                 </p>
 
                 {featuredBook.favoriteQuote && (
-                  <p className="mt-2.5 text-xs italic text-[#17151C] bg-white/70 p-2.5 rounded-xl border border-white/80 leading-relaxed font-serif">
-                    “{featuredBook.favoriteQuote}”
+                  <p className="mt-2.5 text-xs italic text-[#17151C] bg-white/70 p-2.5 rounded-xl border border-white/80 leading-relaxed font-serif flex items-start gap-1.5">
+                    <Quote size={13} className="text-[#9E96D8] shrink-0 mt-0.5" />
+                    <span>“{featuredBook.favoriteQuote}”</span>
                   </p>
                 )}
 
@@ -285,7 +412,7 @@ export default function Reading() {
                     <span>
                       Page {featuredBook.currentPage} of {featuredBook.totalPages || 300}
                     </span>
-                    <span className="text-[#9E96D8]">
+                    <span className="text-[#9E96D8] font-bold">
                       {featuredBook.totalPages > 0
                         ? Math.round(
                             (featuredBook.currentPage / featuredBook.totalPages) * 100
@@ -404,7 +531,8 @@ export default function Reading() {
                   key={book.id}
                   variant={cardVariant}
                   hoverEffect
-                  className="group relative flex flex-col justify-between overflow-hidden p-4.5 border-[#E8E3F0]"
+                  className="group relative flex flex-col justify-between overflow-hidden p-4.5 border-[#E8E3F0] cursor-pointer"
+                  onClick={() => setSelectedBook(book)}
                 >
                   <div>
                     {/* Top cover / icon banner */}
@@ -437,7 +565,10 @@ export default function Reading() {
 
                       <button
                         type="button"
-                        onClick={() => handleDelete(book.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(book.id);
+                        }}
                         className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-[#8D8792] hover:text-[#D99BB8] hover:bg-white transition shadow-2xs opacity-0 group-hover:opacity-100 cursor-pointer"
                         title="Delete book"
                       >
@@ -445,7 +576,7 @@ export default function Reading() {
                       </button>
                     </div>
 
-                    <h3 className="font-serif font-bold text-base text-[#17151C] truncate tracking-tight">
+                    <h3 className="font-serif font-bold text-base text-[#17151C] truncate tracking-tight group-hover:text-[#9E96D8] transition-colors">
                       {book.title}
                     </h3>
                     <p className="text-xs text-[#5F5965] truncate font-medium">
@@ -494,6 +625,132 @@ export default function Reading() {
               );
             })}
           </div>
+        )}
+
+        {/* ═══════════════════════════════════════
+            BOOK DETAIL MODAL
+        ═══════════════════════════════════════ */}
+        {selectedBook && (
+          <Modal
+            isOpen={!!selectedBook}
+            onClose={() => setSelectedBook(null)}
+            title={selectedBook.title}
+            subtitle={`by ${selectedBook.author}`}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-[#E8E3F0] pb-3">
+                <span className="rounded-full bg-[#EEEAFE] border border-[#DDD8F2] px-3 py-1 text-xs font-semibold text-[#6B5BA5] capitalize">
+                  Status: {selectedBook.status.replace("-", " ")}
+                </span>
+
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => {
+                        const updated = { ...selectedBook, rating: star };
+                        updateBook(updated);
+                        setBooks(getBooks());
+                        setSelectedBook(updated);
+                      }}
+                      className="p-1 hover:scale-110 transition cursor-pointer"
+                    >
+                      <Star
+                        size={16}
+                        className={
+                          star <= (selectedBook.rating || 0)
+                            ? "fill-[#D99BB8] text-[#D99BB8]"
+                            : "text-[#E8E3F0]"
+                        }
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Progress updater */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold text-[#17151C] mb-1.5">
+                  <span>Reading Progress</span>
+                  <span className="text-[#9E96D8] font-bold">
+                    {selectedBook.currentPage} / {selectedBook.totalPages || 0} pages (
+                    {selectedBook.totalPages > 0
+                      ? Math.round(
+                          (selectedBook.currentPage / selectedBook.totalPages) * 100
+                        )
+                      : 0}
+                    %)
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={selectedBook.totalPages || 300}
+                    value={selectedBook.currentPage}
+                    onChange={(e) =>
+                      handleQuickUpdatePage(selectedBook, Number(e.target.value))
+                    }
+                    className="w-full accent-[#17151C] cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleQuickUpdatePage(
+                        selectedBook,
+                        selectedBook.currentPage + 10
+                      )
+                    }
+                    className="rounded-xl bg-white border border-[#E8E3F0] px-3 py-1.5 text-xs font-semibold text-[#17151C] hover:bg-[#EEEAFE] shrink-0 shadow-2xs cursor-pointer transition"
+                  >
+                    +10 pgs
+                  </button>
+                </div>
+              </div>
+
+              {/* Quotes and Notes */}
+              {selectedBook.favoriteQuote && (
+                <div className="rounded-xl bg-[#FAF8FC] border border-[#E8E3F0] p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8D8792] mb-1">
+                    Favorite Quote
+                  </p>
+                  <p className="font-serif italic text-xs text-[#17151C]">
+                    “{selectedBook.favoriteQuote}”
+                  </p>
+                </div>
+              )}
+
+              {selectedBook.whyIPickedIt && (
+                <div className="rounded-xl bg-[#FAF8FC] border border-[#E8E3F0] p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8D8792] mb-1">
+                    Why I Picked It
+                  </p>
+                  <p className="text-xs text-[#5F5965] leading-relaxed">
+                    {selectedBook.whyIPickedIt}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-2 border-t border-[#E8E3F0]">
+                <button
+                  type="button"
+                  onClick={() => handleDelete(selectedBook.id)}
+                  className="text-xs font-semibold text-[#D99BB8] hover:underline cursor-pointer"
+                >
+                  Remove Book
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedBook(null)}
+                  className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white hover:bg-[#2D263B] cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </Modal>
         )}
 
         {/* ═══════════════════════════════════════
@@ -594,6 +851,21 @@ export default function Reading() {
                 placeholder="https://images.unsplash.com/..."
                 value={form.cover}
                 onChange={(e) => setForm({ ...form, cover: e.target.value })}
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                Favorite Quote (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="“A memorable sentence from the book...”"
+                value={form.favoriteQuote}
+                onChange={(e) =>
+                  setForm({ ...form, favoriteQuote: e.target.value })
+                }
                 className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
               />
             </div>

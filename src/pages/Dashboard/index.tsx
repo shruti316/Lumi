@@ -22,16 +22,22 @@ import { useState } from "react";
 import { Card } from "../../components/ui/Card";
 import { getTasks, type Task } from "../../lib/storage";
 import { getHabits, type Habit } from "../../lib/habitStorage";
+import { getGoals, getFocusSessions, type Goal, type FocusSession } from "../../lib/lifeOSStorage";
+import { getBooks, type Book } from "../../lib/readingStorage";
 
 export default function Dashboard() {
   const [tasks] = useState<Task[]>(() => getTasks());
   const [habits] = useState<Habit[]>(() => getHabits());
+  const [goals] = useState<Goal[]>(() => getGoals());
+  const [focusSessions] = useState<FocusSession[]>(() => getFocusSessions());
+  const [books] = useState<Book[]>(() => getBooks());
   const [showDockMenu, setShowDockMenu] = useState(false);
 
   /* ───────────────── DATA ───────────────── */
 
   const completedTasks = tasks.filter((task) => task.completed).length;
   const totalTasks = tasks.length;
+  const remainingTasks = tasks.filter((task) => !task.completed).length;
   const taskProgress =
     totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
@@ -43,6 +49,9 @@ export default function Dashboard() {
   ).length;
 
   const totalHabits = habits.length;
+  const remainingHabits = habits.filter(
+    (habit) => !habit.completedDates.includes(todayString)
+  ).length;
   const habitProgress =
     totalHabits === 0 ? 0 : Math.round((completedHabits / totalHabits) * 100);
 
@@ -63,6 +72,12 @@ export default function Dashboard() {
   const bestHabitStreak =
     habitStreaks.length > 0 ? Math.max(...habitStreaks) : 0;
 
+  const activeGoals = goals.filter((g) => g.status === "In Progress");
+  const todayFocusMinutes = focusSessions
+    .filter((s) => s.date === todayString)
+    .reduce((acc, s) => acc + s.durationMinutes, 0);
+  const readingBooks = books.filter((b) => b.status === "reading");
+
   /* ───────────────── DATE / GREETING ───────────────── */
 
   const formattedDate = today.toLocaleDateString("en-US", {
@@ -73,11 +88,15 @@ export default function Dashboard() {
 
   const hour = today.getHours();
   const greeting =
-    hour < 12
-      ? "Good morning"
+    hour < 5
+      ? "Good night ✦"
+      : hour < 12
+      ? "Good morning ✦"
       : hour < 17
-      ? "Good afternoon"
-      : "Good evening";
+      ? "Good afternoon ✦"
+      : hour < 22
+      ? "Good evening ✦"
+      : "Good night ✦";
 
   return (
     <div className="min-h-screen bg-transparent pb-28 lumi-animate-fade-up">
@@ -102,7 +121,7 @@ export default function Dashboard() {
             </h1>
 
             <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
-              Here is your daily sanctuary & workspace overview.
+              Welcome back to your little world.
             </p>
           </div>
 
@@ -127,9 +146,13 @@ export default function Dashboard() {
         ═══════════════════════════════════════ */}
         <section className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
           <MiniStat
-            label="Today's Goal"
-            value="Project UI"
-            subtext="Visual refinement in progress"
+            label="Active Goal"
+            value={activeGoals.length > 0 ? activeGoals[0].title : "Personal OS"}
+            subtext={
+              activeGoals.length > 0
+                ? `${activeGoals[0].category} • ${activeGoals[0].progress}% done`
+                : "Add new goal milestone"
+            }
             icon={<Target size={19} />}
             tone="blue"
           />
@@ -137,7 +160,11 @@ export default function Dashboard() {
           <MiniStat
             label="Tasks"
             value={`${completedTasks}/${totalTasks}`}
-            subtext={`${taskProgress}% tasks completed`}
+            subtext={
+              totalTasks === 0
+                ? "No tasks queued"
+                : `${taskProgress}% tasks completed`
+            }
             icon={<Check size={19} />}
             tone="pink"
             progress={taskProgress}
@@ -158,11 +185,140 @@ export default function Dashboard() {
 
           <MiniStat
             label="Focus Time"
-            value="2h 15m"
-            subtext="Deep work session logged"
+            value={`${Math.floor(todayFocusMinutes / 60)}h ${
+              todayFocusMinutes % 60
+            }m`}
+            subtext={
+              todayFocusMinutes > 0
+                ? "Deep focus recorded today"
+                : "Start a focus sprint"
+            }
             icon={<Clock3 size={19} />}
             tone="lavender"
           />
+        </section>
+
+        {/* ═══════════════════════════════════════
+            DAILY BRIEFING ("YOUR DAY")
+        ═══════════════════════════════════════ */}
+        <section className="mt-4">
+          <Card
+            variant="glass"
+            hoverEffect
+            className="p-5 md:p-6 border-[#E8E3F0] bg-white/90 shadow-sm"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 pb-3 border-b border-[#E8E3F0]">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EEEAFE] text-[#9E96D8] border border-[#DDD8F2]">
+                  <Sparkles size={16} />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#17151C]">
+                    Daily Briefing
+                  </h2>
+                  <p className="text-xs text-[#5F5965]">
+                    Your real-time sanctuary rhythm for today
+                  </p>
+                </div>
+              </div>
+
+              <span className="w-fit rounded-full bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-1 text-[11px] font-semibold text-[#5F5965]">
+                {formattedDate}
+              </span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {/* Tasks briefing */}
+              <div className="rounded-2xl bg-[#FDF0F4] border border-[#F2D8E4] p-3.5 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8C4E6D]">
+                  Tasks
+                </span>
+                <p className="mt-1 text-sm font-bold text-[#17151C]">
+                  {remainingTasks === 0
+                    ? "All tasks complete"
+                    : `${remainingTasks} task${remainingTasks === 1 ? "" : "s"} remaining`}
+                </p>
+                <Link
+                  to="/tasks"
+                  className="mt-2 text-[11px] font-semibold text-[#D99BB8] hover:underline"
+                >
+                  Open Tasks →
+                </Link>
+              </div>
+
+              {/* Habits briefing */}
+              <div className="rounded-2xl bg-[#EEF8F4] border border-[#CCE5DC] p-3.5 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#4A7D63]">
+                  Habits
+                </span>
+                <p className="mt-1 text-sm font-bold text-[#17151C]">
+                  {remainingHabits === 0
+                    ? "All habits completed"
+                    : `${remainingHabits} habit${remainingHabits === 1 ? "" : "s"} remaining`}
+                </p>
+                <Link
+                  to="/habits"
+                  className="mt-2 text-[11px] font-semibold text-[#4A7D63] hover:underline"
+                >
+                  Check Habits →
+                </Link>
+              </div>
+
+              {/* Goals briefing */}
+              <div className="rounded-2xl bg-[#EEF4F8] border border-[#D9E7F2] p-3.5 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#4E6B8C]">
+                  Goals
+                </span>
+                <p className="mt-1 text-sm font-bold text-[#17151C]">
+                  {activeGoals.length === 0
+                    ? "No goals in progress"
+                    : `${activeGoals.length} goal${activeGoals.length === 1 ? "" : "s"} active`}
+                </p>
+                <Link
+                  to="/goals"
+                  className="mt-2 text-[11px] font-semibold text-[#4E6B8C] hover:underline"
+                >
+                  View Goals →
+                </Link>
+              </div>
+
+              {/* Focus briefing */}
+              <div className="rounded-2xl bg-[#EEEAFE] border border-[#DDD8F2] p-3.5 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B5BA5]">
+                  Focus
+                </span>
+                <p className="mt-1 text-sm font-bold text-[#17151C]">
+                  {todayFocusMinutes === 0
+                    ? "No focus session"
+                    : `${todayFocusMinutes}m deep focus`}
+                </p>
+                <Link
+                  to="/focus"
+                  className="mt-2 text-[11px] font-semibold text-[#9E96D8] hover:underline"
+                >
+                  Start Focus →
+                </Link>
+              </div>
+
+              {/* Reading briefing */}
+              <div className="rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-3.5 flex flex-col justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8D8792]">
+                  Reading
+                </span>
+                <p className="mt-1 text-sm font-bold text-[#17151C] truncate">
+                  {readingBooks.length > 0
+                    ? `${readingBooks[0].title}`
+                    : `${books.length} books in library`}
+                </p>
+                <Link
+                  to="/reading"
+                  className="mt-2 text-[11px] font-semibold text-[#9E96D8] hover:underline"
+                >
+                  Open Sanctuary →
+                </Link>
+              </div>
+            </div>
+          </Card>
         </section>
 
         {/* ═══════════════════════════════════════
