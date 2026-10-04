@@ -9,7 +9,7 @@ import {
 const navigation = [
   {
     label: "Home",
-    path: "/",
+    path: "/dashboard",
     icon: Home,
   },
   {

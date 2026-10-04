@@ -298,6 +298,184 @@ button:active {
   background: rgba(95, 89, 101, 0.45);
 }
 
+/* ─────────────────────────────────────────────────────────────
+   AUTH & ATMOSPHERE ANIMATIONS
+───────────────────────────────────────────────────────────── */
+@keyframes lumi-auth-orb-1 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(35px, -45px) scale(1.08);
+  }
+  100% {
+    transform: translate(-25px, 20px) scale(0.96);
+  }
+}
+
+@keyframes lumi-auth-orb-2 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-40px, 30px) scale(1.12);
+  }
+  100% {
+    transform: translate(25px, -35px) scale(0.92);
+  }
+}
+
+@keyframes lumi-auth-orb-3 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(30px, 40px) scale(1.06);
+  }
+  100% {
+    transform: translate(-30px, -20px) scale(0.98);
+  }
+}
+
+@keyframes lumi-auth-orb-4 {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-25px, -30px) scale(1.10);
+  }
+  100% {
+    transform: translate(35px, 25px) scale(0.94);
+  }
+}
+
+@keyframes lumi-logo-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes lumi-auth-card-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lumi-float-gentle {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes lumi-twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.1);
+  }
+}
+
+.animate-lumi-orb-1 {
+  animation: lumi-auth-orb-1 14s ease-in-out infinite alternate;
+}
+
+.animate-lumi-orb-2 {
+  animation: lumi-auth-orb-2 17s ease-in-out infinite alternate;
+}
+
+.animate-lumi-orb-3 {
+  animation: lumi-auth-orb-3 12s ease-in-out infinite alternate;
+}
+
+.animate-lumi-orb-4 {
+  animation: lumi-auth-orb-4 15s ease-in-out infinite alternate;
+}
+
+.animate-lumi-logo {
+  animation: lumi-logo-appear 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-lumi-auth-card {
+  animation: lumi-auth-card-enter 0.68s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+
+.animate-lumi-float {
+  animation: lumi-float-gentle 7s ease-in-out infinite;
+}
+
+.animate-lumi-twinkle {
+  animation: lumi-twinkle 4s ease-in-out infinite;
+}
+
+.lumi-auth-input {
+  width: 100%;
+  background-color: #FAF8FC;
+  border: 1px solid #E8E3F0;
+  border-radius: 0.875rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-size: 0.875rem;
+  color: #17151C;
+  outline: none;
+  transition: all 220ms ease;
+}
+
+.lumi-auth-input.has-left-icon {
+  padding-left: 2.75rem !important;
+}
+
+.lumi-auth-input.has-right-icon {
+  padding-right: 2.75rem !important;
+}
+
+.lumi-auth-input.has-both-icons {
+  padding-left: 2.75rem !important;
+  padding-right: 2.75rem !important;
+}
+
+.lumi-auth-input:focus {
+  background-color: #FFFFFF;
+  border-color: #9E96D8;
+  box-shadow: 0 0 0 3.5px rgba(184, 179, 232, 0.22);
+}
+
+.lumi-auth-input::placeholder {
+  color: #8D8792;
+}
+
+/* Fix browser autofill ugly yellow/blue backgrounds and preserve LUMI aesthetic */
+.lumi-auth-input:-webkit-autofill,
+.lumi-auth-input:-webkit-autofill:hover,
+.lumi-auth-input:-webkit-autofill:focus,
+.lumi-auth-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #FAF8FC inset !important;
+  -webkit-text-fill-color: #17151C !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

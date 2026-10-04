@@ -31,7 +31,7 @@ interface NavItemConfig {
 }
 
 const PRIMARY_NAV: NavItemConfig[] = [
-  { icon: <Home size={17} strokeWidth={1.9} />, label: "Home", path: "/" },
+  { icon: <Home size={17} strokeWidth={1.9} />, label: "Home", path: "/dashboard" },
   { icon: <CalendarDays size={17} strokeWidth={1.9} />, label: "Planner", path: "/planner" },
   { icon: <CheckSquare size={17} strokeWidth={1.9} />, label: "Tasks", path: "/tasks" },
   { icon: <Flame size={17} strokeWidth={1.9} />, label: "Habits", path: "/habits" },
@@ -64,7 +64,7 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
       <div className="relative z-10 px-6 pt-7 pb-5">
         <button
           type="button"
-          onClick={() => onNavigate("/")}
+          onClick={() => onNavigate("/dashboard")}
           className="flex items-center gap-3.5 group text-left w-full cursor-pointer"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DCD8F2] to-[#F2D8E4] border border-white shadow-[0_4px_12px_rgba(184,179,232,0.3)] group-hover:scale-105 transition-transform duration-200 text-lg">

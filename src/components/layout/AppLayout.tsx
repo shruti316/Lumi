@@ -1,13 +1,8 @@
-import { useLocation, useNavigate } from "react-router-dom";
-
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,7 +30,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         />
 
         <main className="min-w-0 flex-1 pb-24 md:pb-8">
-          {children}
+          <Outlet />
         </main>
       </div>
 

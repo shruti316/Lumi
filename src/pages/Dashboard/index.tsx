@@ -509,7 +509,7 @@ export default function Dashboard() {
         )}
 
         <nav className="flex w-fit items-center gap-1.5 rounded-2xl border border-[#E8E3F0] bg-white/90 p-1.5 shadow-[0_12px_36px_rgba(80,70,120,0.12)] backdrop-blur-xl">
-          <DockLink to="/" icon="⌂" label="Home" active />
+          <DockLink to="/dashboard" icon="⌂" label="Home" active />
           <DockLink to="/planner" icon="☷" label="Planner" />
           <DockLink to="/tasks" icon="✓" label="Tasks" />
           <DockLink to="/habits" icon="🌱" label="Habits" />

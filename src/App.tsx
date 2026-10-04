@@ -1,5 +1,12 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import { AppLayout } from "./components/layout/AppLayout";
+
+// Auth pages
+import Login from "./pages/Auth/Login";
+import Signup from "./pages/Auth/Signup";
+
+// App pages
 import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import Planner from "./pages/planner";
@@ -17,13 +24,29 @@ import Calendar from "./pages/Calendar";
 import Focus from "./pages/Focus";
 import Exams from "./pages/Exams";
 import Music from "./pages/Music";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
+      <Routes>
+
+        {/* =========================
+            ENTRY REDIRECT
+        ========================= */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* =========================
+            PUBLIC AUTH ROUTES
+        ========================= */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        {/* =========================
+            LUMI APPLICATION (AppLayout with Outlet)
+        ========================= */}
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/reading" element={<Reading />} />
@@ -40,8 +63,14 @@ function App() {
           <Route path="/focus" element={<Focus />} />
           <Route path="/exams" element={<Exams />} />
           <Route path="/music" element={<Music />} />
-        </Routes>
-      </AppLayout>
+        </Route>
+
+        {/* =========================
+            404 NOT FOUND
+        ========================= */}
+        <Route path="*" element={<NotFound />} />
+
+      </Routes>
     </BrowserRouter>
   );
 }
