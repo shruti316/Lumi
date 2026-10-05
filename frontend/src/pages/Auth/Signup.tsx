@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { AuthLayout } from "./AuthLayout";
+import { api } from "../../lib/api";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -12,8 +13,9 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
 
@@ -34,10 +36,22 @@ export default function Signup() {
       return;
     }
 
-    // ==========================================
-    // TEMPORARY DEVELOPMENT AUTH
-    // Replace with real backend authentication later.
-    // ==========================================
+    setIsLoading(true);
+    const { data, error } = await api.auth.signup({ email, password, name });
+    setIsLoading(false);
+
+    if (error && !error.includes("Network error") && !error.includes("Failed to fetch")) {
+      setErrorMessage(error);
+      return;
+    }
+
+    if (data?.token) {
+      localStorage.setItem("lumi_token", data.token);
+      if (data.user) {
+        localStorage.setItem("lumi_user", JSON.stringify(data.user));
+      }
+    }
+
     navigate("/dashboard");
   }
 
@@ -168,10 +182,17 @@ export default function Signup() {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#17151C] py-3.5 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] hover:shadow-md active:scale-98 cursor-pointer"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#17151C] py-3.5 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] hover:shadow-md active:scale-98 cursor-pointer disabled:opacity-75"
             >
-              <Sparkles size={15} className="text-[#E8B9CD]" />
-              <span>Create account</span>
+              {isLoading ? (
+                <Loader2 size={16} className="animate-spin text-[#E8B9CD]" />
+              ) : (
+                <>
+                  <Sparkles size={15} className="text-[#E8B9CD]" />
+                  <span>Create account</span>
+                </>
+              )}
             </button>
           </div>
         </form>

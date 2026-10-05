@@ -6,24 +6,31 @@ import { AppLayout } from "./components/layout/AppLayout";
 import Login from "./pages/Auth/Login";
 import Signup from "./pages/Auth/Signup";
 
-// App pages
+// Core Primary Application Pages
 import Dashboard from "./pages/Dashboard";
-import Tasks from "./pages/Tasks";
-import Planner from "./pages/planner";
-import Reading from "./pages/Reading";
-import Diary from "./pages/Diary";
-import Mood from "./pages/Mood";
+import Plan from "./pages/Plan";
+import Workspace from "./pages/Workspace";
+import Journal from "./pages/Journal";
+import Calendar from "./pages/Calendar";
 import Habits from "./pages/Habits";
 import Goals from "./pages/Goals";
-import Projects from "./pages/Projects";
-import Notes from "./pages/Notes";
-import BrainDump from "./pages/BrainDump";
+import Reading from "./pages/Reading";
+import Music from "./pages/Music";
 import Memories from "./pages/Memories";
+import Friends from "./pages/Friends";
+import Settings from "./pages/Settings";
+
+// Specialized & Legacy Pages (Preserved & accessible)
+import Tasks from "./pages/Tasks";
+import Planner from "./pages/planner";
+import Diary from "./pages/Diary";
 import Reflection from "./pages/Reflection";
-import Calendar from "./pages/Calendar";
+import Notes from "./pages/Notes";
+import Projects from "./pages/Projects";
+import Mood from "./pages/Mood";
+import BrainDump from "./pages/BrainDump";
 import Focus from "./pages/Focus";
 import Exams from "./pages/Exams";
-import Music from "./pages/Music";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -46,23 +53,31 @@ function App() {
             LUMI APPLICATION (AppLayout with Outlet)
         ========================= */}
         <Route element={<AppLayout />}>
+          {/* Primary Unified Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/planner" element={<Planner />} />
-          <Route path="/reading" element={<Reading />} />
-          <Route path="/diary" element={<Diary />} />
-          <Route path="/mood" element={<Mood />} />
+          <Route path="/plan" element={<Plan />} />
+          <Route path="/workspace" element={<Workspace />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/habits" element={<Habits />} />
           <Route path="/goals" element={<Goals />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/brain-dump" element={<BrainDump />} />
+          <Route path="/reading" element={<Reading />} />
+          <Route path="/music" element={<Music />} />
           <Route path="/memories" element={<Memories />} />
+          <Route path="/friends" element={<Friends />} />
+          <Route path="/settings" element={<Settings />} />
+
+          {/* Preserved Direct Sub-Routes */}
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/planner" element={<Planner />} />
+          <Route path="/notes" element={<Notes />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/diary" element={<Diary />} />
           <Route path="/reflection" element={<Reflection />} />
-          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/mood" element={<Mood />} />
+          <Route path="/brain-dump" element={<BrainDump />} />
           <Route path="/focus" element={<Focus />} />
           <Route path="/exams" element={<Exams />} />
-          <Route path="/music" element={<Music />} />
         </Route>
 
         {/* =========================

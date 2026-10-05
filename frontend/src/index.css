@@ -486,3 +486,207 @@ button:active {
     scroll-behavior: auto !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   THEME 2: DARK (Midnight LUMI Glow)
+   Deep dark background, elevated cards, readable light text,
+   with LUMI's signature soft pastel glows.
+───────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --lumi-bg-primary: #121017;
+  --lumi-dark: #F5F3F8;
+  --lumi-secondary: #B5AFC0;
+  --lumi-muted: #857E90;
+  --lumi-border: #2C2638;
+}
+
+[data-theme="dark"] html,
+[data-theme="dark"] body {
+  background-color: #121017 !important;
+  color: #F5F3F8 !important;
+}
+
+[data-theme="dark"] .lumi-page-atmosphere {
+  background-color: #121017 !important;
+  background-image:
+    radial-gradient(
+      ellipse 800px 700px at 0% 0%,
+      rgba(158, 150, 216, 0.16) 0%,
+      rgba(24, 20, 32, 0.35) 50%,
+      transparent 80%
+    ),
+    radial-gradient(
+      ellipse 850px 750px at 100% 5%,
+      rgba(217, 155, 184, 0.14) 0%,
+      rgba(26, 21, 34, 0.30) 50%,
+      transparent 80%
+    ),
+    radial-gradient(
+      ellipse 800px 700px at 15% 100%,
+      rgba(184, 212, 232, 0.14) 0%,
+      rgba(22, 19, 30, 0.35) 50%,
+      transparent 80%
+    ),
+    radial-gradient(
+      ellipse 750px 650px at 95% 95%,
+      rgba(241, 210, 201, 0.12) 0%,
+      transparent 75%
+    ),
+    linear-gradient(
+      180deg,
+      #121017 0%,
+      #181520 50%,
+      #14111A 100%
+    ) !important;
+}
+
+[data-theme="dark"] .lumi-page-atmosphere::before {
+  background: radial-gradient(
+    ellipse 900px 600px at 50% 35%,
+    rgba(158, 150, 216, 0.08),
+    transparent 80%
+  ) !important;
+}
+
+/* Dark mode surfaces & card overrides */
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-white\/80,
+[data-theme="dark"] .bg-white\/90,
+[data-theme="dark"] .bg-white\/95 {
+  background-color: #1A1724 !important;
+}
+
+[data-theme="dark"] .bg-\[\#FAF8FC\],
+[data-theme="dark"] .bg-\[\#F7F5F8\] {
+  background-color: #14111C !important;
+}
+
+[data-theme="dark"] .bg-\[\#EEEAFE\] {
+  background-color: #272238 !important;
+}
+
+[data-theme="dark"] .bg-\[\#F8E8F0\] {
+  background-color: #31212B !important;
+}
+
+[data-theme="dark"] .bg-\[\#EEF3FA\] {
+  background-color: #1E2530 !important;
+}
+
+[data-theme="dark"] .border-\[\#E8E3F0\] {
+  border-color: #2D273C !important;
+}
+
+[data-theme="dark"] .border-\[\#DDD8F2\],
+[data-theme="dark"] .border-\[\#DCD8F2\] {
+  border-color: #3E3555 !important;
+}
+
+[data-theme="dark"] .text-\[\#17151C\] {
+  color: #F5F3F8 !important;
+}
+
+[data-theme="dark"] .text-\[\#5F5965\] {
+  color: #B5AFC0 !important;
+}
+
+[data-theme="dark"] .text-\[\#8D8792\] {
+  color: #888194 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   THEME 3: MIST / STONE (Warm Neutral Palette)
+   Calm soft stone gray background, clean natural surfaces,
+   retaining LUMI's elegant pastel accents.
+───────────────────────────────────────────────────────────── */
+[data-theme="mist"] {
+  color-scheme: light;
+  --lumi-bg-primary: #ECEAE5;
+  --lumi-dark: #1F1D1B;
+  --lumi-secondary: #5C5854;
+  --lumi-muted: #8E8982;
+  --lumi-border: #DDD8D0;
+}
+
+[data-theme="mist"] html,
+[data-theme="mist"] body {
+  background-color: #ECEAE5 !important;
+  color: #1F1D1B !important;
+}
+
+[data-theme="mist"] .lumi-page-atmosphere {
+  background-color: #ECEAE5 !important;
+  background-image:
+    radial-gradient(
+      ellipse 800px 700px at 0% 0%,
+      rgba(215, 210, 202, 0.45) 0%,
+      rgba(235, 232, 227, 0.25) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 850px 750px at 100% 5%,
+      rgba(228, 220, 214, 0.40) 0%,
+      rgba(240, 237, 233, 0.20) 45%,
+      transparent 80%
+    ),
+    radial-gradient(
+      ellipse 800px 700px at 15% 100%,
+      rgba(218, 224, 220, 0.45) 0%,
+      rgba(238, 240, 236, 0.25) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 750px 650px at 95% 95%,
+      rgba(226, 218, 212, 0.35) 0%,
+      transparent 75%
+    ),
+    linear-gradient(
+      180deg,
+      #ECEAE5 0%,
+      #F2F0EB 50%,
+      #EAE7E2 100%
+    ) !important;
+}
+
+[data-theme="mist"] .lumi-page-atmosphere::before {
+  background: radial-gradient(
+    ellipse 900px 600px at 50% 35%,
+    rgba(255, 255, 255, 0.5),
+    transparent 80%
+  ) !important;
+}
+
+/* Mist/Stone surfaces & card overrides */
+[data-theme="mist"] .bg-white,
+[data-theme="mist"] .bg-white\/80,
+[data-theme="mist"] .bg-white\/90,
+[data-theme="mist"] .bg-white\/95 {
+  background-color: #F8F6F2 !important;
+}
+
+[data-theme="mist"] .bg-\[\#FAF8FC\],
+[data-theme="mist"] .bg-\[\#F7F5F8\] {
+  background-color: #E6E3DC !important;
+}
+
+[data-theme="mist"] .border-\[\#E8E3F0\] {
+  border-color: #DDD8D0 !important;
+}
+
+[data-theme="mist"] .border-\[\#DDD8F2\],
+[data-theme="mist"] .border-\[\#DCD8F2\] {
+  border-color: #D2CDC4 !important;
+}
+
+[data-theme="mist"] .text-\[\#17151C\] {
+  color: #1F1D1B !important;
+}
+
+[data-theme="mist"] .text-\[\#5F5965\] {
+  color: #5C5854 !important;
+}
+
+[data-theme="mist"] .text-\[\#8D8792\] {
+  color: #8E8982 !important;
+}

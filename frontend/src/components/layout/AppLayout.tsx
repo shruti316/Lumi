@@ -4,11 +4,18 @@ import { Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { CommandPalette } from "../common/CommandPalette";
 import { QuickActions } from "../common/QuickActions";
+import {
+  UniversalCreateModal,
+  type CreateTemplateType,
+} from "../common/UniversalCreateModal";
 
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createTemplate, setCreateTemplate] = useState<CreateTemplateType>("menu");
+  const [createText, setCreateText] = useState("");
 
   useEffect(() => {
     function handleGlobalKeyDown(e: KeyboardEvent) {
@@ -18,8 +25,24 @@ export function AppLayout() {
       }
     }
 
+    // Custom event listener for triggering Universal Create from any page/widget
+    function handleOpenUniversalCreate(e: Event) {
+      const customEvent = e as CustomEvent<{
+        template?: CreateTemplateType;
+        initialText?: string;
+      }>;
+      setCreateTemplate(customEvent.detail?.template || "menu");
+      setCreateText(customEvent.detail?.initialText || "");
+      setIsCreateOpen(true);
+    }
+
     window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+    window.addEventListener("open-universal-create" as any, handleOpenUniversalCreate);
+
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+      window.removeEventListener("open-universal-create" as any, handleOpenUniversalCreate);
+    };
   }, []);
 
   return (
@@ -43,6 +66,11 @@ export function AppLayout() {
         <Sidebar
           currentPath={location.pathname}
           onNavigate={navigate}
+          onOpenCreate={() => {
+            setCreateTemplate("menu");
+            setCreateText("");
+            setIsCreateOpen(true);
+          }}
           onOpenSearch={() => setIsCommandOpen(true)}
         />
 
@@ -54,6 +82,23 @@ export function AppLayout() {
       <MobileNav
         currentPath={location.pathname}
         onNavigate={navigate}
+        onOpenCreate={() => {
+          setCreateTemplate("menu");
+          setCreateText("");
+          setIsCreateOpen(true);
+        }}
+      />
+
+      {/* Global Universal Create Modal */}
+      <UniversalCreateModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        initialTemplate={createTemplate}
+        initialText={createText}
+        onSuccess={() => {
+          // Dispatch a lightweight state sync trigger if needed
+          window.dispatchEvent(new Event("storage-sync"));
+        }}
       />
 
       {/* Global Command Palette (Ctrl+K / Cmd+K) */}
@@ -63,7 +108,13 @@ export function AppLayout() {
       />
 
       {/* Global Quick Actions Floating Action Menu */}
-      <QuickActions />
+      <QuickActions
+        onOpenCreate={(template) => {
+          setCreateTemplate(template || "menu");
+          setCreateText("");
+          setIsCreateOpen(true);
+        }}
+      />
     </div>
   );
 }

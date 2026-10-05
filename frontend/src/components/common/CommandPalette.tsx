@@ -22,6 +22,7 @@ import {
   ArrowRight,
   Sparkles,
   Command,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
 interface CommandItem {
@@ -162,6 +163,14 @@ const COMMANDS: CommandItem[] = [
     icon: <Music size={16} className="text-[#D99BB8]" />,
     path: "/music",
     keywords: ["spotify", "audio", "vibes"],
+  },
+  {
+    id: "nav-settings",
+    title: "Settings & Appearance Themes",
+    category: "Navigation",
+    icon: <SettingsIcon size={16} className="text-[#9E96D8]" />,
+    path: "/settings",
+    keywords: ["settings", "appearance", "dark theme", "mist", "light", "profile", "theme"],
   },
 
   // Quick Actions

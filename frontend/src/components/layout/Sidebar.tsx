@@ -1,27 +1,25 @@
 import {
   Home,
+  Plus,
   CalendarDays,
-  CheckSquare,
   Flame,
-  Target,
   FolderKanban,
-  BookOpen,
-  FileText,
+  Target,
   PenLine,
-  Heart,
-  Brain,
-  Lightbulb,
-  Calendar,
+  BookOpen,
   Music,
-  GraduationCap,
-  Clock,
+  Heart,
+  Users,
+  Calendar,
   Sparkles,
+  Settings,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface SidebarProps {
   currentPath: string;
   onNavigate: (path: string) => void;
+  onOpenCreate?: () => void;
   onOpenSearch?: () => void;
 }
 
@@ -29,40 +27,38 @@ interface NavItemConfig {
   icon: ReactNode;
   label: string;
   path: string;
+  badge?: string;
 }
 
 const PRIMARY_NAV: NavItemConfig[] = [
   { icon: <Home size={17} strokeWidth={1.9} />, label: "Home", path: "/dashboard" },
-  { icon: <CalendarDays size={17} strokeWidth={1.9} />, label: "Planner", path: "/planner" },
-  { icon: <CheckSquare size={17} strokeWidth={1.9} />, label: "Tasks", path: "/tasks" },
+  { icon: <CalendarDays size={17} strokeWidth={1.9} />, label: "Plan", path: "/plan" },
+  { icon: <Calendar size={17} strokeWidth={1.9} />, label: "Calendar", path: "/calendar" },
   { icon: <Flame size={17} strokeWidth={1.9} />, label: "Habits", path: "/habits" },
+  { icon: <FolderKanban size={17} strokeWidth={1.9} />, label: "Workspace", path: "/workspace" },
   { icon: <Target size={17} strokeWidth={1.9} />, label: "Goals", path: "/goals" },
-  { icon: <FolderKanban size={17} strokeWidth={1.9} />, label: "Projects", path: "/projects" },
+  { icon: <PenLine size={17} strokeWidth={1.9} />, label: "Journal", path: "/journal" },
   { icon: <BookOpen size={17} strokeWidth={1.9} />, label: "Reading", path: "/reading" },
-  { icon: <FileText size={17} strokeWidth={1.9} />, label: "Notes", path: "/notes" },
-  { icon: <PenLine size={17} strokeWidth={1.9} />, label: "Diary", path: "/diary" },
+  { icon: <Music size={17} strokeWidth={1.9} />, label: "Music", path: "/music" },
   { icon: <Heart size={17} strokeWidth={1.9} />, label: "Memories", path: "/memories" },
-  { icon: <Brain size={17} strokeWidth={1.9} />, label: "Brain Dump", path: "/brain-dump" },
-  { icon: <Lightbulb size={17} strokeWidth={1.9} />, label: "Reflection", path: "/reflection" },
+  { icon: <Users size={17} strokeWidth={1.9} />, label: "Friends", path: "/friends" },
 ];
 
-const UTILITY_NAV: NavItemConfig[] = [
-  { icon: <Calendar size={15} strokeWidth={1.8} />, label: "Calendar", path: "/calendar" },
-  { icon: <Music size={15} strokeWidth={1.8} />, label: "Music", path: "/music" },
-  { icon: <GraduationCap size={15} strokeWidth={1.8} />, label: "Exams", path: "/exams" },
-  { icon: <Clock size={15} strokeWidth={1.8} />, label: "Study / Focus", path: "/focus" },
-];
-
-export function Sidebar({ currentPath, onNavigate, onOpenSearch }: SidebarProps) {
+export function Sidebar({
+  currentPath,
+  onNavigate,
+  onOpenCreate,
+  onOpenSearch,
+}: SidebarProps) {
   return (
     <aside className="relative hidden w-64 shrink-0 border-r border-[#E8E3F0] bg-white/80 backdrop-blur-xl md:flex md:flex-col min-h-screen select-none z-20 shadow-[0_4px_24px_rgba(80,70,120,0.04)] overflow-hidden">
-      {/* Subtle Pastel Ambient Blobs Behind Sidebar */}
+      {/* Subtle Pastel Ambient Glows */}
       <div className="pointer-events-none absolute -top-12 -left-12 h-44 w-44 rounded-full bg-[#EEEAFE]/60 blur-3xl" />
       <div className="pointer-events-none absolute top-1/2 -right-12 h-40 w-40 rounded-full bg-[#F8E8F0]/50 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full bg-[#EEF3FA]/60 blur-3xl" />
 
       {/* BRAND HEADER */}
-      <div className="relative z-10 px-6 pt-7 pb-4">
+      <div className="relative z-10 px-6 pt-7 pb-3">
         <button
           type="button"
           onClick={() => onNavigate("/dashboard")}
@@ -76,21 +72,31 @@ export function Sidebar({ currentPath, onNavigate, onOpenSearch }: SidebarProps)
               LUMI
             </h1>
             <p className="mt-1 text-[11px] font-medium tracking-widest text-[#8D8792] uppercase">
-              Editorial Life OS
+              Personal Life OS
             </p>
           </div>
         </button>
 
-        {/* Global Search / Command Trigger in Sidebar */}
+        {/* UNIVERSAL CREATE TRIGGER BUTTON */}
+        <button
+          type="button"
+          onClick={onOpenCreate}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#17151C] px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#2D263B] hover:-translate-y-0.5 active:scale-98 cursor-pointer"
+        >
+          <Plus size={16} />
+          <span>Create</span>
+        </button>
+
+        {/* Search / Command Trigger */}
         {onOpenSearch && (
           <button
             type="button"
             onClick={onOpenSearch}
-            className="mt-4 flex w-full items-center justify-between rounded-xl bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-2 text-xs text-[#8D8792] hover:border-[#9E96D8]/50 hover:bg-white transition cursor-pointer shadow-2xs"
+            className="mt-2.5 flex w-full items-center justify-between rounded-xl bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-1.5 text-xs text-[#8D8792] hover:border-[#9E96D8]/50 hover:bg-white transition cursor-pointer shadow-2xs"
           >
             <span className="flex items-center gap-2 font-medium">
               <Sparkles size={13} className="text-[#9E96D8]" />
-              <span>Search / Command</span>
+              <span>Quick Search</span>
             </span>
             <kbd className="rounded border border-[#DDD8F2] bg-[#EEEAFE] px-1.5 py-0.5 text-[10px] font-semibold text-[#6B5BA5]">
               ⌘K
@@ -100,12 +106,17 @@ export function Sidebar({ currentPath, onNavigate, onOpenSearch }: SidebarProps)
       </div>
 
       {/* PRIMARY NAVIGATION */}
-      <nav className="relative z-10 flex-1 space-y-1 overflow-y-auto px-3.5 py-2 scrollbar-none">
+      <nav className="relative z-10 flex-1 space-y-0.5 overflow-y-auto px-3.5 py-2 scrollbar-none">
         <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-[#8D8792]">
-          Workspace
+          Navigation
         </div>
         {PRIMARY_NAV.map((item) => {
-          const isActive = currentPath === item.path;
+          const isActive =
+            currentPath === item.path ||
+            (item.path === "/plan" && (currentPath === "/tasks" || currentPath === "/planner")) ||
+            (item.path === "/workspace" && (currentPath === "/notes" || currentPath === "/projects")) ||
+            (item.path === "/journal" && (currentPath === "/diary" || currentPath === "/reflection"));
+
           return (
             <button
               key={item.label}
@@ -133,51 +144,29 @@ export function Sidebar({ currentPath, onNavigate, onOpenSearch }: SidebarProps)
         })}
       </nav>
 
-      {/* UTILITY NAVIGATION AREA */}
-      <div className="relative z-10 border-t border-[#E8E3F0] px-3.5 py-3">
-        <div className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-wider text-[#8D8792]">
-          Quick Tools
-        </div>
-        <div className="space-y-0.5">
-          {UTILITY_NAV.map((item) => {
-            const isActive = currentPath === item.path;
-            return (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => onNavigate(item.path)}
-                className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-[11px] transition duration-200 cursor-pointer ${
-                  isActive
-                    ? "bg-[#EEEAFE] text-[#17151C] font-semibold border border-[#DDD8F2]"
-                    : "text-[#5F5965] hover:bg-white/80 hover:text-[#17151C] font-medium border border-transparent"
-                }`}
-              >
-                <span
-                  className={`transition-transform duration-200 group-hover:translate-x-0.5 ${
-                    isActive ? "text-[#9E96D8]" : "text-[#8D8792] group-hover:text-[#17151C]"
-                  }`}
-                >
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
       {/* USER PROFILE FOOTER */}
       <div className="relative z-10 border-t border-[#E8E3F0] p-3.5">
-        <div className="flex items-center gap-3 rounded-2xl bg-white/90 p-2.5 border border-[#E8E3F0] shadow-2xs">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#DCD8F2] to-[#EEF3FA] text-[#17151C] font-bold text-xs border border-white shadow-2xs">
+        <button
+          type="button"
+          onClick={() => onNavigate("/settings")}
+          className={`flex w-full items-center gap-3 rounded-2xl p-2.5 border transition cursor-pointer text-left ${
+            currentPath === "/settings"
+              ? "bg-[#EEEAFE] border-[#DDD8F2] shadow-2xs"
+              : "bg-white/90 border-[#E8E3F0] hover:bg-white hover:border-[#DDD8F2] shadow-2xs"
+          }`}
+          title="Settings & Appearance"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#DCD8F2] to-[#EEF3FA] text-[#17151C] font-bold text-xs border border-white shadow-2xs shrink-0">
             S
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold text-[#17151C]">Shru</p>
-            <p className="truncate text-[10px] text-[#8D8792]">Personal Life OS</p>
+            <p className="truncate text-[10px] text-[#8D8792]">Settings & Themes</p>
           </div>
-          <Sparkles size={14} className="text-[#B8B3E8]" />
-        </div>
+          <span className="text-[#8D8792] hover:text-[#17151C] p-1 transition">
+            <Settings size={14} className={currentPath === "/settings" ? "text-[#9E96D8]" : ""} />
+          </span>
+        </button>
       </div>
     </aside>
   );

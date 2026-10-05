@@ -1,0 +1,199 @@
+{
+  "users": [
+    {
+      "id": "u-demo",
+      "email": "shru@lumi.app",
+      "passwordHash": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "name": "Shru",
+      "bio": "Designing my best days with LUMI ✨",
+      "theme": "light",
+      "createdAt": "2026-10-05T09:16:36.104Z"
+    },
+    {
+      "id": "u-1791192382250",
+      "email": "shrutijoshi1209@gmail.com",
+      "passwordHash": "$2b$10$LKLYAAygbk3c9nwGdxkAjO/13DfmsCxMVgb4LDsO9k5iRIp/B.Lcm",
+      "name": "Shu",
+      "bio": "Crafting beautiful days with LUMI ✨",
+      "theme": "light",
+      "createdAt": "2026-10-05T09:26:22.250Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t-1",
+      "userId": "u-demo",
+      "title": "Complete DSA Assignment",
+      "priority": "high",
+      "completed": false,
+      "dueDate": "Today",
+      "category": "Academic",
+      "createdAt": "2026-10-05T09:16:36.111Z"
+    },
+    {
+      "id": "t-2",
+      "userId": "u-demo",
+      "title": "Review ML Paper Notes",
+      "priority": "medium",
+      "completed": false,
+      "dueDate": "Tomorrow",
+      "category": "Research",
+      "createdAt": "2026-10-05T09:16:36.111Z"
+    },
+    {
+      "id": "t-3",
+      "userId": "u-demo",
+      "title": "Water indoor plants & herbal tea",
+      "priority": "low",
+      "completed": true,
+      "dueDate": "Today",
+      "category": "Personal",
+      "createdAt": "2026-10-05T09:16:36.111Z"
+    }
+  ],
+  "habits": [
+    {
+      "id": "h-1",
+      "userId": "u-demo",
+      "name": "Daily Reading (20 mins)",
+      "category": "Mind",
+      "icon": "BookOpen",
+      "color": "#9E96D8",
+      "targetDaysPerWeek": 7,
+      "completedDates": [
+        "2026-10-03",
+        "2026-10-04",
+        "2026-10-05"
+      ],
+      "createdAt": "2026-10-05T09:16:36.111Z"
+    },
+    {
+      "id": "h-2",
+      "userId": "u-demo",
+      "name": "Morning Sunlight & Stretch",
+      "category": "Body",
+      "icon": "Sun",
+      "color": "#F1D2C9",
+      "targetDaysPerWeek": 5,
+      "completedDates": [
+        "2026-10-04",
+        "2026-10-05"
+      ],
+      "createdAt": "2026-10-05T09:16:36.111Z"
+    }
+  ],
+  "notes": [
+    {
+      "id": "n-1",
+      "userId": "u-demo",
+      "title": "Transformer Architecture Ideas",
+      "category": "Research",
+      "tags": [
+        "AI",
+        "Architecture",
+        "Attention"
+      ],
+      "content": "Exploring multi-head latent attention mechanism for fast streaming generation.",
+      "updatedAt": "2026-10-05T09:16:36.111Z"
+    },
+    {
+      "id": "n-2",
+      "userId": "u-demo",
+      "title": "Weekly Grocery & Meal Prep",
+      "category": "Personal",
+      "tags": [
+        "Health",
+        "Food"
+      ],
+      "content": "Matcha powder, oat milk, avocados, berries, and sourdough bread.",
+      "updatedAt": "2026-10-05T09:16:36.111Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "p-1",
+      "userId": "u-demo",
+      "name": "AI Life OS Application",
+      "description": "Building the modern, aesthetic personal operating system for mindful achievers.",
+      "status": "in-progress",
+      "deadline": "2026-11-15",
+      "progress": 85,
+      "tasks": [
+        "Design System",
+        "Universal Create",
+        "Backend API Sync"
+      ],
+      "updatedAt": "2026-10-05T09:16:36.111Z"
+    }
+  ],
+  "goals": [
+    {
+      "id": "g-1",
+      "userId": "u-demo",
+      "title": "Build my AI/ML Portfolio",
+      "category": "Career",
+      "targetDate": "Dec 2026",
+      "progress": 75,
+      "milestones": [
+        "LUMI Frontend Release",
+        "Cloud Persistence",
+        "Deployment"
+      ],
+      "whyItMatters": "Establish my career in AI and product craftsmanship."
+    }
+  ],
+  "journals": [
+    {
+      "id": "j-1",
+      "userId": "u-demo",
+      "title": "Morning Clarity & Fresh Intentions",
+      "date": "2026-10-05",
+      "template": "daily",
+      "mood": "peaceful",
+      "entry": "Woke up feeling refreshed. Ready to build with focus and calm energy today.",
+      "gratitude": "Grateful for cozy mornings, clear vision, and good music."
+    }
+  ],
+  "memories": [
+    {
+      "id": "m-1",
+      "userId": "u-demo",
+      "title": "Golden Hour Walk",
+      "caption": "Soft sunset hues by the bay 🌅",
+      "date": "2026-10-05",
+      "location": "San Francisco Pier",
+      "imageUrl": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+      "isShared": true,
+      "tags": [
+        "Sunset",
+        "Walk",
+        "Golden Hour"
+      ],
+      "reactions": {
+        "heart": 4,
+        "sparkle": 2,
+        "fire": 1
+      },
+      "comments": [
+        {
+          "id": "c-1",
+          "author": "Maya",
+          "text": "Such a magical sky! ✨",
+          "time": "2h ago"
+        }
+      ]
+    }
+  ],
+  "books": [
+    {
+      "id": "b-1",
+      "userId": "u-demo",
+      "title": "Atomic Habits",
+      "author": "James Clear",
+      "status": "reading",
+      "currentPage": 142,
+      "totalPages": 320,
+      "cover": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80"
+    }
+  ]
+}
