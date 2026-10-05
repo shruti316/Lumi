@@ -1,20 +1,20 @@
+import { useState, useEffect } from "react";
 import {
   Home,
   Plus,
   CalendarDays,
   Flame,
   FolderKanban,
-  Target,
   PenLine,
   BookOpen,
   Music,
   Heart,
   Users,
-  Calendar,
   Sparkles,
   Settings,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { LumiButterfly } from "../common/LumiButterfly";
 
 interface SidebarProps {
   currentPath: string;
@@ -33,11 +33,9 @@ interface NavItemConfig {
 const PRIMARY_NAV: NavItemConfig[] = [
   { icon: <Home size={17} strokeWidth={1.9} />, label: "Home", path: "/dashboard" },
   { icon: <CalendarDays size={17} strokeWidth={1.9} />, label: "Plan", path: "/plan" },
-  { icon: <Calendar size={17} strokeWidth={1.9} />, label: "Calendar", path: "/calendar" },
-  { icon: <Flame size={17} strokeWidth={1.9} />, label: "Habits", path: "/habits" },
   { icon: <FolderKanban size={17} strokeWidth={1.9} />, label: "Workspace", path: "/workspace" },
-  { icon: <Target size={17} strokeWidth={1.9} />, label: "Goals", path: "/goals" },
   { icon: <PenLine size={17} strokeWidth={1.9} />, label: "Journal", path: "/journal" },
+  { icon: <Flame size={17} strokeWidth={1.9} />, label: "Habits", path: "/habits" },
   { icon: <BookOpen size={17} strokeWidth={1.9} />, label: "Reading", path: "/reading" },
   { icon: <Music size={17} strokeWidth={1.9} />, label: "Music", path: "/music" },
   { icon: <Heart size={17} strokeWidth={1.9} />, label: "Memories", path: "/memories" },
@@ -50,6 +48,24 @@ export function Sidebar({
   onOpenCreate,
   onOpenSearch,
 }: SidebarProps) {
+  const [profile, setProfile] = useState<{ displayName: string; username: string; avatarUrl?: string }>(() => {
+    try {
+      const saved = localStorage.getItem("lumi_profile");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { displayName: "Shru", username: "shru.lumi" };
+  });
+
+  useEffect(() => {
+    function handleProfileSync(e: Event) {
+      const customEvent = e as CustomEvent<{ displayName: string; username: string; avatarUrl?: string }>;
+      if (customEvent.detail) {
+        setProfile(customEvent.detail);
+      }
+    }
+    window.addEventListener("lumi-profile-change" as any, handleProfileSync);
+    return () => window.removeEventListener("lumi-profile-change" as any, handleProfileSync);
+  }, []);
   return (
     <aside className="relative hidden w-64 shrink-0 border-r border-[#E8E3F0] bg-white/80 backdrop-blur-xl md:flex md:flex-col min-h-screen select-none z-20 shadow-[0_4px_24px_rgba(80,70,120,0.04)] overflow-hidden">
       {/* Subtle Pastel Ambient Glows */}
@@ -64,8 +80,8 @@ export function Sidebar({
           onClick={() => onNavigate("/dashboard")}
           className="flex items-center gap-3 group text-left w-full cursor-pointer select-none"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DCD8F2] to-[#F2D8E4] border border-white shadow-[0_4px_12px_rgba(184,179,232,0.3)] group-hover:scale-105 transition-transform duration-200 text-lg">
-            ✧
+          <div className="lumi-logo-container flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DCD8F2] to-[#F2D8E4] border border-white shadow-[0_4px_12px_rgba(184,179,232,0.3)] group-hover:scale-105 transition-transform duration-200">
+            <LumiButterfly size={22} />
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="font-serif text-2xl font-bold tracking-tight text-[#17151C] leading-none group-hover:text-[#9E96D8] transition-colors">
@@ -159,12 +175,20 @@ export function Sidebar({
             className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
             title="View Profile"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#DCD8F2] to-[#EEF3FA] text-[#17151C] font-bold text-xs border border-white shadow-2xs shrink-0">
-              S
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#DCD8F2] to-[#EEF3FA] text-[#17151C] font-bold text-xs border border-white shadow-2xs shrink-0 overflow-hidden">
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span>{profile.displayName ? profile.displayName.charAt(0).toUpperCase() : "S"}</span>
+              )}
             </div>
             <div className="min-w-0 flex-1 text-left">
-              <p className="truncate text-xs font-semibold text-[#17151C]">Shru</p>
-              <p className="truncate text-[10px] text-[#8D8792]">@shru.lumi</p>
+              <p className="truncate text-xs font-semibold text-[#17151C]">{profile.displayName || "Shru"}</p>
+              <p className="truncate text-[10px] text-[#8D8792]">@{profile.username || "shru.lumi"}</p>
             </div>
           </button>
 

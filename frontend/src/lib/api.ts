@@ -1,7 +1,7 @@
 const API_BASE_URL = "http://localhost:5000/api";
 
 function getAuthHeader(): Record<string, string> {
-  const token = localStorage.getItem("lumi_token");
+  const token = localStorage.getItem("lumi_token") || sessionStorage.getItem("lumi_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

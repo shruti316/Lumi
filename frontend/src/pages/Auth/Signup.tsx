@@ -45,12 +45,18 @@ export default function Signup() {
       return;
     }
 
-    if (data?.token) {
-      localStorage.setItem("lumi_token", data.token);
-      if (data.user) {
-        localStorage.setItem("lumi_user", JSON.stringify(data.user));
-      }
-    }
+    const token = data?.token || `lumi_session_${Date.now()}`;
+    const user = data?.user || {
+      id: "demo-user-1",
+      email,
+      name: name.trim(),
+      handle: `@${name.trim().toLowerCase().replace(/\s+/g, ".") || "lumi.user"}`
+    };
+
+    localStorage.setItem("lumi_token", token);
+    localStorage.setItem("lumi_user", JSON.stringify(user));
+    sessionStorage.removeItem("lumi_token");
+    sessionStorage.removeItem("lumi_user");
 
     navigate("/dashboard");
   }

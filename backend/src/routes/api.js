@@ -13,6 +13,7 @@ const goalController = require("../controllers/goalController");
 const memoryController = require("../controllers/memoryController");
 const readingController = require("../controllers/readingController");
 const friendController = require("../controllers/friendController");
+const messageController = require("../controllers/messageController");
 
 // ==========================================
 // 1. AUTHENTICATION & PROFILE ROUTES
@@ -87,5 +88,13 @@ router.delete("/books/:id", authenticateToken, readingController.deleteBook);
 router.get("/friends/feed", authenticateToken, friendController.getFriendFeed);
 router.post("/friends/memories/:id/react", authenticateToken, friendController.reactToMemory);
 router.post("/friends/memories/:id/comment", authenticateToken, friendController.commentOnMemory);
+
+// ==========================================
+// 10. 1-TO-1 MESSAGING & CHAT ROUTES
+// ==========================================
+router.get("/messages/conversations", authenticateToken, messageController.getConversations);
+router.get("/messages/conversations/:conversationId", authenticateToken, messageController.getMessages);
+router.post("/messages/conversations/:conversationId/send", authenticateToken, messageController.sendMessage);
+router.post("/messages/conversations/start", authenticateToken, messageController.startConversation);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sparkles,
   BookOpen,
@@ -92,10 +92,56 @@ export default function Profile() {
     });
   }, []);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check size limit (under 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Please select an image smaller than 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        const updated = { ...profile, avatarUrl: dataUrl };
+        setProfile(updated);
+        setEditForm(updated);
+        localStorage.setItem("lumi_profile", JSON.stringify(updated));
+        localStorage.setItem("lumi_user_avatar", dataUrl);
+        window.dispatchEvent(new CustomEvent("lumi-profile-change", { detail: updated }));
+        setSavedToast(true);
+        setTimeout(() => setSavedToast(false), 2500);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemoveAvatar() {
+    const updated = { ...profile, avatarUrl: undefined };
+    setProfile(updated);
+    setEditForm(updated);
+    localStorage.setItem("lumi_profile", JSON.stringify(updated));
+    localStorage.removeItem("lumi_user_avatar");
+    window.dispatchEvent(new CustomEvent("lumi-profile-change", { detail: updated }));
+    setSavedToast(true);
+    setTimeout(() => setSavedToast(false), 2500);
+  }
+
   function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     setProfile(editForm);
     localStorage.setItem("lumi_profile", JSON.stringify(editForm));
+    if (editForm.avatarUrl) {
+      localStorage.setItem("lumi_user_avatar", editForm.avatarUrl);
+    } else {
+      localStorage.removeItem("lumi_user_avatar");
+    }
+    window.dispatchEvent(new CustomEvent("lumi-profile-change", { detail: editForm }));
     setShowEditModal(false);
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2500);
@@ -168,11 +214,38 @@ export default function Profile() {
         <Card variant="pearl" className="p-6 md:p-8 mb-6 border-[#E8E3F0]">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-start sm:items-center gap-5">
-              {/* Avatar Circle */}
-              <div className="relative">
-                <div className="flex h-20 w-20 md:h-24 md:md:w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-[#EEEAFE] via-[#F8E8F0] to-[#EEF3FA] border-2 border-white shadow-md text-3xl font-serif font-bold text-[#17151C]">
-                  {profile.displayName ? profile.displayName.charAt(0).toUpperCase() : "S"}
+              {/* Avatar Circle with Upload & Camera Overlay */}
+              <div className="relative group">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex h-20 w-20 md:h-24 md:w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-[#EEEAFE] via-[#F8E8F0] to-[#EEF3FA] border-2 border-white shadow-md text-3xl font-serif font-bold text-[#17151C] overflow-hidden cursor-pointer relative"
+                  title="Click to upload profile photo"
+                >
+                  {profile.avatarUrl ? (
+                    <img
+                      src={profile.avatarUrl}
+                      alt={profile.displayName}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span>{profile.displayName ? profile.displayName.charAt(0).toUpperCase() : "S"}</span>
+                  )}
+
+                  {/* Camera overlay on hover */}
+                  <div className="absolute inset-0 bg-[#17151C]/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity duration-200">
+                    <Camera size={18} />
+                    <span className="text-[9px] font-semibold mt-0.5">Change</span>
+                  </div>
                 </div>
+
                 <span className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-[#528D6F] border-2 border-white shadow-xs" title="Online & Active" />
               </div>
 
@@ -200,6 +273,18 @@ export default function Profile() {
                     <Shield size={13} className="text-[#528D6F]" />
                     Private Vault Protected
                   </span>
+                  {profile.avatarUrl && (
+                    <>
+                      <span>•</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        className="text-[11px] text-[#D99BB8] hover:underline cursor-pointer font-medium"
+                      >
+                        Remove custom photo
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

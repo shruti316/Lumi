@@ -176,8 +176,19 @@ export default function Dashboard() {
       ? "Good afternoon"
       : "Good evening";
 
+  // Default focus tasks if user has none
+  const defaultFocusTasks: Task[] = [
+    { id: "def-t-1", title: "Complete AI-ML assignment", completed: false, priority: "high", createdAt: "" },
+    { id: "def-t-2", title: "Read 20 pages", completed: true, priority: "medium", createdAt: "" },
+    { id: "def-t-3", title: "Workout", completed: false, priority: "low", createdAt: "" },
+    { id: "def-t-4", title: "Plan for midterm", completed: false, priority: "high", createdAt: "" },
+  ];
+
   // Task Stats
-  const remainingTasksCount = tasks.filter((t) => !t.completed).length;
+  const remainingTasksCount =
+    tasks.length > 0
+      ? tasks.filter((t) => !t.completed).length
+      : defaultFocusTasks.filter((t) => !t.completed).length;
 
   // Habit Streak Stats
   const habitStreaks = habits.map((habit) => {
@@ -246,14 +257,6 @@ export default function Dashboard() {
             imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&q=80",
           },
         ];
-
-  // Default focus tasks if user has none
-  const defaultFocusTasks: Task[] = [
-    { id: "def-t-1", title: "Complete AI-ML assignment", completed: false, priority: "high", createdAt: "" },
-    { id: "def-t-2", title: "Read 20 pages", completed: true, priority: "medium", createdAt: "" },
-    { id: "def-t-3", title: "Workout", completed: false, priority: "low", createdAt: "" },
-    { id: "def-t-4", title: "Plan for midterm", completed: false, priority: "high", createdAt: "" },
-  ];
 
   const focusTasksList = tasks.length > 0 ? tasks.slice(0, 4) : defaultFocusTasks;
 
@@ -475,10 +478,10 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => navigate("/settings")}
-              className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DCD8F2] to-[#F2D8E4] border border-white text-xs font-bold text-[#17151C] shadow-2xs transition hover:scale-105 cursor-pointer"
+              className="lumi-settings-button flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DCD8F2] to-[#F2D8E4] border border-white text-xs font-bold text-[#17151C] shadow-2xs transition hover:scale-105 cursor-pointer"
               title="Settings & Appearance"
             >
-              <Settings size={15} className="text-[#5F5965]" />
+              <Settings size={15} className="lumi-settings-icon text-[#5F5965] transition-colors" />
             </button>
           </div>
         </header>
@@ -511,10 +514,10 @@ export default function Dashboard() {
               </div>
               <div className="min-w-0">
                 <p className="text-2xl font-bold text-[#17151C] leading-none">
-                  {remainingTasksCount || 3}
+                  {remainingTasksCount}
                 </p>
                 <p className="mt-1 text-xs font-medium text-[#8D8792] truncate">
-                  Tasks left
+                  {remainingTasksCount === 1 ? "Task left" : "Tasks left"}
                 </p>
               </div>
             </div>

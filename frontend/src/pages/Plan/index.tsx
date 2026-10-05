@@ -596,7 +596,7 @@ export default function Plan() {
                     onClick={() => setNewTaskPriority(p)}
                     className={`rounded-xl border py-2 text-xs font-semibold capitalize transition cursor-pointer ${
                       newTaskPriority === p
-                        ? "bg-[#EEEAFE] border-[#DDD8F2] text-[#17151C] shadow-2xs"
+                        ? "bg-[#EEEAFE] border-[#DDD8F2] text-[#17151C] shadow-2xs font-bold"
                         : "bg-white border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
                     }`}
                   >

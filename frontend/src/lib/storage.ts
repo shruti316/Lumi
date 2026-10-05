@@ -27,6 +27,9 @@ export function saveTasks(tasks: Task[]) {
     TASKS_KEY,
     JSON.stringify(tasks)
   );
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("storage-sync"));
+  }
 }
 
 export function addTask(task: Task) {

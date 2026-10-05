@@ -491,6 +491,26 @@ button:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
+/* Quick Habit Suggestion Chips */
+.lumi-quick-habit-chip {
+  background-color: rgba(255, 255, 255, 0.92);
+  border: 1px solid #E8E3F0;
+  color: #17151C;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.lumi-quick-habit-chip:not(.is-added):hover {
+  transform: translateY(-1px);
+  background-color: #EEEAFE;
+  border-color: #DDD8F2;
+}
+
+.lumi-quick-habit-chip.is-added {
+  background-color: #F4F1FA;
+  border-color: #E2DCED;
+  color: #5F5965;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -663,18 +683,287 @@ button:active {
   color: #9D96A8 !important;
 }
 
-/* Form inputs in Dark mode */
+/* Form inputs & Auth inputs in Dark mode */
 [data-theme="dark"] input,
 [data-theme="dark"] textarea,
 [data-theme="dark"] select {
-  background-color: #161320;
-  border-color: #342C44;
-  color: #FFFFFF;
+  background-color: #161320 !important;
+  border-color: #383048 !important;
+  color: #FFFFFF !important;
 }
 
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder {
-  color: #8C8496;
+  color: #8C8496 !important;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+  background-color: #1F1A2E !important;
+  border-color: #9E96D8 !important;
+  box-shadow: 0 0 0 3px rgba(158, 150, 216, 0.22) !important;
+}
+
+[data-theme="dark"] option {
+  background-color: #1A1626 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] input[type="date"] {
+  color-scheme: dark !important;
+}
+
+[data-theme="dark"] .lumi-auth-input {
+  background-color: #1A1624 !important;
+  border-color: #383048 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .lumi-auth-input:focus {
+  background-color: #201B2E !important;
+  border-color: #9E96D8 !important;
+  box-shadow: 0 0 0 3.5px rgba(158, 150, 216, 0.25) !important;
+}
+
+[data-theme="dark"] .lumi-auth-input::placeholder {
+  color: #8C8496 !important;
+}
+
+[data-theme="dark"] .lumi-auth-input:-webkit-autofill,
+[data-theme="dark"] .lumi-auth-input:-webkit-autofill:hover,
+[data-theme="dark"] .lumi-auth-input:-webkit-autofill:focus,
+[data-theme="dark"] .lumi-auth-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #1A1624 inset !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Green / Flow card dark mode mappings */
+[data-theme="dark"] .from-\[\#EEF8F4\],
+[data-theme="dark"] .to-\[\#EEF8F4\],
+[data-theme="dark"] .from-\[\#EAF6F0\],
+[data-theme="dark"] .to-\[\#EAF6F0\] {
+  --tw-gradient-from: #15261F !important;
+  --tw-gradient-to: #111E18 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+[data-theme="dark"] .border-\[\#CCE5DC\],
+[data-theme="dark"] .border-\[\#B8DFD1\] {
+  border-color: #2A483B !important;
+}
+
+[data-theme="dark"] .text-\[\#2E7D5B\],
+[data-theme="dark"] .text-\[\#3D6B58\],
+[data-theme="dark"] .text-\[\#236348\],
+[data-theme="dark"] .text-\[\#3E7D5C\],
+[data-theme="dark"] .text-\[\#4A7D63\] {
+  color: #7BE0B8 !important;
+}
+
+[data-theme="dark"] .bg-\[\#EEF8F4\] {
+  background-color: #16261E !important;
+  color: #7BE0B8 !important;
+}
+
+[data-theme="dark"] .bg-\[\#FDF3EC\] {
+  background-color: #2D201A !important;
+  border-color: #4D3528 !important;
+}
+
+[data-theme="dark"] .bg-\[\#FDF0F6\],
+[data-theme="dark"] .bg-\[\#FDF0F4\] {
+  background-color: #321D2B !important;
+  border-color: #522D45 !important;
+}
+
+/* Auth & Action Buttons in Dark Mode */
+[data-theme="dark"] button.bg-\[\#17151C\],
+[data-theme="dark"] .bg-\[\#17151C\] {
+  background-color: #2D253B !important;
+  color: #FFFFFF !important;
+  border-color: #443859 !important;
+}
+
+[data-theme="dark"] button.bg-\[\#17151C\]:hover {
+  background-color: #3B304E !important;
+}
+
+[data-theme="dark"] .hover\:text-\[\#17151C\]:hover {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .hover\:bg-\[\#EEEAFE\]\/60:hover,
+[data-theme="dark"] .hover\:bg-\[\#EEEAFE\]:hover {
+  background-color: rgba(45, 37, 65, 0.7) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LUMI BRANDING: BUTTERFLY MARK & SETTINGS CONTROLS
+───────────────────────────────────────────────────────────── */
+.lumi-butterfly-mark {
+  color: #17151C;
+}
+
+.lumi-settings-icon {
+  color: #5F5965;
+}
+
+[data-theme="dark"] .lumi-butterfly-mark {
+  color: #9E96D8 !important;
+  filter: drop-shadow(0 0 6px rgba(158, 150, 216, 0.4));
+}
+
+[data-theme="dark"] .lumi-logo-container {
+  background: linear-gradient(135deg, #2A213D 0%, #1A2234 100%) !important;
+  border-color: #4C3E68 !important;
+  box-shadow: 0 4px 14px rgba(158, 150, 216, 0.25) !important;
+}
+
+[data-theme="dark"] .lumi-settings-icon {
+  color: #9D96A8 !important;
+}
+
+[data-theme="dark"] .lumi-settings-icon:hover,
+[data-theme="dark"] button:hover .lumi-settings-icon {
+  color: #9E96D8 !important;
+}
+
+[data-theme="dark"] .lumi-settings-button {
+  background: linear-gradient(135deg, #261F38 0%, #1F192E 100%) !important;
+  border-color: #4C3E68 !important;
+}
+
+[data-theme="mist"] .lumi-butterfly-mark {
+  color: #1F1D1B !important;
+}
+
+[data-theme="mist"] .lumi-settings-icon {
+  color: #5C5854 !important;
+}
+
+/* Habits Quick Suggestion Chips in Mist Mode */
+[data-theme="mist"] .lumi-quick-habit-chip {
+  background-color: #FAF8F5 !important;
+  border-color: #E8E4DF !important;
+  color: #2E2B28 !important;
+}
+
+[data-theme="mist"] .lumi-quick-habit-chip:not(.is-added):hover {
+  background-color: #F1ECE6 !important;
+  border-color: #DDD7CE !important;
+}
+
+[data-theme="mist"] .lumi-quick-habit-chip.is-added {
+  background-color: #EFEBE5 !important;
+  border-color: #DDD7CE !important;
+  color: #6C665F !important;
+  opacity: 1 !important;
+}
+
+[data-theme="mist"] .lumi-quick-habit-chip .lumi-chip-check {
+  color: #528D6F !important;
+}
+
+/* Habits Dark Mode Specifics */
+[data-theme="dark"] .bg-\[\#E5EFEA\] {
+  background-color: #20352A !important;
+}
+
+/* Quick Habit Suggestion Chips in Dark Mode (all chips use deep charcoal/plum surfaces) */
+[data-theme="dark"] .lumi-quick-habit-chip {
+  background-color: #1A1626 !important;
+  border-color: #342C44 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .lumi-quick-habit-chip:not(.is-added):hover {
+  background-color: #241D34 !important;
+  border-color: #4C3E68 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .lumi-quick-habit-chip.is-added {
+  background-color: #1F192C !important;
+  border-color: #3B3050 !important;
+  color: #E8E2F2 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .lumi-quick-habit-chip .lumi-chip-check {
+  color: #7BE0B8 !important;
+}
+
+[data-theme="dark"] .lumi-quick-habit-chip .lumi-chip-plus {
+  color: #9D96A8 !important;
+}
+
+[data-theme="dark"] section button.border-\[\#E8E3F0\]:not(:disabled):not(.lumi-quick-habit-chip) {
+  background-color: #1A1626 !important;
+  border-color: #383048 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] section button.border-\[\#E8E3F0\]:not(:disabled):not(.lumi-quick-habit-chip):hover {
+  background-color: #282038 !important;
+  border-color: #544475 !important;
+}
+
+[data-theme="dark"] section button:disabled:not(.lumi-quick-habit-chip) {
+  background-color: #15111E !important;
+  border-color: #2D253A !important;
+  color: #8C8496 !important;
+}
+
+/* 7-Day Matrix tiles in Dark Mode */
+[data-theme="dark"] .h-8.w-8.border {
+  background-color: #161320 !important;
+  border-color: #342C44 !important;
+  color: #C8C2D4 !important;
+}
+
+[data-theme="dark"] .h-8.w-8.border.bg-\[\#528D6F\] {
+  background-color: #1F5A40 !important;
+  border-color: #2D805B !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .h-8.w-8.border.bg-\[\#EEEAFE\] {
+  background-color: #2B2142 !important;
+  border-color: #4E3E6E !important;
+  color: #FFFFFF !important;
+}
+
+/* Reading Dark Mode Specifics (Surfaces, Quotes, Progress, Timers) */
+[data-theme="dark"] .bg-white\/70,
+[data-theme="dark"] .bg-white\/75 {
+  background-color: rgba(26, 22, 36, 0.75) !important;
+  border-color: #383048 !important;
+}
+
+[data-theme="dark"] .border-white\/80,
+[data-theme="dark"] .border-white\/60 {
+  border-color: #3A324A !important;
+}
+
+/* Messages & Friends Dark Mode Specifics */
+[data-theme="dark"] .bg-\[\#FAF8FC\] {
+  background-color: #171322 !important;
+}
+
+[data-theme="dark"] .border-r.border-\[\#E8E3F0\] {
+  border-right-color: #322A42 !important;
+}
+
+[data-theme="dark"] .border-b.border-\[\#E8E3F0\] {
+  border-bottom-color: #322A42 !important;
+}
+
+[data-theme="dark"] .border-t.border-\[\#E8E3F0\] {
+  border-top-color: #322A42 !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -810,16 +1099,32 @@ button:active {
   color: #8E8982 !important;
 }
 
-/* Form inputs in Mist mode */
+/* Form inputs & Auth inputs in Mist mode */
 [data-theme="mist"] input,
 [data-theme="mist"] textarea,
 [data-theme="mist"] select {
   background-color: #F8F6F2;
   border-color: #DDD8D0;
-  color: #1F1D1B;
+  color: #1F1D1B !important;
 }
 
 [data-theme="mist"] input::placeholder,
 [data-theme="mist"] textarea::placeholder {
-  color: #8E8982;
+  color: #8E8982 !important;
+}
+
+[data-theme="mist"] .lumi-auth-input {
+  background-color: #F8F6F2 !important;
+  border-color: #DDD8D0 !important;
+  color: #1F1D1B !important;
+}
+
+[data-theme="mist"] .lumi-auth-input:focus {
+  background-color: #FFFFFF !important;
+  border-color: #B8B3E8 !important;
+  box-shadow: 0 0 0 3.5px rgba(184, 179, 232, 0.22) !important;
+}
+
+[data-theme="mist"] .lumi-auth-input::placeholder {
+  color: #8E8982 !important;
 }

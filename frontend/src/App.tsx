@@ -34,6 +34,22 @@ import Focus from "./pages/Focus";
 import Exams from "./pages/Exams";
 import NotFound from "./pages/NotFound";
 
+function hasAuthToken(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean(localStorage.getItem("lumi_token") || sessionStorage.getItem("lumi_token"));
+}
+
+function RootRedirect() {
+  return <Navigate to={hasAuthToken() ? "/dashboard" : "/login"} replace />;
+}
+
+function PublicAuthRoute({ children }: { children: React.ReactNode }) {
+  if (hasAuthToken()) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -42,13 +58,13 @@ function App() {
         {/* =========================
             ENTRY REDIRECT
         ========================= */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<RootRedirect />} />
 
         {/* =========================
             PUBLIC AUTH ROUTES
         ========================= */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<PublicAuthRoute><Login /></PublicAuthRoute>} />
+        <Route path="/signup" element={<PublicAuthRoute><Signup /></PublicAuthRoute>} />
 
         {/* =========================
             LUMI APPLICATION (AppLayout with Outlet)

@@ -1,12 +1,10 @@
 import {
   Home,
   CalendarDays,
-  Calendar,
   Users,
   Plus,
   Flame,
   FolderKanban,
-  Target,
   PenLine,
   BookOpen,
   Music,
@@ -25,16 +23,14 @@ interface MobileNavProps {
 }
 
 const MORE_SECTIONS = [
-  { label: "Calendar", path: "/calendar", icon: Calendar, desc: "Schedules & Deadlines" },
   { label: "Workspace", path: "/workspace", icon: FolderKanban, desc: "Notes & Projects" },
-  { label: "Goals", path: "/goals", icon: Target, desc: "Long-term Objectives" },
   { label: "Journal", path: "/journal", icon: PenLine, desc: "Diary & Reflections" },
+  { label: "Habits", path: "/habits", icon: Flame, desc: "Routines & Streaks" },
   { label: "Reading", path: "/reading", icon: BookOpen, desc: "Books & Library" },
   { label: "Music", path: "/music", icon: Music, desc: "Spotify & Playlists" },
   { label: "Memories", path: "/memories", icon: Heart, desc: "Photo Moments" },
-  { label: "Habits", path: "/habits", icon: Flame, desc: "Routines & Streaks" },
-  { label: "Appearance", path: "/settings", icon: Settings, desc: "Themes & Styling" },
-  { label: "Profile", path: "/settings", icon: User, desc: "Account Settings" },
+  { label: "My Profile", path: "/profile", icon: User, desc: "@username & Identity" },
+  { label: "Settings", path: "/settings", icon: Settings, desc: "Themes & Privacy" },
 ];
 
 export function MobileNav({

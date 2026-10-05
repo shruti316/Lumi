@@ -284,18 +284,16 @@ export default function Habits() {
                   type="button"
                   onClick={() => !alreadyAdded && handleQuickAdd(s)}
                   disabled={alreadyAdded}
-                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
-                    alreadyAdded
-                      ? "border-[#E8E3F0] bg-[#EEEAFE]/50 text-[#8D8792] opacity-60 cursor-default"
-                      : "border-[#E8E3F0] bg-white/90 text-[#17151C] shadow-2xs hover:-translate-y-0.5 hover:bg-[#EEEAFE] hover:border-[#DDD8F2]"
+                  className={`lumi-quick-habit-chip flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
+                    alreadyAdded ? "is-added cursor-default" : "cursor-pointer"
                   }`}
                 >
-                  <span>{s.emoji}</span>
-                  <span>{s.name}</span>
+                  <span className="text-sm">{s.emoji}</span>
+                  <span className="lumi-chip-label">{s.name}</span>
                   {alreadyAdded ? (
-                    <Check size={12} className="text-[#528D6F]" />
+                    <Check size={12} className="lumi-chip-check text-[#528D6F]" />
                   ) : (
-                    <Plus size={12} className="text-[#8D8792]" />
+                    <Plus size={12} className="lumi-chip-plus text-[#8D8792]" />
                   )}
                 </button>
               );

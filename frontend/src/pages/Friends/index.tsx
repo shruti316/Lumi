@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Users,
   Heart,
@@ -14,6 +14,7 @@ import {
   X,
   Smile,
   ShieldCheck,
+  CheckCheck,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
@@ -64,6 +65,25 @@ interface FriendMemory {
     text: string;
     time: string;
   }[];
+}
+
+interface ChatMessage {
+  id: string;
+  senderId: string; // "me" or friend id
+  text: string;
+  mediaUrl?: string;
+  timestamp: string;
+  read: boolean;
+  reactions?: string[];
+}
+
+interface Conversation {
+  id: string;
+  friendId: string;
+  unreadCount: number;
+  lastMessage: string;
+  lastTimestamp: string;
+  messages: ChatMessage[];
 }
 
 const INITIAL_FRIEND_PROFILES: Record<string, FriendProfile> = {
@@ -199,6 +219,102 @@ const INITIAL_FRIEND_MEMORIES: FriendMemory[] = [
   },
 ];
 
+const INITIAL_CONVERSATIONS: Conversation[] = [
+  {
+    id: "conv-1",
+    friendId: "u-1",
+    unreadCount: 1,
+    lastMessage: "Bro are you coming to the coffee sprint? ☕",
+    lastTimestamp: "2m ago",
+    messages: [
+      {
+        id: "m-1",
+        senderId: "u-1",
+        text: "Hey Shru! Did you finish debugging the project routes?",
+        timestamp: "10:15 AM",
+        read: true,
+      },
+      {
+        id: "m-2",
+        senderId: "me",
+        text: "Yes! Just pushed the master refinements and clean build 🚀",
+        timestamp: "10:18 AM",
+        read: true,
+      },
+      {
+        id: "m-3",
+        senderId: "u-1",
+        text: "Awesome! Bro are you coming to the coffee sprint? ☕",
+        timestamp: "10:22 AM",
+        read: false,
+      },
+    ],
+  },
+  {
+    id: "conv-2",
+    friendId: "u-2",
+    unreadCount: 0,
+    lastMessage: "Look at this watercolor draft 😭",
+    lastTimestamp: "1h ago",
+    messages: [
+      {
+        id: "m-4",
+        senderId: "u-2",
+        text: "Hey! Loved your latest memory post on the wall ✨",
+        timestamp: "Yesterday",
+        read: true,
+      },
+      {
+        id: "m-5",
+        senderId: "me",
+        text: "Thank you Meera! Autumn lighting on campus is unreal right now.",
+        timestamp: "Yesterday",
+        read: true,
+      },
+      {
+        id: "m-6",
+        senderId: "u-2",
+        text: "Look at this watercolor draft 😭",
+        mediaUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80",
+        timestamp: "9:30 AM",
+        read: true,
+      },
+    ],
+  },
+  {
+    id: "conv-3",
+    friendId: "u-3",
+    unreadCount: 0,
+    lastMessage: "Half marathon training went great!",
+    lastTimestamp: "1d ago",
+    messages: [
+      {
+        id: "m-7",
+        senderId: "u-3",
+        text: "Half marathon training went great! 10k completed today.",
+        timestamp: "Yesterday",
+        read: true,
+      },
+    ],
+  },
+  {
+    id: "conv-4",
+    friendId: "u-4",
+    unreadCount: 0,
+    lastMessage: "Which chapter of Atomic Habits are you on?",
+    lastTimestamp: "2d ago",
+    messages: [
+      {
+        id: "m-8",
+        senderId: "u-4",
+        text: "Which chapter of Atomic Habits are you on?",
+        timestamp: "Oct 3",
+        read: true,
+      },
+    ],
+  },
+];
+
 const INITIAL_REQUESTS: FriendRequest[] = [
   {
     id: "req-1",
@@ -223,8 +339,11 @@ const INITIAL_REQUESTS: FriendRequest[] = [
 export default function Friends() {
   const [friends, setFriends] = useState<Record<string, FriendProfile>>(INITIAL_FRIEND_PROFILES);
   const [memories, setMemories] = useState<FriendMemory[]>(INITIAL_FRIEND_MEMORIES);
+  const [conversations, setConversations] = useState<Conversation[]>(INITIAL_CONVERSATIONS);
+  const [activeConvId, setActiveConvId] = useState<string>("conv-1");
   const [requests, setRequests] = useState<FriendRequest[]>(INITIAL_REQUESTS);
-  const [activeTab, setActiveTab] = useState<"feed" | "friends" | "requests">("feed");
+  
+  const [activeTab, setActiveTab] = useState<"feed" | "friends" | "messages" | "requests">("feed");
   const [searchQuery, setSearchQuery] = useState("");
   const [commentInput, setCommentInput] = useState<Record<string, string>>({});
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
@@ -233,7 +352,44 @@ export default function Friends() {
   const [selectedProfile, setSelectedProfile] = useState<FriendProfile | null>(null);
   const [cheeredToast, setCheeredToast] = useState(false);
 
+  // Chat message composition & media
+  const [chatInputText, setChatInputText] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [myAvatar, setMyAvatar] = useState<string | null>(() => {
+    try {
+      const saved = localStorage.getItem("lumi_user_avatar");
+      if (saved) return saved;
+      const prof = localStorage.getItem("lumi_profile");
+      if (prof) return JSON.parse(prof).avatarUrl || null;
+    } catch {}
+    return null;
+  });
+
+  const chatFileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const friendsList = Object.values(friends);
+  const totalUnreadMessages = conversations.reduce((acc, c) => acc + c.unreadCount, 0);
+
+  const activeConversation = conversations.find((c) => c.id === activeConvId);
+  const activeFriend = activeConversation ? friends[activeConversation.friendId] : null;
+
+  useEffect(() => {
+    function handleProfileSync(e: Event) {
+      const customEvent = e as CustomEvent<{ avatarUrl?: string }>;
+      if (customEvent.detail) {
+        setMyAvatar(customEvent.detail.avatarUrl || null);
+      }
+    }
+    window.addEventListener("lumi-profile-change" as any, handleProfileSync);
+    return () => window.removeEventListener("lumi-profile-change" as any, handleProfileSync);
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeConversation?.messages]);
 
   function handleToggleLike(id: string) {
     setMemories((prev) =>
@@ -298,16 +454,90 @@ export default function Friends() {
     setCommentInput((prev) => ({ ...prev, [memId]: "" }));
   }
 
-  function handleAddFriend(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newFriendHandle.trim()) return;
+  function handleSendMessage(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if ((!chatInputText.trim() && !attachmentPreview) || !activeConvId) return;
 
-    setAddedFriendToast(true);
-    setTimeout(() => {
-      setAddedFriendToast(false);
-      setNewFriendHandle("");
-      setShowAddFriendModal(false);
-    }, 1000);
+    const newMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      senderId: "me",
+      text: chatInputText.trim() || "Sent an image",
+      mediaUrl: attachmentPreview || undefined,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      read: false,
+    };
+
+    setConversations((prev) =>
+      prev.map((conv) => {
+        if (conv.id === activeConvId) {
+          return {
+            ...conv,
+            lastMessage: newMsg.mediaUrl ? "Sent a photo 📷" : newMsg.text,
+            lastTimestamp: "Just now",
+            messages: [...conv.messages, newMsg],
+          };
+        }
+        return conv;
+      })
+    );
+
+    setChatInputText("");
+    setAttachmentPreview(null);
+    setShowEmojiPicker(false);
+  }
+
+  function handleToggleMessageReaction(msgId: string, emoji: string) {
+    if (!activeConvId) return;
+
+    setConversations((prev) =>
+      prev.map((conv) => {
+        if (conv.id === activeConvId) {
+          return {
+            ...conv,
+            messages: conv.messages.map((m) => {
+              if (m.id === msgId) {
+                const current = m.reactions || [];
+                const next = current.includes(emoji)
+                  ? current.filter((r) => r !== emoji)
+                  : [...current, emoji];
+                return { ...m, reactions: next };
+              }
+              return m;
+            }),
+          };
+        }
+        return conv;
+      })
+    );
+  }
+
+  function handleStartChatWithFriend(friendId: string) {
+    let existingConv = conversations.find((c) => c.friendId === friendId);
+    if (!existingConv) {
+      const newConv: Conversation = {
+        id: crypto.randomUUID(),
+        friendId,
+        unreadCount: 0,
+        lastMessage: "Started conversation",
+        lastTimestamp: "Just now",
+        messages: [
+          {
+            id: crypto.randomUUID(),
+            senderId: "me",
+            text: "Hey! Connected on LUMI ✨",
+            timestamp: "Just now",
+            read: true,
+          },
+        ],
+      };
+      setConversations((prev) => [newConv, ...prev]);
+      setActiveConvId(newConv.id);
+    } else {
+      setActiveConvId(existingConv.id);
+    }
+
+    setSelectedProfile(null);
+    setActiveTab("messages");
   }
 
   function handleAcceptRequest(req: FriendRequest) {
@@ -334,6 +564,18 @@ export default function Friends() {
     setRequests((prev) => prev.filter((r) => r.id !== id));
   }
 
+  function handleAddFriend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newFriendHandle.trim()) return;
+
+    setAddedFriendToast(true);
+    setTimeout(() => {
+      setAddedFriendToast(false);
+      setNewFriendHandle("");
+      setShowAddFriendModal(false);
+    }, 1000);
+  }
+
   function handleSendCheer() {
     setCheeredToast(true);
     setTimeout(() => setCheeredToast(false), 2000);
@@ -355,7 +597,8 @@ export default function Friends() {
 
   return (
     <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
-      <div className="mx-auto max-w-5xl px-5 py-6 md:px-8 md:py-8">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        
         {/* ═══════════════════════════════════════
             HEADER
         ═══════════════════════════════════════ */}
@@ -364,14 +607,14 @@ export default function Friends() {
             <div className="flex items-center gap-2 mb-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[#E8B9CD]" />
               <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792]">
-                Lightweight Social Layer • Inspired by Waffle
+                Private Social Circle & Messaging
               </p>
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
-              Friends & <span className="font-editorial-italic font-normal text-[#9E96D8]">Moments</span>
+              Friends & <span className="font-editorial-italic font-normal text-[#9E96D8]">Circle</span>
             </h1>
             <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
-              LUMI is personal first. Share moments selectively with friends you care about.
+              Share life moments selectively, cheer each other's goals, and stay connected with private chat.
             </p>
           </div>
 
@@ -386,21 +629,21 @@ export default function Friends() {
         </header>
 
         {/* ═══════════════════════════════════════
-            SEARCH & VIEW SELECTOR TABS
+            4 PRIMARY VIEW SELECTOR TABS
         ═══════════════════════════════════════ */}
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex flex-wrap gap-1.5 rounded-2xl border border-[#E8E3F0] bg-white/90 p-1.5 shadow-2xs">
             <button
               type="button"
               onClick={() => setActiveTab("feed")}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "feed"
                   ? "bg-[#EEEAFE] text-[#17151C] border border-[#DDD8F2] shadow-2xs"
                   : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
-              <Sparkles size={15} className={activeTab === "feed" ? "text-[#9E96D8]" : ""} />
-              <span>Shared Moments Feed</span>
+              <Sparkles size={14} className={activeTab === "feed" ? "text-[#9E96D8]" : ""} />
+              <span>Shared Moments</span>
               <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2]">
                 {memories.length}
               </span>
@@ -409,13 +652,13 @@ export default function Friends() {
             <button
               type="button"
               onClick={() => setActiveTab("friends")}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "friends"
                   ? "bg-[#EEEAFE] text-[#17151C] border border-[#DDD8F2] shadow-2xs"
                   : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
-              <Users size={15} className={activeTab === "friends" ? "text-[#9E96D8]" : ""} />
+              <Users size={14} className={activeTab === "friends" ? "text-[#9E96D8]" : ""} />
               <span>Friends Circle</span>
               <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2]">
                 {friendsList.length}
@@ -424,14 +667,35 @@ export default function Friends() {
 
             <button
               type="button"
+              onClick={() => {
+                setActiveTab("messages");
+                if (conversations[0]) setActiveConvId(conversations[0].id);
+              }}
+              className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
+                activeTab === "messages"
+                  ? "bg-[#EEEAFE] text-[#17151C] border border-[#DDD8F2] shadow-2xs"
+                  : "text-[#5F5965] hover:text-[#17151C]"
+              }`}
+            >
+              <MessageCircle size={14} className={activeTab === "messages" ? "text-[#9E96D8]" : ""} />
+              <span>Messages</span>
+              {totalUnreadMessages > 0 && (
+                <span className="rounded-full bg-[#17151C] px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
+                  {totalUnreadMessages}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab("requests")}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "requests"
                   ? "bg-[#EEEAFE] text-[#17151C] border border-[#DDD8F2] shadow-2xs"
                   : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
-              <UserPlus size={15} className={activeTab === "requests" ? "text-[#9E96D8]" : ""} />
+              <UserPlus size={14} className={activeTab === "requests" ? "text-[#9E96D8]" : ""} />
               <span>Requests</span>
               {requests.length > 0 && (
                 <span className="rounded-full bg-[#E8B9CD] px-2 py-0.5 text-[10px] font-bold text-[#6B2848] border border-[#DC9EB7]">
@@ -441,20 +705,22 @@ export default function Friends() {
             </button>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8D8792]" />
-            <input
-              type="text"
-              placeholder="Search feed & friends..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-[#E8E3F0] bg-white py-2 pl-9 pr-3 text-xs font-medium text-[#17151C] placeholder-[#8D8792] focus:border-[#9E96D8] outline-none shadow-2xs"
-            />
-          </div>
+          {activeTab !== "messages" && (
+            <div className="relative w-full sm:w-60">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8D8792]" />
+              <input
+                type="text"
+                placeholder="Search feed & friends..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white py-2 pl-9 pr-3 text-xs font-medium text-[#17151C] placeholder-[#8D8792] focus:border-[#9E96D8] outline-none shadow-2xs"
+              />
+            </div>
+          )}
         </div>
 
         {/* =========================================================
-            FEED VIEW
+            TAB 1: SHARED MOMENTS FEED
         ========================================================= */}
         {activeTab === "feed" && (
           <div>
@@ -465,7 +731,7 @@ export default function Friends() {
                 </div>
                 <h3 className="font-serif text-xl font-bold text-[#17151C]">No moments found</h3>
                 <p className="mt-1 text-xs text-[#5F5965]">
-                  {searchQuery ? "No moments match your search query." : "When friends share moments, they will appear right here."}
+                  {searchQuery ? "No moments match your search query." : "When friends share memories, they will appear right here."}
                 </p>
               </div>
             ) : (
@@ -516,9 +782,13 @@ export default function Friends() {
                           </div>
                         </div>
 
-                        <span className="rounded-full bg-[#FAF8FC] border border-[#E8E3F0] px-2.5 py-1 text-[10px] font-semibold text-[#8D8792]">
-                          Shared Moment
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleStartChatWithFriend(mem.authorId)}
+                          className="rounded-full bg-[#FAF8FC] border border-[#E8E3F0] px-2.5 py-1 text-[10px] font-semibold text-[#6B5BA5] hover:bg-[#EEEAFE] transition cursor-pointer"
+                        >
+                          💬 Chat
+                        </button>
                       </div>
 
                       {/* Photo with rounded card container */}
@@ -623,7 +893,7 @@ export default function Friends() {
         )}
 
         {/* =========================================================
-            FRIENDS LIST VIEW
+            TAB 2: FRIENDS CIRCLE
         ========================================================= */}
         {activeTab === "friends" && (
           <div>
@@ -644,38 +914,44 @@ export default function Friends() {
                     key={friend.handle}
                     variant="glass"
                     hoverEffect
-                    onClick={() => setSelectedProfile(friend)}
-                    className="p-4 border-[#E8E3F0] bg-white/95 flex items-center justify-between gap-3 cursor-pointer group"
+                    className="p-4 border-[#E8E3F0] bg-white/95 flex items-center justify-between gap-3 group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
+                    <div
+                      className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+                      onClick={() => setSelectedProfile(friend)}
+                    >
+                      <div className="relative shrink-0">
                         <img
                           src={friend.avatar}
                           alt={friend.name}
-                          className="h-11 w-11 rounded-full object-cover border border-[#DDD8F2] group-hover:scale-105 transition"
+                          className="h-12 w-12 rounded-full object-cover border border-[#DDD8F2] group-hover:scale-105 transition"
                         />
                         {friend.online && (
-                          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-[#528D6F] border-2 border-white" />
+                          <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-[#528D6F] border-2 border-white" />
                         )}
                       </div>
 
-                      <div>
-                        <h3 className="font-serif font-bold text-sm text-[#17151C] group-hover:text-[#6B5BA5] transition">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-serif font-bold text-sm text-[#17151C] group-hover:text-[#6B5BA5] transition truncate">
                           {friend.name}
                         </h3>
-                        <p className="text-[11px] font-medium text-[#8D8792]">
+                        <p className="text-[11px] font-medium text-[#8D8792] truncate">
                           {friend.handle}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-[#5F5965] flex items-center gap-1 font-medium">
-                          <Sparkles size={10} className="text-[#9E96D8]" /> {friend.status}
+                        <p className="mt-0.5 text-[10px] text-[#5F5965] flex items-center gap-1 font-medium truncate">
+                          <Sparkles size={10} className="text-[#9E96D8] shrink-0" /> {friend.status}
                         </p>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="rounded-xl bg-[#EEEAFE] border border-[#DDD8F2] px-3 py-1 text-[11px] font-semibold text-[#6B5BA5]">
-                        View Profile
-                      </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleStartChatWithFriend(friend.id)}
+                        className="rounded-xl bg-[#17151C] px-3 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] transition cursor-pointer"
+                      >
+                        Message
+                      </button>
                     </div>
                   </Card>
                 ))}
@@ -685,7 +961,330 @@ export default function Friends() {
         )}
 
         {/* =========================================================
-            REQUESTS TAB VIEW
+            TAB 3: 💬 1-TO-1 MESSAGING & CHAT SYSTEM
+        ========================================================= */}
+        {activeTab === "messages" && (
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 rounded-3xl border border-[#E8E3F0] bg-white/95 p-3 shadow-lg min-h-[560px]">
+            
+            {/* Conversations Sidebar List (Left 4 cols) */}
+            <div className="md:col-span-4 border-r border-[#E8E3F0] pr-2 space-y-2">
+              <div className="p-2 border-b border-[#E8E3F0]">
+                <h3 className="font-serif text-base font-bold text-[#17151C]">Direct Messages</h3>
+                <p className="text-[11px] text-[#8D8792]">Private chats with accepted friends</p>
+              </div>
+
+              <div className="space-y-1 overflow-y-auto max-h-[460px] scrollbar-thin">
+                {conversations.map((conv) => {
+                  const friend = friends[conv.friendId];
+                  if (!friend) return null;
+                  const isSelected = activeConvId === conv.id;
+
+                  return (
+                    <button
+                      key={conv.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveConvId(conv.id);
+                        // Clear unread
+                        setConversations((prev) =>
+                          prev.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c))
+                        );
+                      }}
+                      className={`w-full flex items-center gap-3 p-2.5 rounded-2xl transition cursor-pointer text-left ${
+                        isSelected
+                          ? "bg-[#EEEAFE] border border-[#DDD8F2] shadow-2xs"
+                          : "hover:bg-[#FAF8FC] border border-transparent"
+                      }`}
+                    >
+                      <div className="relative shrink-0">
+                        <img
+                          src={friend.avatar}
+                          alt={friend.name}
+                          className="h-10 w-10 rounded-full object-cover border border-[#DDD8F2]"
+                        />
+                        {friend.online && (
+                          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#528D6F] border-2 border-white" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-serif font-bold text-xs text-[#17151C] truncate">
+                            {friend.name}
+                          </h4>
+                          <span className="text-[10px] text-[#8D8792]">{conv.lastTimestamp}</span>
+                        </div>
+                        <p className="text-[11px] text-[#5F5965] truncate mt-0.5">
+                          {conv.lastMessage}
+                        </p>
+                      </div>
+
+                      {conv.unreadCount > 0 && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#17151C] text-[10px] font-bold text-white shadow-2xs shrink-0">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Active Chat Conversation (Right 8 cols) */}
+            <div className="md:col-span-8 flex flex-col justify-between pl-1">
+              {activeFriend && activeConversation ? (
+                <>
+                  {/* Chat Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E8E3F0] px-3">
+                    <div
+                      className="flex items-center gap-3 cursor-pointer"
+                      onClick={() => setSelectedProfile(activeFriend)}
+                    >
+                      <div className="relative">
+                        <img
+                          src={activeFriend.avatar}
+                          alt={activeFriend.name}
+                          className="h-10 w-10 rounded-full object-cover border border-[#DDD8F2]"
+                        />
+                        {activeFriend.online && (
+                          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#528D6F] border-2 border-white" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-serif font-bold text-sm text-[#17151C] flex items-center gap-2">
+                          <span>{activeFriend.name}</span>
+                          <span className="text-[11px] font-normal text-[#8D8792]">
+                            {activeFriend.handle}
+                          </span>
+                        </h3>
+                        <p className="text-[10px] text-[#528D6F] font-medium flex items-center gap-1">
+                          <Sparkles size={10} />
+                          <span>{activeFriend.online ? "Online • " + activeFriend.status : "Offline"}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProfile(activeFriend)}
+                      className="rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3 py-1.5 text-xs font-semibold text-[#5F5965] hover:bg-white transition cursor-pointer"
+                    >
+                      View Profile
+                    </button>
+                  </div>
+
+                  {/* Message Stream */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[380px] scrollbar-thin">
+                    <div className="text-center my-1">
+                      <span className="rounded-full bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-1 text-[10px] font-semibold text-[#8D8792]">
+                        🔒 End-to-end private chat with {activeFriend.name}
+                      </span>
+                    </div>
+
+                    {activeConversation.messages.map((msg) => {
+                      const isMe = msg.senderId === "me";
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}
+                        >
+                          {!isMe && (
+                            <img
+                              src={activeFriend.avatar}
+                              alt={activeFriend.name}
+                              className="h-7 w-7 rounded-full object-cover border border-[#DDD8F2] shrink-0 mb-1"
+                            />
+                          )}
+
+                          <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[78%]`}>
+                            <div
+                              className={`relative rounded-2xl p-3 shadow-2xs ${
+                                isMe
+                                  ? "bg-[#17151C] text-white rounded-br-xs"
+                                  : "bg-[#FAF8FC] border border-[#E8E3F0] text-[#17151C] rounded-bl-xs"
+                              }`}
+                            >
+                              {msg.mediaUrl && (
+                                <img
+                                  src={msg.mediaUrl}
+                                  alt="Attachment"
+                                  onClick={() => setLightboxImage(msg.mediaUrl || null)}
+                                  className="rounded-xl mb-2 max-h-52 w-full object-cover cursor-pointer hover:opacity-95 transition"
+                                />
+                              )}
+                              <p className="text-xs leading-relaxed whitespace-pre-wrap select-text">{msg.text}</p>
+
+                              {/* Reaction Pills on Bubble */}
+                              {msg.reactions && msg.reactions.length > 0 && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {msg.reactions.map((r, rIdx) => (
+                                    <span
+                                      key={rIdx}
+                                      onClick={() => handleToggleMessageReaction(msg.id, r)}
+                                      className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] cursor-pointer hover:scale-105 transition"
+                                    >
+                                      {r}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Timestamp, status & Quick Reaction Triggers on Hover */}
+                            <div className="mt-1 flex items-center gap-2 px-1 text-[10px] text-[#8D8792]">
+                              <span>{msg.timestamp}</span>
+                              {isMe && <CheckCheck size={12} className="text-[#9E96D8]" />}
+
+                              {/* Hover Reactions */}
+                              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 bg-[#FAF8FC] px-1.5 py-0.5 rounded-full border border-[#E8E3F0] transition-opacity">
+                                {["❤️", "✨", "😂", "👍"].map((emoji) => (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    onClick={() => handleToggleMessageReaction(msg.id, emoji)}
+                                    className="hover:scale-125 transition cursor-pointer text-[10px]"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {isMe && (
+                            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-[#DCD8F2] to-[#EEF3FA] border border-white flex items-center justify-center text-[10px] font-bold text-[#17151C] shrink-0 mb-1 overflow-hidden">
+                              {myAvatar ? (
+                                <img src={myAvatar} alt="Me" className="h-full w-full object-cover" />
+                              ) : (
+                                <span>S</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Attachment Preview Bar */}
+                  {attachmentPreview && (
+                    <div className="p-2 px-4 border-t border-[#E8E3F0] bg-[#FAF8FC] flex items-center justify-between lumi-animate-fade-up">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={attachmentPreview}
+                          alt="Preview"
+                          className="h-10 w-10 rounded-lg object-cover border border-[#DDD8F2]"
+                        />
+                        <span className="text-xs text-[#5F5965] font-medium">Photo attached • Ready to send</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAttachmentPreview(null)}
+                        className="text-xs font-semibold text-[#D99BB8] hover:underline cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Emoji / Sticker Quick Bar */}
+                  {showEmojiPicker && (
+                    <div className="p-2 border-t border-[#E8E3F0] bg-[#FAF8FC] flex flex-wrap gap-1.5 lumi-animate-fade-up">
+                      <span className="text-[10px] font-bold text-[#8D8792] uppercase self-center mr-1">
+                        Emojis:
+                      </span>
+                      {["✨", "🌸", "☕", "🍵", "❤️", "💖", "🔥", "🚀", "🙌", "📚", "💻", "🌿", "🌙", "🥑", "🧘", "🎧", "🎯"].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            setChatInputText((prev) => prev + emoji);
+                          }}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-[#E8E3F0] hover:scale-115 transition cursor-pointer text-xs"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Chat Composer */}
+                  <form
+                    onSubmit={handleSendMessage}
+                    className="p-3 border-t border-[#E8E3F0] flex items-center gap-2"
+                  >
+                    <input
+                      type="file"
+                      ref={chatFileInputRef}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            setAttachmentPreview(ev.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      accept="image/*"
+                      className="hidden"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => chatFileInputRef.current?.click()}
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0"
+                      title="Attach photo"
+                    >
+                      📷
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0"
+                      title="Add sticker or emoji"
+                    >
+                      <Smile size={16} />
+                    </button>
+
+                    <input
+                      type="text"
+                      placeholder={`Write a message to ${activeFriend.name}... (Press Enter to send)`}
+                      value={chatInputText}
+                      onChange={(e) => setChatInputText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      className="flex-1 rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={!chatInputText.trim() && !attachmentPreview}
+                      className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#17151C] text-white hover:bg-[#2D263B] disabled:opacity-40 transition cursor-pointer shadow-2xs shrink-0"
+                    >
+                      <Send size={14} />
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full py-16 text-center text-[#8D8792]">
+                  <MessageCircle size={32} className="text-[#9E96D8] mb-2" />
+                  <p className="font-serif text-lg font-bold text-[#17151C]">Select a conversation</p>
+                  <p className="text-xs text-[#5F5965]">Choose a friend from the list to start chatting.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+            TAB 4: REQUESTS
         ========================================================= */}
         {activeTab === "requests" && (
           <div>
@@ -841,25 +1440,34 @@ export default function Friends() {
                 </div>
               </div>
 
-              {/* Stats Footer */}
+              {/* Action Buttons & Stats */}
               <div className="mt-4 pt-3 border-t border-[#E8E3F0] flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-[#8D8792]">
+                <div className="flex items-center gap-3 text-xs text-[#8D8792]">
                   <span>
                     <strong className="text-[#17151C]">{selectedProfile.sharedMomentsCount}</strong> moments
                   </span>
                   <span>
-                    <strong className="text-[#17151C]">{selectedProfile.mutualCount}</strong> mutual friends
+                    <strong className="text-[#17151C]">{selectedProfile.mutualCount}</strong> mutuals
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    onClick={() => handleStartChatWithFriend(selectedProfile.id)}
+                    className="flex items-center gap-1.5 rounded-xl bg-[#17151C] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] transition cursor-pointer"
+                  >
+                    <MessageCircle size={14} />
+                    <span>Message</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={handleSendCheer}
                     className="flex items-center gap-1.5 rounded-xl bg-[#EEEAFE] border border-[#DDD8F2] px-3 py-1.5 text-xs font-semibold text-[#6B5BA5] hover:bg-[#E2DBFA] transition cursor-pointer"
                   >
                     <Smile size={14} />
-                    <span>Send Cheer ✨</span>
+                    <span>Cheer ✨</span>
                   </button>
                 </div>
               </div>
@@ -894,7 +1502,7 @@ export default function Friends() {
             <form onSubmit={handleAddFriend} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                  Friend's LUMI Handle or Email *
+                  Friend's LUMI @username or Email *
                 </label>
                 <input
                   type="text"
@@ -933,6 +1541,32 @@ export default function Friends() {
             </form>
           )}
         </Modal>
+
+        {/* ═══════════════════════════════════════
+            LIGHTBOX PHOTO PREVIEW MODAL
+        ═══════════════════════════════════════ */}
+        {lightboxImage && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#17151C]/85 p-4 backdrop-blur-md lumi-animate-fade-up"
+            onClick={() => setLightboxImage(null)}
+          >
+            <div className="relative max-w-2xl max-h-[85vh] p-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setLightboxImage(null)}
+                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-[#17151C]/70 text-white hover:bg-[#17151C] transition cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+              <img
+                src={lightboxImage}
+                alt="Enlarged view"
+                className="max-h-[80vh] w-auto rounded-2xl object-contain shadow-2xl border border-white/20"
+              />
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

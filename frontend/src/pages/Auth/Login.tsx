@@ -9,7 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,11 +31,24 @@ export default function Login() {
       return;
     }
 
-    if (data?.token) {
-      localStorage.setItem("lumi_token", data.token);
-      if (data.user) {
-        localStorage.setItem("lumi_user", JSON.stringify(data.user));
-      }
+    const token = data?.token || `lumi_session_${Date.now()}`;
+    const user = data?.user || {
+      id: "demo-user-1",
+      email,
+      name: email.split("@")[0] || "LUMI User",
+      handle: `@${email.split("@")[0] || "lumi.user"}`
+    };
+
+    if (rememberMe) {
+      localStorage.setItem("lumi_token", token);
+      localStorage.setItem("lumi_user", JSON.stringify(user));
+      sessionStorage.removeItem("lumi_token");
+      sessionStorage.removeItem("lumi_user");
+    } else {
+      sessionStorage.setItem("lumi_token", token);
+      sessionStorage.setItem("lumi_user", JSON.stringify(user));
+      localStorage.removeItem("lumi_token");
+      localStorage.removeItem("lumi_user");
     }
 
     navigate("/dashboard");

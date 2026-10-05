@@ -4,7 +4,6 @@ import {
   CheckSquare,
   FileText,
   FolderKanban,
-  Target,
   PenLine,
   Camera,
   BookOpen,
@@ -324,13 +323,6 @@ export function UniversalCreateModal({
       bg: "bg-[#FDF3EC] border-[#F1D2C9]",
     },
     {
-      type: "goal" as CreateTemplateType,
-      title: "Goal",
-      desc: "Long term milestone & target",
-      icon: <Target size={20} className="text-[#9E96D8]" />,
-      bg: "bg-[#EEEAFE] border-[#DDD8F2]",
-    },
-    {
       type: "journal" as CreateTemplateType,
       title: "Journal",
       desc: "Daily entry, reflection, gratitude",
@@ -345,18 +337,18 @@ export function UniversalCreateModal({
       bg: "bg-[#EEF3FA] border-[#D9E7F2]",
     },
     {
-      type: "habit" as CreateTemplateType,
-      title: "Habit",
-      desc: "Daily ritual to track",
-      icon: <Flame size={20} className="text-[#D99BB8]" />,
-      bg: "bg-[#FDF0F6] border-[#F2D8E4]",
-    },
-    {
       type: "reading" as CreateTemplateType,
       title: "Reading",
       desc: "Book to read & track progress",
       icon: <BookOpen size={20} className="text-[#6B9AB8]" />,
       bg: "bg-[#EEF3FA] border-[#D9E7F2]",
+    },
+    {
+      type: "habit" as CreateTemplateType,
+      title: "Habit",
+      desc: "Daily ritual to track",
+      icon: <Flame size={20} className="text-[#D99BB8]" />,
+      bg: "bg-[#FDF0F6] border-[#F2D8E4]",
     },
   ];
 

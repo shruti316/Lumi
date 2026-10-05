@@ -803,6 +803,7 @@ export default function Settings() {
                   onClick={() => {
                     if (confirm("Reset demo items and synchronize fresh state?")) {
                       localStorage.clear();
+                      sessionStorage.clear();
                       window.location.reload();
                     }
                   }}
@@ -810,6 +811,20 @@ export default function Settings() {
                 >
                   <Trash2 size={14} />
                   <span>Reset Demo State</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("lumi_token");
+                    localStorage.removeItem("lumi_user");
+                    sessionStorage.removeItem("lumi_token");
+                    sessionStorage.removeItem("lumi_user");
+                    window.location.href = "/login";
+                  }}
+                  className="flex items-center gap-2 rounded-xl border border-[#DDD8F2] bg-[#EEEAFE] px-4 py-2.5 text-xs font-semibold text-[#17151C] hover:bg-[#E5E0F8] transition cursor-pointer"
+                >
+                  <span>Sign Out of Device</span>
                 </button>
               </div>
             </Card>
