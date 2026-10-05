@@ -10,6 +10,11 @@ const PORT = 5000;
 // Allows Express to read JSON request bodies
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // -------------------------
 // Basic Route
 // -------------------------
