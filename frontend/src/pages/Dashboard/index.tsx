@@ -5,7 +5,6 @@ import {
   Bell,
   Settings,
   Plus,
-  ArrowRight,
   Check,
   Flame,
   Target,
@@ -26,6 +25,7 @@ import {
   ExternalLink,
   FolderKanban,
   X,
+  RotateCw,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { getTasks, updateTask, addTask, type Task } from "../../lib/storage";
@@ -92,6 +92,50 @@ export default function Dashboard() {
   ]);
 
   const unreadNotifsCount = notifications.filter((n) => n.unread).length;
+
+  // Dynamic Rotating Daily Mindsets
+  const DAILY_MINDSETS = [
+    {
+      quote: "Progress, not perfection.",
+      supporting: "Small steps still move you forward.",
+      image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
+      tag: "Focus",
+    },
+    {
+      quote: "You don't have to do everything today.",
+      supporting: "Focus on what brings you peace and genuine momentum.",
+      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+      tag: "Calm",
+    },
+    {
+      quote: "Quiet moments cultivate the deepest growth.",
+      supporting: "Make gentle space to breathe, reflect, and reset.",
+      image: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80",
+      tag: "Reflection",
+    },
+    {
+      quote: "Design your days around what truly matters.",
+      supporting: "Protect your energy for what brings you life and purpose.",
+      image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&q=80",
+      tag: "Intention",
+    },
+    {
+      quote: "Be proud of how hard you are trying.",
+      supporting: "Trust the timing of your life and keep showing up for yourself.",
+      image: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80",
+      tag: "Encouragement",
+    },
+  ];
+
+  // Daily index derived from day of year with manual shuffle override
+  const todayDayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const [mindsetIndex, setMindsetIndex] = useState(
+    () => todayDayOfYear % DAILY_MINDSETS.length
+  );
+
+  const currentMindset = DAILY_MINDSETS[mindsetIndex % DAILY_MINDSETS.length];
 
   // Quick Capture State
   const [quickCaptureText, setQuickCaptureText] = useState("");
@@ -444,7 +488,7 @@ export default function Dashboard() {
         ═══════════════════════════════════════════════════ */}
         <section className="mb-6 grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
           {/* CARD 1: TODAY'S DATE CARD */}
-          <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#EEEAFE] via-[#F8E8F0] to-[#EEF3FA] p-5 border border-[#DCD8F2] shadow-[0_4px_20px_rgba(80,70,120,0.05)] transition-all duration-300 hover:shadow-md">
+          <div className="card-date-hero group relative overflow-hidden rounded-3xl p-5 shadow-[0_4px_20px_rgba(80,70,120,0.05)] transition-all duration-300 hover:shadow-md">
             <div className="relative z-10 flex flex-col justify-between h-full">
               <span className="font-serif text-lg sm:text-xl font-bold text-[#17151C]">
                 {dateFormatted}
@@ -657,31 +701,43 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            {/* CARD: INSPIRATION BANNER (MOUNTAIN/NATURE) */}
+            {/* CARD: DYNAMIC DAILY MINDSET BANNER */}
             <div className="relative overflow-hidden rounded-3xl bg-[#17151C] text-white p-6 shadow-md border border-[#2D263B] group">
               <div
-                className="absolute inset-0 bg-cover bg-center opacity-40 transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 bg-cover bg-center opacity-45 transition-all duration-700 group-hover:scale-105"
                 style={{
-                  backgroundImage:
-                    "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80')",
+                  backgroundImage: `url('${currentMindset.image}')`,
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30" />
 
               <div className="relative z-10 flex flex-col justify-between min-h-32">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#B8B3E8]">
-                    Daily Mindset
-                  </span>
-                  <ArrowRight size={14} className="text-white/70 group-hover:translate-x-1 transition-transform" />
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#B8B3E8]">
+                      Daily Mindset
+                    </span>
+                    <span className="text-white/40">•</span>
+                    <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-semibold text-white/90">
+                      {currentMindset.tag}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMindsetIndex((prev) => prev + 1)}
+                    className="rounded-full p-1.5 bg-white/15 hover:bg-white/30 text-white/90 transition backdrop-blur-xs cursor-pointer active:scale-95"
+                    title="Next inspiration"
+                  >
+                    <RotateCw size={12} />
+                  </button>
                 </div>
 
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-white leading-snug">
-                    "Progress, not perfection."
+                  <h3 className="font-serif text-lg font-bold text-white leading-snug drop-shadow-xs">
+                    "{currentMindset.quote}"
                   </h3>
-                  <p className="mt-1 text-xs text-white/80 font-normal">
-                    You're doing better than you think.
+                  <p className="mt-1 text-xs text-white/90 font-normal leading-relaxed drop-shadow-xs">
+                    {currentMindset.supporting}
                   </p>
                 </div>
               </div>

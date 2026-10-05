@@ -57,21 +57,21 @@ export function Sidebar({
       <div className="pointer-events-none absolute top-1/2 -right-12 h-40 w-40 rounded-full bg-[#F8E8F0]/50 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full bg-[#EEF3FA]/60 blur-3xl" />
 
-      {/* BRAND HEADER */}
-      <div className="relative z-10 px-6 pt-7 pb-3">
+      {/* BRAND HEADER & LOGO */}
+      <div className="relative z-10 px-5 pt-6 pb-3">
         <button
           type="button"
           onClick={() => onNavigate("/dashboard")}
-          className="flex items-center gap-3.5 group text-left w-full cursor-pointer"
+          className="flex items-center gap-3 group text-left w-full cursor-pointer select-none"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DCD8F2] to-[#F2D8E4] border border-white shadow-[0_4px_12px_rgba(184,179,232,0.3)] group-hover:scale-105 transition-transform duration-200 text-lg">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DCD8F2] to-[#F2D8E4] border border-white shadow-[0_4px_12px_rgba(184,179,232,0.3)] group-hover:scale-105 transition-transform duration-200 text-lg">
             ✧
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="font-serif text-2xl font-bold tracking-tight text-[#17151C] leading-none group-hover:text-[#9E96D8] transition-colors">
               LUMI
             </h1>
-            <p className="mt-1 text-[11px] font-medium tracking-widest text-[#8D8792] uppercase">
+            <p className="mt-1 text-[10px] font-semibold tracking-widest text-[#8D8792] uppercase">
               Personal Life OS
             </p>
           </div>
@@ -81,7 +81,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onOpenCreate}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#17151C] px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#2D263B] hover:-translate-y-0.5 active:scale-98 cursor-pointer"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#17151C] px-3.5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#2D263B] hover:-translate-y-0.5 active:scale-98 cursor-pointer"
         >
           <Plus size={16} />
           <span>Create</span>
@@ -92,7 +92,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={onOpenSearch}
-            className="mt-2.5 flex w-full items-center justify-between rounded-xl bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-1.5 text-xs text-[#8D8792] hover:border-[#9E96D8]/50 hover:bg-white transition cursor-pointer shadow-2xs"
+            className="mt-2 flex w-full items-center justify-between rounded-xl bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-2 text-xs text-[#8D8792] hover:border-[#9E96D8]/50 hover:bg-white transition cursor-pointer shadow-2xs"
           >
             <span className="flex items-center gap-2 font-medium">
               <Sparkles size={13} className="text-[#9E96D8]" />
@@ -106,7 +106,7 @@ export function Sidebar({
       </div>
 
       {/* PRIMARY NAVIGATION */}
-      <nav className="relative z-10 flex-1 space-y-0.5 overflow-y-auto px-3.5 py-2 scrollbar-none">
+      <nav className="relative z-10 flex-1 space-y-1 overflow-y-auto px-3.5 py-2 scrollbar-none">
         <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-[#8D8792]">
           Navigation
         </div>
@@ -146,27 +146,37 @@ export function Sidebar({
 
       {/* USER PROFILE FOOTER */}
       <div className="relative z-10 border-t border-[#E8E3F0] p-3.5">
-        <button
-          type="button"
-          onClick={() => onNavigate("/settings")}
-          className={`flex w-full items-center gap-3 rounded-2xl p-2.5 border transition cursor-pointer text-left ${
-            currentPath === "/settings"
+        <div
+          className={`flex w-full items-center justify-between gap-2.5 rounded-2xl p-2.5 border transition text-left ${
+            currentPath === "/profile" || currentPath === "/settings"
               ? "bg-[#EEEAFE] border-[#DDD8F2] shadow-2xs"
               : "bg-white/90 border-[#E8E3F0] hover:bg-white hover:border-[#DDD8F2] shadow-2xs"
           }`}
-          title="Settings & Appearance"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#DCD8F2] to-[#EEF3FA] text-[#17151C] font-bold text-xs border border-white shadow-2xs shrink-0">
-            S
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-[#17151C]">Shru</p>
-            <p className="truncate text-[10px] text-[#8D8792]">Settings & Themes</p>
-          </div>
-          <span className="text-[#8D8792] hover:text-[#17151C] p-1 transition">
+          <button
+            type="button"
+            onClick={() => onNavigate("/profile")}
+            className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
+            title="View Profile"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#DCD8F2] to-[#EEF3FA] text-[#17151C] font-bold text-xs border border-white shadow-2xs shrink-0">
+              S
+            </div>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="truncate text-xs font-semibold text-[#17151C]">Shru</p>
+              <p className="truncate text-[10px] text-[#8D8792]">@shru.lumi</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onNavigate("/settings")}
+            className="text-[#8D8792] hover:text-[#17151C] p-1.5 rounded-lg hover:bg-white/80 transition cursor-pointer"
+            title="Settings & Themes"
+          >
             <Settings size={14} className={currentPath === "/settings" ? "text-[#9E96D8]" : ""} />
-          </span>
-        </button>
+          </button>
+        </div>
       </div>
     </aside>
   );

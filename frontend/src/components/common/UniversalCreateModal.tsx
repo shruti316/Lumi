@@ -9,6 +9,9 @@ import {
   Camera,
   BookOpen,
   Flame,
+  Lock,
+  Users,
+  Star,
 } from "lucide-react";
 import { addTask, type Task } from "../../lib/storage";
 import {
@@ -95,7 +98,9 @@ export function UniversalCreateModal({
   const [memoryCaption, setMemoryCaption] = useState("");
   const [memoryDate, setMemoryDate] = useState(new Date().toISOString().split("T")[0]);
   const [memoryLocation, setMemoryLocation] = useState("");
-  const [memoryShare, setMemoryShare] = useState(false);
+  const [memoryVisibility, setMemoryVisibility] = useState<"private" | "friends" | "close_friends">("private");
+  const [memoryMusic, setMemoryMusic] = useState("");
+  const [memoryPeople, setMemoryPeople] = useState("");
 
   // Habit
   const [habitName, setHabitName] = useState(initialText);
@@ -232,19 +237,31 @@ export function UniversalCreateModal({
       "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500&q=80",
       "https://images.unsplash.com/photo-1519741497674-611481863552?w=500&q=80",
     ];
-    const finalImg = memoryImage.trim() || sampleImages[Math.floor(Math.random() * sampleImages.length)];
-
+    const finalImg =
+      memoryImage.trim() ||
+      sampleImages[Math.floor(Math.random() * sampleImages.length)];
+    const isSharedMoment = memoryVisibility === "friends" || memoryVisibility === "close_friends";
     addMemory({
       id: crypto.randomUUID(),
       title: memoryTitle.trim(),
-      caption: memoryCaption.trim() + (memoryLocation ? ` 📍 ${memoryLocation}` : ""),
+      caption:
+        memoryCaption.trim() +
+        (memoryLocation ? ` 📍 ${memoryLocation}` : "") +
+        (memoryPeople ? ` 👥 ${memoryPeople}` : "") +
+        (memoryMusic ? ` 🎵 ${memoryMusic}` : ""),
       imageUrl: finalImg,
       date: memoryDate,
-      tags: memoryShare ? ["shared", "friends"] : ["personal"],
+      location: memoryLocation.trim() || undefined,
+      song: memoryMusic.trim() || undefined,
+      visibility: memoryVisibility,
+      tags: isSharedMoment ? ["moment", "shared", memoryVisibility] : ["personal", "private"],
       createdAt: new Date().toISOString(),
     });
 
-    handleTriggerSuccess("Memory preserved in LUMI!", "memory");
+    handleTriggerSuccess(
+      isSharedMoment ? "Moment shared with friends! ✨" : "Personal memory preserved in vault! 🔒",
+      "memory"
+    );
   }
 
   function handleSubmitHabit(e: React.FormEvent) {
@@ -852,10 +869,11 @@ export function UniversalCreateModal({
         )}
 
         {/* =========================================================
-            CREATE MEMORY
+            CREATE MEMORY / MOMENT
         ========================================================= */}
         {currentView === "memory" && (
-          <form onSubmit={handleSubmitMemory} className="space-y-3.5">
+          <form onSubmit={handleSubmitMemory} className="space-y-3.5 max-h-[75vh] overflow-y-auto pr-1 scrollbar-none">
+            {/* 1. MEDIA & TITLE */}
             <div>
               <label className="block text-xs font-semibold text-[#17151C] mb-1">
                 Memory Title *
@@ -863,7 +881,7 @@ export function UniversalCreateModal({
               <input
                 type="text"
                 autoFocus
-                placeholder="e.g. Sunset over Campus Quad"
+                placeholder="e.g. Golden hour sunset at the bay"
                 value={memoryTitle}
                 onChange={(e) => setMemoryTitle(e.target.value)}
                 className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:bg-white outline-none shadow-2xs"
@@ -871,6 +889,20 @@ export function UniversalCreateModal({
               />
             </div>
 
+            <div>
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                Photo URL (or choose aesthetic default)
+              </label>
+              <input
+                type="text"
+                placeholder="https://images.unsplash.com/photo-..."
+                value={memoryImage}
+                onChange={(e) => setMemoryImage(e.target.value)}
+                className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+              />
+            </div>
+
+            {/* 2. DETAILS */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[#17151C] mb-1">
@@ -890,7 +922,7 @@ export function UniversalCreateModal({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Library Cafe / Kyoto"
+                  placeholder="e.g. San Francisco Pier"
                   value={memoryLocation}
                   onChange={(e) => setMemoryLocation(e.target.value)}
                   className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
@@ -898,17 +930,32 @@ export function UniversalCreateModal({
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Image URL (Optional or uses aesthetic default)
-              </label>
-              <input
-                type="text"
-                placeholder="https://images.unsplash.com/..."
-                value={memoryImage}
-                onChange={(e) => setMemoryImage(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                  Tag People (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Maya, Aarav"
+                  value={memoryPeople}
+                  onChange={(e) => setMemoryPeople(e.target.value)}
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                  Soundtrack / Song (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Snooze - SZA"
+                  value={memoryMusic}
+                  onChange={(e) => setMemoryMusic(e.target.value)}
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                />
+              </div>
             </div>
 
             <div>
@@ -924,17 +971,54 @@ export function UniversalCreateModal({
               />
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="shareMemory"
-                checked={memoryShare}
-                onChange={(e) => setMemoryShare(e.target.checked)}
-                className="rounded accent-[#17151C] cursor-pointer"
-              />
-              <label htmlFor="shareMemory" className="text-xs font-medium text-[#5F5965] cursor-pointer select-none">
-                Share with Friends feed in LUMI
+            {/* 3. VISIBILITY (MEMORY VS MOMENT) */}
+            <div>
+              <label className="block text-xs font-semibold text-[#17151C] mb-1.5">
+                Visibility & Sharing
               </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMemoryVisibility("private")}
+                  className={`flex flex-col items-center gap-1 rounded-2xl border p-2.5 text-center transition cursor-pointer ${
+                    memoryVisibility === "private"
+                      ? "bg-[#17151C] text-white border-[#17151C] shadow-2xs"
+                      : "bg-[#FAF8FC] border-[#E8E3F0] text-[#5F5965] hover:bg-white"
+                  }`}
+                >
+                  <Lock size={14} className={memoryVisibility === "private" ? "text-[#E8B9CD]" : "text-[#8D8792]"} />
+                  <span className="text-xs font-bold">Private</span>
+                  <span className="text-[9px] opacity-80 leading-tight">Personal Vault</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMemoryVisibility("friends")}
+                  className={`flex flex-col items-center gap-1 rounded-2xl border p-2.5 text-center transition cursor-pointer ${
+                    memoryVisibility === "friends"
+                      ? "bg-[#17151C] text-white border-[#17151C] shadow-2xs"
+                      : "bg-[#FAF8FC] border-[#E8E3F0] text-[#5F5965] hover:bg-white"
+                  }`}
+                >
+                  <Users size={14} className={memoryVisibility === "friends" ? "text-[#9E96D8]" : "text-[#8D8792]"} />
+                  <span className="text-xs font-bold">Friends</span>
+                  <span className="text-[9px] opacity-80 leading-tight">Shared Moment</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMemoryVisibility("close_friends")}
+                  className={`flex flex-col items-center gap-1 rounded-2xl border p-2.5 text-center transition cursor-pointer ${
+                    memoryVisibility === "close_friends"
+                      ? "bg-[#17151C] text-white border-[#17151C] shadow-2xs"
+                      : "bg-[#FAF8FC] border-[#E8E3F0] text-[#5F5965] hover:bg-white"
+                  }`}
+                >
+                  <Star size={14} className={memoryVisibility === "close_friends" ? "text-[#F1D2C9]" : "text-[#8D8792]"} />
+                  <span className="text-xs font-bold">Close Circle</span>
+                  <span className="text-[9px] opacity-80 leading-tight">Inner Circle</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2.5 pt-2">
@@ -948,9 +1032,9 @@ export function UniversalCreateModal({
               <button
                 type="submit"
                 disabled={!memoryTitle.trim()}
-                className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
+                className="rounded-xl bg-[#17151C] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
               >
-                Preserve Memory
+                {memoryVisibility === "private" ? "Preserve Memory 🔒" : "Share Moment ✨"}
               </button>
             </div>
           </form>

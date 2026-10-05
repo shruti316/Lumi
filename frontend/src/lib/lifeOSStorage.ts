@@ -155,6 +155,9 @@ export interface Memory {
   imageUrl: string;
   date: string;
   tags: string[];
+  location?: string;
+  song?: string;
+  visibility?: "private" | "friends" | "close_friends";
   createdAt: string;
 }
 

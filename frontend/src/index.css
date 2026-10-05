@@ -175,6 +175,21 @@ body {
   border-color: #E8E3F0;
 }
 
+.card-date-hero {
+  background: linear-gradient(135deg, #EEEAFE 0%, #F8E8F0 50%, #EEF3FA 100%);
+  border: 1px solid #DCD8F2;
+}
+
+[data-theme="dark"] .card-date-hero {
+  background: linear-gradient(135deg, #28213A 0%, #32202E 50%, #1C2436 100%) !important;
+  border-color: #4C3E68 !important;
+}
+
+[data-theme="mist"] .card-date-hero {
+  background: linear-gradient(135deg, #E6E1D8 0%, #EDE8E0 50%, #E2E6E3 100%) !important;
+  border-color: #DDD8D0 !important;
+}
+
 /* ─────────────────────────────────────────────────────────────
    PREMIUM SHADOW SYSTEM
 ───────────────────────────────────────────────────────────── */
@@ -495,16 +510,16 @@ button:active {
 [data-theme="dark"] {
   color-scheme: dark;
   --lumi-bg-primary: #121017;
-  --lumi-dark: #F5F3F8;
-  --lumi-secondary: #B5AFC0;
-  --lumi-muted: #857E90;
-  --lumi-border: #2C2638;
+  --lumi-dark: #FFFFFF;
+  --lumi-secondary: #C8C2D4;
+  --lumi-muted: #9D96A8;
+  --lumi-border: #322B42;
 }
 
 [data-theme="dark"] html,
 [data-theme="dark"] body {
   background-color: #121017 !important;
-  color: #F5F3F8 !important;
+  color: #FFFFFF !important;
 }
 
 [data-theme="dark"] .lumi-page-atmosphere {
@@ -512,39 +527,39 @@ button:active {
   background-image:
     radial-gradient(
       ellipse 800px 700px at 0% 0%,
-      rgba(158, 150, 216, 0.16) 0%,
-      rgba(24, 20, 32, 0.35) 50%,
+      rgba(158, 150, 216, 0.20) 0%,
+      rgba(24, 20, 32, 0.40) 50%,
       transparent 80%
     ),
     radial-gradient(
       ellipse 850px 750px at 100% 5%,
-      rgba(217, 155, 184, 0.14) 0%,
-      rgba(26, 21, 34, 0.30) 50%,
+      rgba(217, 155, 184, 0.18) 0%,
+      rgba(26, 21, 34, 0.35) 50%,
       transparent 80%
     ),
     radial-gradient(
       ellipse 800px 700px at 15% 100%,
-      rgba(184, 212, 232, 0.14) 0%,
-      rgba(22, 19, 30, 0.35) 50%,
+      rgba(184, 212, 232, 0.18) 0%,
+      rgba(22, 19, 30, 0.40) 50%,
       transparent 80%
     ),
     radial-gradient(
       ellipse 750px 650px at 95% 95%,
-      rgba(241, 210, 201, 0.12) 0%,
+      rgba(241, 210, 201, 0.15) 0%,
       transparent 75%
     ),
     linear-gradient(
       180deg,
       #121017 0%,
-      #181520 50%,
-      #14111A 100%
+      #181522 50%,
+      #131019 100%
     ) !important;
 }
 
 [data-theme="dark"] .lumi-page-atmosphere::before {
   background: radial-gradient(
     ellipse 900px 600px at 50% 35%,
-    rgba(158, 150, 216, 0.08),
+    rgba(158, 150, 216, 0.10),
     transparent 80%
   ) !important;
 }
@@ -552,47 +567,114 @@ button:active {
 /* Dark mode surfaces & card overrides */
 [data-theme="dark"] .bg-white,
 [data-theme="dark"] .bg-white\/80,
+[data-theme="dark"] .bg-white\/85,
 [data-theme="dark"] .bg-white\/90,
 [data-theme="dark"] .bg-white\/95 {
-  background-color: #1A1724 !important;
+  background-color: #1B1726 !important;
 }
 
 [data-theme="dark"] .bg-\[\#FAF8FC\],
 [data-theme="dark"] .bg-\[\#F7F5F8\] {
-  background-color: #14111C !important;
+  background-color: #14111E !important;
 }
 
+/* Dark mode card variants */
+[data-theme="dark"] .card-lavender {
+  background: linear-gradient(135deg, #261F38 0%, #1F192E 100%) !important;
+  border-color: #4C3E68 !important;
+}
+
+[data-theme="dark"] .card-pink {
+  background: linear-gradient(135deg, #301E2B 0%, #241721 100%) !important;
+  border-color: #5C3A50 !important;
+}
+
+[data-theme="dark"] .card-blue {
+  background: linear-gradient(135deg, #1C2738 0%, #161F2C 100%) !important;
+  border-color: #354964 !important;
+}
+
+[data-theme="dark"] .card-peach {
+  background: linear-gradient(135deg, #2E211E 0%, #241A17 100%) !important;
+  border-color: #5A3E36 !important;
+}
+
+[data-theme="dark"] .card-mixed {
+  background: linear-gradient(135deg, #282038 0%, #301D2B 50%, #1C2638 100%) !important;
+  border-color: #4C3E68 !important;
+}
+
+[data-theme="dark"] .card-glass {
+  background: rgba(27, 23, 38, 0.88) !important;
+  border-color: #342C44 !important;
+}
+
+[data-theme="dark"] .card-pearl {
+  background: linear-gradient(135deg, #201B2C 0%, #1B1726 100%) !important;
+  border-color: #322A42 !important;
+}
+
+/* Pastel accent containers in dark mode */
 [data-theme="dark"] .bg-\[\#EEEAFE\] {
-  background-color: #272238 !important;
+  background-color: #2A233E !important;
+  color: #E2DEFA !important;
 }
 
 [data-theme="dark"] .bg-\[\#F8E8F0\] {
-  background-color: #31212B !important;
+  background-color: #352130 !important;
+  color: #F8DCE8 !important;
 }
 
 [data-theme="dark"] .bg-\[\#EEF3FA\] {
-  background-color: #1E2530 !important;
+  background-color: #1E2838 !important;
+  color: #DCE8F8 !important;
 }
 
+[data-theme="dark"] .bg-\[\#EEF8F4\] {
+  background-color: #1A3028 !important;
+  color: #D4F0E4 !important;
+}
+
+[data-theme="dark"] .bg-\[\#F3EAF4\] {
+  background-color: #302034 !important;
+  color: #F0D8EE !important;
+}
+
+/* Borders in dark mode */
 [data-theme="dark"] .border-\[\#E8E3F0\] {
-  border-color: #2D273C !important;
+  border-color: #322A42 !important;
 }
 
 [data-theme="dark"] .border-\[\#DDD8F2\],
 [data-theme="dark"] .border-\[\#DCD8F2\] {
-  border-color: #3E3555 !important;
+  border-color: #4A3E65 !important;
 }
 
+/* High-contrast Typography in Dark mode */
 [data-theme="dark"] .text-\[\#17151C\] {
-  color: #F5F3F8 !important;
+  color: #FFFFFF !important;
 }
 
 [data-theme="dark"] .text-\[\#5F5965\] {
-  color: #B5AFC0 !important;
+  color: #C8C2D4 !important;
 }
 
 [data-theme="dark"] .text-\[\#8D8792\] {
-  color: #888194 !important;
+  color: #9D96A8 !important;
+}
+
+/* Form inputs in Dark mode */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #161320;
+  border-color: #342C44;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #8C8496;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -660,6 +742,7 @@ button:active {
 /* Mist/Stone surfaces & card overrides */
 [data-theme="mist"] .bg-white,
 [data-theme="mist"] .bg-white\/80,
+[data-theme="mist"] .bg-white\/85,
 [data-theme="mist"] .bg-white\/90,
 [data-theme="mist"] .bg-white\/95 {
   background-color: #F8F6F2 !important;
@@ -668,6 +751,42 @@ button:active {
 [data-theme="mist"] .bg-\[\#FAF8FC\],
 [data-theme="mist"] .bg-\[\#F7F5F8\] {
   background-color: #E6E3DC !important;
+}
+
+/* Mist card variants */
+[data-theme="mist"] .card-lavender {
+  background: linear-gradient(135deg, #E2DEEE 0%, #ECE8F6 100%) !important;
+  border-color: #D2CCE0 !important;
+}
+
+[data-theme="mist"] .card-pink {
+  background: linear-gradient(135deg, #EEDEE6 0%, #F6EAF0 100%) !important;
+  border-color: #E0C8D4 !important;
+}
+
+[data-theme="mist"] .card-blue {
+  background: linear-gradient(135deg, #DEE7EE 0%, #EAF1F6 100%) !important;
+  border-color: #C8D8E4 !important;
+}
+
+[data-theme="mist"] .card-peach {
+  background: linear-gradient(135deg, #EDE3DD 0%, #F5EDE8 100%) !important;
+  border-color: #DFD0C6 !important;
+}
+
+[data-theme="mist"] .card-mixed {
+  background: linear-gradient(135deg, #E2DEED 0%, #ECE0E8 50%, #DFE8ED 100%) !important;
+  border-color: #D2CCE0 !important;
+}
+
+[data-theme="mist"] .card-glass {
+  background: rgba(248, 246, 242, 0.88) !important;
+  border-color: #DDD8D0 !important;
+}
+
+[data-theme="mist"] .card-pearl {
+  background: linear-gradient(135deg, #F8F6F2 0%, #EFECE6 100%) !important;
+  border-color: #DDD8D0 !important;
 }
 
 [data-theme="mist"] .border-\[\#E8E3F0\] {
@@ -689,4 +808,18 @@ button:active {
 
 [data-theme="mist"] .text-\[\#8D8792\] {
   color: #8E8982 !important;
+}
+
+/* Form inputs in Mist mode */
+[data-theme="mist"] input,
+[data-theme="mist"] textarea,
+[data-theme="mist"] select {
+  background-color: #F8F6F2;
+  border-color: #DDD8D0;
+  color: #1F1D1B;
+}
+
+[data-theme="mist"] input::placeholder,
+[data-theme="mist"] textarea::placeholder {
+  color: #8E8982;
 }

@@ -19,6 +19,7 @@ import Music from "./pages/Music";
 import Memories from "./pages/Memories";
 import Friends from "./pages/Friends";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 
 // Specialized & Legacy Pages (Preserved & accessible)
 import Tasks from "./pages/Tasks";
@@ -65,6 +66,7 @@ function App() {
           <Route path="/music" element={<Music />} />
           <Route path="/memories" element={<Memories />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
 
           {/* Preserved Direct Sub-Routes */}

@@ -23,6 +23,7 @@ import {
   Sparkles,
   Command,
   Settings as SettingsIcon,
+  Users,
 } from "lucide-react";
 
 interface CommandItem {
@@ -165,12 +166,52 @@ const COMMANDS: CommandItem[] = [
     keywords: ["spotify", "audio", "vibes"],
   },
   {
+    id: "nav-plan",
+    title: "Plan & Schedule",
+    category: "Navigation",
+    icon: <CalendarDays size={16} className="text-[#9E96D8]" />,
+    path: "/plan",
+    keywords: ["plan", "tasks", "planner", "schedule", "todos"],
+  },
+  {
+    id: "nav-workspace",
+    title: "Workspace & Studio",
+    category: "Navigation",
+    icon: <FolderKanban size={16} className="text-[#9E96D8]" />,
+    path: "/workspace",
+    keywords: ["notes", "projects", "studio", "knowledge", "docs"],
+  },
+  {
+    id: "nav-journal",
+    title: "Journal & Reflections",
+    category: "Navigation",
+    icon: <PenLine size={16} className="text-[#D99BB8]" />,
+    path: "/journal",
+    keywords: ["journal", "diary", "reflection", "gratitude", "entry"],
+  },
+  {
+    id: "nav-friends",
+    title: "Friends & Shared Moments",
+    category: "Navigation",
+    icon: <Users size={16} className="text-[#9E96D8]" />,
+    path: "/friends",
+    keywords: ["friends", "moments", "social", "requests", "circle"],
+  },
+  {
+    id: "nav-profile",
+    title: "My LUMI Profile & @username",
+    category: "Navigation",
+    icon: <SettingsIcon size={16} className="text-[#D99BB8]" />,
+    path: "/profile",
+    keywords: ["profile", "persona", "username", "handle", "shru.lumi"],
+  },
+  {
     id: "nav-settings",
     title: "Settings & Appearance Themes",
     category: "Navigation",
     icon: <SettingsIcon size={16} className="text-[#9E96D8]" />,
     path: "/settings",
-    keywords: ["settings", "appearance", "dark theme", "mist", "light", "profile", "theme"],
+    keywords: ["settings", "appearance", "dark theme", "mist", "light", "profile", "theme", "privacy", "integrations"],
   },
 
   // Quick Actions
