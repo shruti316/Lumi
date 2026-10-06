@@ -1,29 +1,57 @@
-import { useState } from "react";
-import { Plus, Search, Pin, Trash2, Tag, BookMarked } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Search, Trash2, Tag, Loader2 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import {
-  getNotes,
-  addNote,
-  updateNote,
-  deleteNote,
-  type Note,
-} from "../../lib/lifeOSStorage";
+import { api } from "../../lib/api";
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  category?: string;
+  tags: string[];
+  pinned?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 const QUICK_TAGS = ["college", "algorithms", "exam", "formulas", "ideas", "reference"];
 
 export default function Notes() {
-  const [notes, setNotes] = useState<Note[]>(() => getNotes());
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "pinned" | "recent">("all");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tagsInput, setTagsInput] = useState("");
 
-  function handleCreateNote(e: React.FormEvent) {
+  async function fetchNotes() {
+    setLoading(true);
+    const { data } = await api.workspace.getNotes();
+    if (data?.notes) {
+      setNotes(
+        data.notes.map((n: any) => ({
+          ...n,
+          tags: Array.isArray(n.tags) ? n.tags : [],
+        }))
+      );
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchNotes();
+    const handleSync = () => {
+      fetchNotes();
+    };
+    window.addEventListener("lumi-sync", handleSync);
+    return () => window.removeEventListener("lumi-sync", handleSync);
+  }, []);
+
+  async function handleCreateNote(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() && !content.trim()) return;
 
@@ -32,17 +60,23 @@ export default function Notes() {
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean);
 
-    const newNote: Note = {
-      id: crypto.randomUUID(),
+    const { data } = await api.workspace.createNote({
       title: title.trim() || "Untitled Note",
       content: content.trim(),
       tags: tags.length > 0 ? tags : ["college"],
-      pinned: false,
-      createdAt: new Date().toISOString(),
-    };
+      category: "General",
+    });
 
-    addNote(newNote);
-    setNotes(getNotes());
+    if (data?.note) {
+      setNotes((prev) => [
+        {
+          ...data.note,
+          tags: Array.isArray(data.note.tags) ? data.note.tags : tags,
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "note" } }));
+    }
 
     setTitle("");
     setContent("");
@@ -50,33 +84,24 @@ export default function Notes() {
     setShowModal(false);
   }
 
-  function handleTogglePin(note: Note) {
-    const updated = { ...note, pinned: !note.pinned };
-    updateNote(updated);
-    setNotes(getNotes());
+  async function handleDelete(id: string) {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    await api.workspace.deleteNote(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "note" } }));
   }
 
-  function handleDelete(id: string) {
-    deleteNote(id);
-    setNotes(getNotes());
-  }
-
-  const allTags = Array.from(new Set(notes.flatMap((n) => n.tags)));
+  const allTags = Array.from(new Set(notes.flatMap((n) => n.tags || [])));
 
   const filteredNotes = notes.filter((n) => {
     const matchesSearch =
       n.title.toLowerCase().includes(search.toLowerCase()) ||
       n.content.toLowerCase().includes(search.toLowerCase()) ||
-      n.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
+      (n.tags || []).some((t) => t.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesTag = selectedTag ? n.tags.includes(selectedTag) : true;
-    const matchesTab =
-      activeTab === "pinned" ? n.pinned : activeTab === "recent" ? true : true;
+    const matchesTag = selectedTag ? (n.tags || []).includes(selectedTag) : true;
 
-    return matchesSearch && matchesTag && matchesTab;
+    return matchesSearch && matchesTag;
   });
-
-  const pinnedCount = notes.filter((n) => n.pinned).length;
 
   return (
     <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
@@ -111,190 +136,116 @@ export default function Notes() {
         </header>
 
         {/* ═══════════════════════════════════════
-            FILTER & SEARCH ROW
+            SEARCH & CONTROLS
         ═══════════════════════════════════════ */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex gap-1.5 rounded-xl border border-[#E8E3F0] bg-white/90 p-1 w-fit shadow-2xs">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab("all");
-                setSelectedTag(null);
-              }}
-              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                activeTab === "all" && !selectedTag
-                  ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
-                  : "text-[#5F5965] hover:text-[#17151C]"
-              }`}
-            >
-              All Notes ({notes.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("pinned")}
-              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                activeTab === "pinned"
-                  ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
-                  : "text-[#5F5965] hover:text-[#17151C]"
-              }`}
-            >
-              <Pin size={12} className={activeTab === "pinned" ? "text-[#9E96D8]" : ""} />
-              <span>Pinned ({pinnedCount})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("recent")}
-              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                activeTab === "recent"
-                  ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
-                  : "text-[#5F5965] hover:text-[#17151C]"
-              }`}
-            >
-              Recent
-            </button>
-          </div>
-
-          <div className="relative flex-1 sm:w-64">
-            <Search size={14} className="absolute left-3.5 top-3 text-[#8D8792]" />
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8D8792]"
+            />
             <input
               type="text"
-              placeholder="Search notes..."
+              placeholder="Search notes or tags..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] shadow-2xs outline-none focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30"
+              className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] placeholder:text-[#8D8792] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
             />
           </div>
-        </div>
 
-        {/* Tags bar */}
-        {allTags.length > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#8D8792] mr-1 flex items-center gap-1">
-              <Tag size={11} /> Filter:
-            </span>
-            {allTags.map((t) => (
+          {/* Tags Filter Chips */}
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
-                key={t}
                 type="button"
-                onClick={() => setSelectedTag(selectedTag === t ? null : t)}
-                className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition cursor-pointer ${
-                  selectedTag === t
-                    ? "bg-[#EEEAFE] border-[#DDD8F2] text-[#17151C] shadow-2xs"
-                    : "bg-white border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
+                onClick={() => setSelectedTag(null)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                  selectedTag === null
+                    ? "bg-[#17151C] text-white shadow-2xs"
+                    : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
                 }`}
               >
-                #{t}
+                All
               </button>
-            ))}
-          </div>
-        )}
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                  className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                    selectedTag === tag
+                      ? "bg-[#9E96D8] text-white shadow-2xs"
+                      : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#EEEAFE]"
+                  }`}
+                >
+                  <Tag size={10} />
+                  <span>#{tag}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* ═══════════════════════════════════════
-            NOTES LIST / EMPTY STATE
+            NOTES GRID
         ═══════════════════════════════════════ */}
-        {filteredNotes.length === 0 ? (
-          <div className="space-y-6">
-            <Card variant="blue" className="p-10 text-center">
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-white">
-                📝
-              </div>
-              <h3 className="font-serif text-3xl font-bold text-[#17151C]">
-                Your notes will live here
-              </h3>
-              <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#5F5965] leading-relaxed">
-                Capture college notes, ideas, reminders, exam formulas, and anything worth remembering in one clean space.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowModal(true)}
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#17151C] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2D263B] cursor-pointer"
-              >
-                <Plus size={15} />
-                <span>Create Note</span>
-              </button>
-            </Card>
-
-            <Card variant="pearl" className="p-5 border-[#E8E3F0]">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#5F5965] flex items-center gap-1.5 mb-3">
-                <BookMarked size={14} className="text-[#9E96D8]" /> Quick Note Starters
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="rounded-xl border border-[#E8E3F0] bg-white p-3.5 text-xs shadow-2xs">
-                  <p className="font-semibold text-xs text-[#17151C]">📖 Lecture Takeaways</p>
-                  <p className="mt-1 text-[11px] text-[#5F5965]">Key terms & bullet points from today's classes.</p>
-                </div>
-                <div className="rounded-xl border border-[#E8E3F0] bg-white p-3.5 text-xs shadow-2xs">
-                  <p className="font-semibold text-xs text-[#17151C]">⚡ Formula Cheatsheet</p>
-                  <p className="mt-1 text-[11px] text-[#5F5965]">Quick formulas & algorithms to memorize.</p>
-                </div>
-                <div className="rounded-xl border border-[#E8E3F0] bg-white p-3.5 text-xs shadow-2xs">
-                  <p className="font-semibold text-xs text-[#17151C]">💡 Spontaneous Ideas</p>
-                  <p className="mt-1 text-[11px] text-[#5F5965]">Project concepts & college event plans.</p>
-                </div>
-              </div>
-            </Card>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-[#9E96D8]" />
           </div>
+        ) : filteredNotes.length === 0 ? (
+          <Card variant="default" className="flex flex-col items-center justify-center p-12 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEAFE] text-[#9E96D8]">
+              <Tag size={22} />
+            </div>
+            <h3 className="font-serif text-lg font-bold text-[#17151C]">No notes found</h3>
+            <p className="mt-1 text-xs text-[#5F5965] max-w-xs">
+              {search || selectedTag
+                ? "No notes match your active filter."
+                : "Create your first note to capture ideas, summaries, and code snippets."}
+            </p>
+          </Card>
         ) : (
-          <div className="grid gap-4.5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredNotes.map((note) => (
               <Card
                 key={note.id}
-                variant="glass"
+                variant="default"
                 hoverEffect
-                className="group relative flex flex-col justify-between p-5 border-[#E8E3F0] bg-white/95"
+                className="group flex flex-col justify-between p-4 bg-white border-[#E8E3F0]"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-2 mb-2.5">
-                    <h3 className="font-serif font-bold text-base text-[#17151C] leading-snug truncate">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-serif text-base font-bold text-[#17151C] line-clamp-1">
                       {note.title}
                     </h3>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleTogglePin(note)}
-                        className={`flex h-7 w-7 items-center justify-center rounded-lg transition cursor-pointer ${
-                          note.pinned
-                            ? "bg-[#EEEAFE] text-[#9E96D8] border border-[#DDD8F2] shadow-2xs"
-                            : "bg-[#F7F5F8] text-[#8D8792] hover:text-[#17151C]"
-                        }`}
-                        title={note.pinned ? "Unpin" : "Pin to top"}
-                      >
-                        <Pin size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(note.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
-                        title="Delete note"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(note.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-[#8D8792] hover:text-[#D84C2C] hover:bg-[#FDECE8] transition cursor-pointer"
+                      title="Delete note"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
 
-                  <p className="text-xs font-normal text-[#5F5965] line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-xs text-[#5F5965] font-normal line-clamp-5 leading-relaxed whitespace-pre-wrap">
                     {note.content}
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#E8E3F0] flex flex-wrap items-center justify-between gap-1 text-[10px]">
-                  <div className="flex flex-wrap gap-1">
-                    {note.tags.map((tag) => (
+                {note.tags && note.tags.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-[#F7F5F8] flex flex-wrap gap-1.5">
+                    {note.tags.map((t) => (
                       <span
-                        key={tag}
-                        className="rounded-md bg-[#EEEAFE] border border-[#DDD8F2] px-2 py-0.5 font-semibold text-[#5F5965]"
+                        key={t}
+                        className="rounded-md bg-[#F7F5F8] border border-[#E8E3F0] px-2 py-0.5 text-[10px] font-semibold text-[#5F5965]"
                       >
-                        #{tag}
+                        #{t}
                       </span>
                     ))}
                   </div>
-                  <span className="font-medium text-[#8D8792]">
-                    {new Date(note.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
+                )}
               </Card>
             ))}
           </div>

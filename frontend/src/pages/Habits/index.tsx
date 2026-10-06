@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Check,
   Flame,
@@ -6,16 +6,23 @@ import {
   Trash2,
   Sparkles,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import {
-  addHabit,
-  deleteHabit,
-  getHabits,
-  updateHabit,
-  type Habit,
-} from "../../lib/habitStorage";
+import { api } from "../../lib/api";
+
+export interface Habit {
+  id: string;
+  name: string;
+  icon?: string;
+  emoji?: string;
+  category?: string;
+  color?: string;
+  targetDaysPerWeek?: number;
+  completedDates: string[];
+  createdAt?: string;
+}
 
 const HABIT_EMOJIS = [
   "💧",
@@ -70,7 +77,7 @@ function getLast7Days() {
 }
 
 function calculateStreak(habit: Habit) {
-  const completed = new Set(habit.completedDates);
+  const completed = new Set(habit.completedDates || []);
   let streak = 0;
   const date = new Date();
 
@@ -84,16 +91,38 @@ function calculateStreak(habit: Habit) {
 }
 
 export default function Habits() {
-  const [habits, setHabits] = useState<Habit[]>(() => getHabits());
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("🌱");
+
+  async function fetchHabits() {
+    setLoading(true);
+    const { data } = await api.habits.getAll();
+    if (data?.habits) {
+      setHabits(
+        data.habits.map((h: any) => ({
+          ...h,
+          emoji: h.icon || h.emoji || "🌱",
+          completedDates: h.completedDates || [],
+        }))
+      );
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchHabits();
+    window.addEventListener("lumi-sync", fetchHabits);
+    return () => window.removeEventListener("lumi-sync", fetchHabits);
+  }, []);
 
   const todayStr = getTodayString();
   const last7Days = getLast7Days();
 
   const completedTodayCount = habits.filter((h) =>
-    h.completedDates.includes(todayStr)
+    (h.completedDates || []).includes(todayStr)
   ).length;
 
   const progress =
@@ -109,7 +138,7 @@ export default function Habits() {
   if (totalPossibleChecks > 0) {
     last7Days.forEach((day) => {
       habits.forEach((h) => {
-        if (h.completedDates.includes(day.dateStr)) {
+        if ((h.completedDates || []).includes(day.dateStr)) {
           totalActualChecks++;
         }
       });
@@ -120,57 +149,79 @@ export default function Habits() {
       ? 0
       : Math.round((totalActualChecks / totalPossibleChecks) * 100);
 
-  function handleCreateHabit(e?: React.FormEvent) {
+  async function handleCreateHabit(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!name.trim()) return;
 
-    const newHabit: Habit = {
-      id: crypto.randomUUID(),
+    const { data } = await api.habits.create({
       name: name.trim(),
-      emoji: emoji || "🌱",
-      completedDates: [],
-      createdAt: new Date().toISOString(),
-    };
+      icon: emoji || "🌱",
+      category: "Daily",
+      targetDaysPerWeek: 7,
+    });
 
-    addHabit(newHabit);
-    setHabits(getHabits());
+    if (data?.habit) {
+      setHabits((prev) => [
+        {
+          ...data.habit,
+          emoji: data.habit.icon || emoji || "🌱",
+          completedDates: data.habit.completedDates || [],
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "habit" } }));
+    }
+
     setName("");
     setEmoji("🌱");
     setShowModal(false);
   }
 
-  function handleQuickAdd(suggested: { emoji: string; name: string }) {
+  async function handleQuickAdd(suggested: { emoji: string; name: string }) {
     const exists = habits.some(
       (h) => h.name.toLowerCase() === suggested.name.toLowerCase()
     );
     if (exists) return;
 
-    const newHabit: Habit = {
-      id: crypto.randomUUID(),
+    const { data } = await api.habits.create({
       name: suggested.name,
-      emoji: suggested.emoji,
-      completedDates: [],
-      createdAt: new Date().toISOString(),
-    };
+      icon: suggested.emoji,
+      category: "Daily",
+      targetDaysPerWeek: 7,
+    });
 
-    addHabit(newHabit);
-    setHabits(getHabits());
+    if (data?.habit) {
+      setHabits((prev) => [
+        {
+          ...data.habit,
+          emoji: data.habit.icon || suggested.emoji,
+          completedDates: data.habit.completedDates || [],
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "habit" } }));
+    }
   }
 
-  function handleToggleDate(habit: Habit, dateStr: string) {
-    const isCompleted = habit.completedDates.includes(dateStr);
+  async function handleToggleDate(habit: Habit, dateStr: string) {
+    const isCompleted = (habit.completedDates || []).includes(dateStr);
     const updatedDates = isCompleted
       ? habit.completedDates.filter((d) => d !== dateStr)
-      : [...habit.completedDates, dateStr];
+      : [...(habit.completedDates || []), dateStr];
 
-    const updated = { ...habit, completedDates: updatedDates };
-    updateHabit(updated);
-    setHabits(getHabits());
+    // Optimistic UI update
+    setHabits((prev) =>
+      prev.map((h) => (h.id === habit.id ? { ...h, completedDates: updatedDates } : h))
+    );
+
+    await api.habits.toggle(habit.id, dateStr);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "habit" } }));
   }
 
-  function handleDelete(id: string) {
-    deleteHabit(id);
-    setHabits(getHabits());
+  async function handleDelete(id: string) {
+    setHabits((prev) => prev.filter((h) => h.id !== id));
+    await api.habits.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "habit" } }));
   }
 
   return (
@@ -249,51 +300,53 @@ export default function Habits() {
             </p>
           </Card>
 
-          <Card variant="blue" hoverEffect className="p-4">
+          <Card variant="pink" hoverEffect className="p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
               7-Day Consistency
             </p>
             <p className="text-2xl font-bold text-[#17151C] mt-1 flex items-center gap-1.5">
-              <TrendingUp size={18} className="text-[#6B9AB8]" />
+              <TrendingUp size={19} className="text-[#9E96D8]" />
               {weeklyConsistency}%
             </p>
             <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
-              Weekly adherence
+              Past 7 days
             </p>
           </Card>
         </section>
 
         {/* ═══════════════════════════════════════
-            QUICK SUGGESTIONS CHIPS
+            QUICK ADD SUGGESTIONS (CHIPS)
         ═══════════════════════════════════════ */}
         <section className="mb-6">
           <div className="flex items-center gap-1.5 mb-2.5">
             <Sparkles size={14} className="text-[#9E96D8]" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#8D8792]">
-              Quick Habit Ideas • Click to Add
-            </span>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#5F5965]">
+              Quick Inspiration
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => {
-              const alreadyAdded = habits.some(
+              const isAdded = habits.some(
                 (h) => h.name.toLowerCase() === s.name.toLowerCase()
               );
               return (
                 <button
                   key={s.name}
                   type="button"
-                  onClick={() => !alreadyAdded && handleQuickAdd(s)}
-                  disabled={alreadyAdded}
-                  className={`lumi-quick-habit-chip flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
-                    alreadyAdded ? "is-added cursor-default" : "cursor-pointer"
+                  onClick={() => handleQuickAdd(s)}
+                  disabled={isAdded}
+                  className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                    isAdded
+                      ? "border-transparent bg-[#EEEAFE] text-[#8D8792] cursor-default opacity-60"
+                      : "border-[#E8E3F0] bg-white text-[#17151C] hover:border-[#9E96D8] hover:bg-[#F7F5F8] shadow-2xs"
                   }`}
                 >
-                  <span className="text-sm">{s.emoji}</span>
-                  <span className="lumi-chip-label">{s.name}</span>
-                  {alreadyAdded ? (
-                    <Check size={12} className="lumi-chip-check text-[#528D6F]" />
+                  <span>{s.emoji}</span>
+                  <span>{s.name}</span>
+                  {isAdded ? (
+                    <Check size={12} className="text-[#528D6F]" />
                   ) : (
-                    <Plus size={12} className="lumi-chip-plus text-[#8D8792]" />
+                    <Plus size={12} className="text-[#8D8792]" />
                   )}
                 </button>
               );
@@ -302,132 +355,102 @@ export default function Habits() {
         </section>
 
         {/* ═══════════════════════════════════════
-            HABITS LIST / 7-DAY MATRIX
+            WEEKLY 7-DAY MATRIX HABIT LIST
         ═══════════════════════════════════════ */}
-        {habits.length === 0 ? (
-          <Card variant="lavender" className="p-10 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl shadow-2xs border border-white">
-              🌱
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-[#9E96D8]" />
+          </div>
+        ) : habits.length === 0 ? (
+          <Card variant="default" className="flex flex-col items-center justify-center p-12 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEAFE] text-[#9E96D8]">
+              <Sparkles size={22} />
             </div>
-            <h3 className="font-serif text-3xl font-bold text-[#17151C]">
-              No habits created yet
-            </h3>
-            <p className="mt-1 text-xs max-w-md mx-auto font-medium text-[#5F5965]">
-              Pick from the quick ideas above or create your own custom habit to start building your daily streak!
+            <h3 className="font-serif text-lg font-bold text-[#17151C]">No habits yet</h3>
+            <p className="mt-1 text-xs text-[#5F5965] max-w-xs">
+              Start small by creating a simple 2-minute daily habit or choosing one from the suggestions above.
             </p>
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#17151C] px-5 py-2.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2D263B] cursor-pointer"
-            >
-              <Plus size={15} />
-              <span>Create My First Habit</span>
-            </button>
           </Card>
         ) : (
           <div className="space-y-3">
-            {/* 7-Day Header guide on desktop */}
-            <div className="hidden md:flex items-center justify-between px-5 text-[10px] font-bold uppercase tracking-wider text-[#8D8792]">
-              <span>Habit Details</span>
-              <div className="flex items-center gap-2 pr-12">
-                {last7Days.map((d) => (
-                  <div
-                    key={d.dateStr}
-                    className={`w-8 text-center ${
-                      d.isToday ? "font-bold text-[#9E96D8]" : ""
-                    }`}
-                  >
-                    <div>{d.label}</div>
-                    <div className="text-[9px] opacity-75">{d.dayNum}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {habits.map((habit) => {
               const streak = calculateStreak(habit);
-              const isDoneToday = habit.completedDates.includes(todayStr);
+              const isCompletedToday = (habit.completedDates || []).includes(todayStr);
 
               return (
                 <Card
                   key={habit.id}
-                  variant="glass"
-                  className="group p-4 shadow-2xs border-[#E8E3F0] transition-all duration-200 hover:-translate-y-0.5 bg-white/90"
+                  variant="default"
+                  hoverEffect
+                  className="p-4 bg-white border-[#E8E3F0]"
                 >
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {/* Habit Info & Today Check */}
-                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#EEEAFE] to-[#F8E8F0] text-xl border border-[#E8E3F0] shadow-2xs">
-                        {habit.emoji}
-                      </div>
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleDate(habit, todayStr)}
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border transition duration-200 cursor-pointer ${
+                          isCompletedToday
+                            ? "border-[#CCE5DC] bg-[#528F75] text-white shadow-2xs"
+                            : "border-[#E8E3F0] bg-[#F7F5F8] text-lg hover:border-[#9E96D8]"
+                        }`}
+                      >
+                        {isCompletedToday ? <Check size={18} strokeWidth={3} /> : habit.emoji || "🌱"}
+                      </button>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-sm text-[#17151C] truncate">
+                          <h4
+                            className={`text-sm font-semibold truncate ${
+                              isCompletedToday ? "text-[#528D6F]" : "text-[#17151C]"
+                            }`}
+                          >
                             {habit.name}
-                          </h3>
-                          {isDoneToday && (
-                            <span className="rounded-full bg-[#EEF8F4] border border-[#CCE5DC] px-2 py-0.5 text-[9px] font-bold text-[#3E7D5C]">
-                              Done today
+                          </h4>
+                          {streak > 0 && (
+                            <span className="flex items-center gap-1 rounded-full bg-[#FEF5E7] px-2 py-0.5 text-[10px] font-bold text-[#9A644D] border border-[#F6E1C8]">
+                              <Flame size={11} className="text-[#D99BB8]" />
+                              {streak}d
                             </span>
                           )}
                         </div>
-
-                        <div className="mt-1 flex items-center gap-2.5 text-xs text-[#8D8792]">
-                          <span className="flex items-center gap-1 font-medium text-[#5F5965]">
-                            <Flame
-                              size={13}
-                              className={
-                                streak > 0 ? "text-[#D99BB8]" : "text-[#8D8792]"
-                              }
-                            />
-                            {streak} {streak === 1 ? "day streak" : "days streak"}
-                          </span>
-                          <span>•</span>
-                          <span className="text-[11px]">
-                            {habit.completedDates.length} total checks
-                          </span>
-                        </div>
+                        <p className="text-[11px] text-[#8D8792] font-medium">
+                          {isCompletedToday ? "Completed today ✨" : "Tap circle to mark complete today"}
+                        </p>
                       </div>
                     </div>
 
-                    {/* 7-Day Completion matrix + Actions */}
-                    <div className="flex items-center justify-between md:justify-end gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-[#E8E3F0]">
-                      {/* 7 Day checks */}
-                      <div className="flex items-center gap-1.5 md:gap-2">
+                    {/* 7-Day History Circles */}
+                    <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#F7F5F8]">
+                      <div className="flex items-center gap-1.5">
                         {last7Days.map((day) => {
-                          const isChecked = habit.completedDates.includes(
-                            day.dateStr
-                          );
+                          const done = (habit.completedDates || []).includes(day.dateStr);
                           return (
                             <button
                               key={day.dateStr}
                               type="button"
                               onClick={() => handleToggleDate(habit, day.dateStr)}
-                              className={`flex flex-col items-center justify-center h-8 w-8 rounded-lg border text-xs font-semibold transition-all active:scale-90 cursor-pointer ${
-                                isChecked
-                                  ? "bg-[#528D6F] border-[#528D6F] text-white shadow-2xs"
+                              title={`${day.label} (${day.dateStr}): ${done ? "Done" : "Missed"}`}
+                              className={`flex flex-col items-center justify-center w-8 h-10 rounded-xl border transition cursor-pointer ${
+                                done
+                                  ? "border-[#CCE5DC] bg-[#EEF8F4] text-[#3E7D5C]"
                                   : day.isToday
-                                  ? "bg-[#EEEAFE] border-[#DDD8F2] text-[#17151C] hover:bg-[#E3DCFA]"
-                                  : "bg-white border-[#E8E3F0] text-[#8D8792] hover:bg-[#F7F5F8]"
+                                  ? "border-[#DCD8F2] bg-[#EEEAFE]/50 text-[#17151C]"
+                                  : "border-transparent bg-[#F7F5F8] text-[#8D8792] hover:bg-[#EEEAFE]"
                               }`}
-                              title={`${habit.name} - ${day.label} ${day.dayNum}`}
                             >
-                              {isChecked ? (
-                                <Check size={14} strokeWidth={2.5} />
-                              ) : (
-                                <span className="text-[10px]">{day.dayNum}</span>
-                              )}
+                              <span className="text-[9px] font-bold uppercase">{day.label[0]}</span>
+                              <span className="text-[10px] font-semibold">{day.dayNum}</span>
                             </button>
                           );
                         })}
                       </div>
 
-                      {/* Delete */}
                       <button
                         type="button"
                         onClick={() => handleDelete(habit.id)}
-                        className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
+                        className="p-2 rounded-xl text-[#8D8792] hover:text-[#D84C2C] hover:bg-[#FDECE8] transition ml-1 cursor-pointer"
                         title="Delete habit"
                       >
                         <Trash2 size={14} />
@@ -441,7 +464,7 @@ export default function Habits() {
         )}
 
         {/* ═══════════════════════════════════════
-            NEW HABIT MODAL
+            CREATE HABIT MODAL
         ═══════════════════════════════════════ */}
         <Modal
           isOpen={showModal}

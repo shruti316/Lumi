@@ -1,41 +1,63 @@
-const { readDB, writeDB } = require("../services/store");
+const journalService = require("../services/journalService");
 
-function getJournals(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const userJournals = db.journals.filter((j) => j.userId === userId || !j.userId);
-  res.json({ journals: userJournals });
+/**
+ * Retrieves all journal entries for the authenticated user.
+ */
+async function getJournals(req, res) {
+  try {
+    const userId = req.user.id;
+    const journals = await journalService.getJournalsByUserId(userId);
+    res.json({ journals });
+  } catch (err) {
+    console.error("Get journals error:", err);
+    res.status(500).json({ error: "Internal server error retrieving journal entries" });
+  }
 }
 
-function createJournal(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const { title, template, mood, entry, gratitude, tags, date } = req.body;
+/**
+ * Creates a new journal entry for the authenticated user.
+ */
+async function createJournal(req, res) {
+  try {
+    const userId = req.user.id;
+    const { title, template, mood, entry, gratitude, date } = req.body;
 
-  const newJournal = {
-    id: "j-" + Date.now(),
-    userId,
-    title: title || "Personal Reflection",
-    date: date || new Date().toISOString().split("T")[0],
-    template: template || "daily",
-    mood: mood || "calm",
-    entry: entry || "",
-    gratitude: gratitude || "",
-    tags: Array.isArray(tags) ? tags : [],
-    createdAt: new Date().toISOString(),
-  };
+    const newJournal = await journalService.createJournal({
+      userId,
+      title,
+      date,
+      template,
+      mood,
+      entry,
+      gratitude,
+    });
 
-  db.journals.unshift(newJournal);
-  writeDB(db);
-  res.status(201).json({ message: "Journal entry saved", journal: newJournal });
+    res.status(201).json({ message: "Journal entry saved", journal: newJournal });
+  } catch (err) {
+    console.error("Create journal error:", err);
+    res.status(500).json({ error: "Internal server error saving journal entry" });
+  }
 }
 
-function deleteJournal(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  db.journals = db.journals.filter((j) => j.id !== id);
-  writeDB(db);
-  res.json({ message: "Journal entry deleted" });
+/**
+ * Deletes a journal entry for the authenticated user.
+ */
+async function deleteJournal(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const deleted = await journalService.deleteJournal(id, userId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Journal entry not found" });
+    }
+
+    res.json({ message: "Journal entry deleted" });
+  } catch (err) {
+    console.error("Delete journal error:", err);
+    res.status(500).json({ error: "Internal server error deleting journal entry" });
+  }
 }
 
 module.exports = {

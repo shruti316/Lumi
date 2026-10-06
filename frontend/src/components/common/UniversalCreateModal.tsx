@@ -12,20 +12,7 @@ import {
   Users,
   Star,
 } from "lucide-react";
-import { addTask, type Task } from "../../lib/storage";
-import {
-  addNote,
-  addProject,
-  addGoal,
-  addMemory,
-  type Project,
-  type Goal,
-  getProjects,
-  getGoals,
-} from "../../lib/lifeOSStorage";
-import { addDiaryEntry } from "../../lib/diaryStorage";
-import { addHabit } from "../../lib/habitStorage";
-import { addBook } from "../../lib/readingStorage";
+import { api } from "../../lib/api";
 
 export type CreateTemplateType =
   | "menu"
@@ -55,15 +42,17 @@ export function UniversalCreateModal({
 }: UniversalCreateModalProps) {
   const [currentView, setCurrentView] = useState<CreateTemplateType>(initialTemplate);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Available relations
-  const projects = getProjects();
-  const goals = getGoals();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [goals, setGoals] = useState<any[]>([]);
 
   // Form States
   // Task
   const [taskTitle, setTaskTitle] = useState(initialText);
-  const [taskPriority, setTaskPriority] = useState<Task["priority"]>("medium");
+  const [taskPriority, setTaskPriority] = useState<"low" | "medium" | "high">("medium");
   const [taskDueDate, setTaskDueDate] = useState("");
   const [taskRelatedProject, setTaskRelatedProject] = useState("");
   const [taskRelatedGoal, setTaskRelatedGoal] = useState("");
@@ -77,12 +66,12 @@ export function UniversalCreateModal({
   const [projName, setProjName] = useState(initialText);
   const [projDesc, setProjDesc] = useState("");
   const [projDeadline, setProjDeadline] = useState("");
-  const [projStatus, setProjStatus] = useState<Project["status"]>("In Progress");
+  const [projStatus, setProjStatus] = useState<"Planning" | "In Progress" | "Completed" | "On Hold">("In Progress");
 
   // Goal
   const [goalTitle, setGoalTitle] = useState(initialText);
   const [goalDesc, setGoalDesc] = useState("");
-  const [goalCategory, setGoalCategory] = useState<Goal["category"]>("Academic");
+  const [goalCategory, setGoalCategory] = useState<"Academic" | "Career" | "Health" | "Personal" | "Financial">("Academic");
   const [goalDeadline, setGoalDeadline] = useState("");
 
   // Journal
@@ -113,6 +102,7 @@ export function UniversalCreateModal({
   useEffect(() => {
     if (isOpen) {
       setCurrentView(initialTemplate || "menu");
+      setErrorMessage(null);
       if (initialText) {
         setTaskTitle(initialText);
         setNoteTitle(initialText);
@@ -123,6 +113,13 @@ export function UniversalCreateModal({
         setHabitName(initialText);
         setBookTitle(initialText);
       }
+      // Load relation options
+      api.workspace.getProjects().then((res) => {
+        if (res.data?.projects) setProjects(res.data.projects);
+      });
+      api.goals.getAll().then((res) => {
+        if (res.data?.goals) setGoals(res.data.goals);
+      });
     }
   }, [isOpen, initialTemplate, initialText]);
 
@@ -130,6 +127,8 @@ export function UniversalCreateModal({
 
   function handleTriggerSuccess(msg: string, type: CreateTemplateType) {
     setSuccessToast(msg);
+    setErrorMessage(null);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type } }));
     setTimeout(() => {
       setSuccessToast(null);
       onClose();
@@ -138,97 +137,128 @@ export function UniversalCreateModal({
   }
 
   // SUBMIT HANDLERS
-  function handleSubmitTask(e: React.FormEvent) {
+  async function handleSubmitTask(e: React.FormEvent) {
     e.preventDefault();
-    if (!taskTitle.trim()) return;
+    if (!taskTitle.trim() || isSubmitting) return;
 
-    addTask({
-      id: crypto.randomUUID(),
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.tasks.create({
       title: taskTitle.trim(),
       completed: false,
       priority: taskPriority,
-      createdAt: new Date().toISOString(),
+      dueDate: taskDueDate || undefined,
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.task) {
+      setErrorMessage(error || "Failed to create task");
+      return;
+    }
 
     handleTriggerSuccess("Task added to your plan!", "task");
   }
 
-  function handleSubmitNote(e: React.FormEvent) {
+  async function handleSubmitNote(e: React.FormEvent) {
     e.preventDefault();
-    if (!noteTitle.trim() && !noteContent.trim()) return;
+    if ((!noteTitle.trim() && !noteContent.trim()) || isSubmitting) return;
 
     const tags = noteTags
       .split(",")
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean);
 
-    addNote({
-      id: crypto.randomUUID(),
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.workspace.createNote({
       title: noteTitle.trim() || "Untitled Note",
       content: noteContent.trim(),
       tags: tags.length > 0 ? tags : ["general"],
       pinned: false,
-      createdAt: new Date().toISOString(),
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.note) {
+      setErrorMessage(error || "Failed to save note");
+      return;
+    }
 
     handleTriggerSuccess("Note saved to workspace!", "note");
   }
 
-  function handleSubmitProject(e: React.FormEvent) {
+  async function handleSubmitProject(e: React.FormEvent) {
     e.preventDefault();
-    if (!projName.trim()) return;
+    if (!projName.trim() || isSubmitting) return;
 
-    addProject({
-      id: crypto.randomUUID(),
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.workspace.createProject({
       name: projName.trim(),
       description: projDesc.trim(),
       status: projStatus,
       progress: 0,
       deadline: projDeadline || "Ongoing",
-      notes: "",
-      createdAt: new Date().toISOString(),
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.project) {
+      setErrorMessage(error || "Failed to create project");
+      return;
+    }
 
     handleTriggerSuccess("Project created in workspace!", "project");
   }
 
-  function handleSubmitGoal(e: React.FormEvent) {
+  async function handleSubmitGoal(e: React.FormEvent) {
     e.preventDefault();
-    if (!goalTitle.trim()) return;
+    if (!goalTitle.trim() || isSubmitting) return;
 
-    addGoal({
-      id: crypto.randomUUID(),
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.goals.create({
       title: goalTitle.trim(),
       description: goalDesc.trim(),
       category: goalCategory,
-      deadline: goalDeadline || "Ongoing",
+      targetDate: goalDeadline || "Ongoing",
       progress: 0,
       status: "In Progress",
-      createdAt: new Date().toISOString(),
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.goal) {
+      setErrorMessage(error || "Failed to set goal");
+      return;
+    }
 
     handleTriggerSuccess("Goal set successfully!", "goal");
   }
 
-  function handleSubmitJournal(e: React.FormEvent) {
+  async function handleSubmitJournal(e: React.FormEvent) {
     e.preventDefault();
-    if (!journalTitle.trim() && !journalContent.trim()) return;
+    if ((!journalTitle.trim() && !journalContent.trim()) || isSubmitting) return;
 
-    addDiaryEntry({
-      id: crypto.randomUUID(),
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.journals.create({
       title: journalTitle.trim() || "Journal Entry",
-      content: journalContent.trim(),
+      entry: journalContent.trim(),
       mood: journalMood,
       tags: [journalType],
-      createdAt: new Date().toISOString(),
+      date: new Date().toISOString().split("T")[0],
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.journal) {
+      setErrorMessage(error || "Failed to save journal entry");
+      return;
+    }
 
     handleTriggerSuccess("Journal entry penned!", "journal");
   }
 
-  function handleSubmitMemory(e: React.FormEvent) {
+  async function handleSubmitMemory(e: React.FormEvent) {
     e.preventDefault();
-    if (!memoryTitle.trim()) return;
+    if (!memoryTitle.trim() || isSubmitting) return;
 
     const sampleImages = [
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80",
@@ -240,8 +270,10 @@ export function UniversalCreateModal({
       memoryImage.trim() ||
       sampleImages[Math.floor(Math.random() * sampleImages.length)];
     const isSharedMoment = memoryVisibility === "friends" || memoryVisibility === "close_friends";
-    addMemory({
-      id: crypto.randomUUID(),
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.memories.create({
       title: memoryTitle.trim(),
       caption:
         memoryCaption.trim() +
@@ -249,13 +281,17 @@ export function UniversalCreateModal({
         (memoryPeople ? ` 👥 ${memoryPeople}` : "") +
         (memoryMusic ? ` 🎵 ${memoryMusic}` : ""),
       imageUrl: finalImg,
-      date: memoryDate,
       location: memoryLocation.trim() || undefined,
-      song: memoryMusic.trim() || undefined,
       visibility: memoryVisibility,
       tags: isSharedMoment ? ["moment", "shared", memoryVisibility] : ["personal", "private"],
-      createdAt: new Date().toISOString(),
+      memoryDate: memoryDate,
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.memory) {
+      setErrorMessage(error || "Failed to preserve memory");
+      return;
+    }
 
     handleTriggerSuccess(
       isSharedMoment ? "Moment shared with friends! ✨" : "Personal memory preserved in vault! 🔒",
@@ -263,27 +299,35 @@ export function UniversalCreateModal({
     );
   }
 
-  function handleSubmitHabit(e: React.FormEvent) {
+  async function handleSubmitHabit(e: React.FormEvent) {
     e.preventDefault();
-    if (!habitName.trim()) return;
+    if (!habitName.trim() || isSubmitting) return;
 
-    addHabit({
-      id: crypto.randomUUID(),
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.habits.create({
       name: habitName.trim(),
       emoji: habitEmoji || "✨",
-      completedDates: [],
-      createdAt: new Date().toISOString(),
+      targetDays: 7,
+      frequency: "daily",
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.habit) {
+      setErrorMessage(error || "Failed to create habit");
+      return;
+    }
 
     handleTriggerSuccess("New habit tracker activated!", "habit");
   }
 
-  function handleSubmitReading(e: React.FormEvent) {
+  async function handleSubmitReading(e: React.FormEvent) {
     e.preventDefault();
-    if (!bookTitle.trim()) return;
+    if (!bookTitle.trim() || isSubmitting) return;
 
-    addBook({
-      id: crypto.randomUUID(),
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    const { data, error } = await api.reading.create({
       title: bookTitle.trim(),
       author: bookAuthor.trim() || "Unknown Author",
       cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80",
@@ -291,11 +335,13 @@ export function UniversalCreateModal({
       currentPage: 0,
       totalPages: Number(bookPages) || 300,
       rating: 0,
-      whyIPickedIt: "",
-      notes: "",
-      favoriteQuote: "",
-      createdAt: new Date().toISOString(),
     });
+    setIsSubmitting(false);
+
+    if (error || !data?.book) {
+      setErrorMessage(error || "Failed to add book");
+      return;
+    }
 
     handleTriggerSuccess("Book placed on your shelf!", "reading");
   }
@@ -398,13 +444,22 @@ export function UniversalCreateModal({
             {currentView !== "menu" && (
               <button
                 type="button"
-                onClick={() => setCurrentView("menu")}
+                onClick={() => {
+                  setErrorMessage(null);
+                  setCurrentView("menu");
+                }}
                 className="text-xs font-semibold text-[#9E96D8] hover:underline cursor-pointer"
               >
                 ← All Options
               </button>
             )}
           </div>
+
+          {errorMessage && (
+            <div className="mt-3 rounded-xl bg-red-50 border border-red-200 p-2.5 text-xs text-red-600 font-medium animate-fadeIn">
+              ⚠️ {errorMessage}
+            </div>
+          )}
         </div>
 
         {/* =========================================================
@@ -470,7 +525,7 @@ export function UniversalCreateModal({
                 </label>
                 <select
                   value={taskPriority}
-                  onChange={(e) => setTaskPriority(e.target.value as Task["priority"])}
+                  onChange={(e) => setTaskPriority(e.target.value as "low" | "medium" | "high")}
                   className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-semibold text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 >
                   <option value="high">High Priority</option>
@@ -629,7 +684,7 @@ export function UniversalCreateModal({
                 </label>
                 <select
                   value={projStatus}
-                  onChange={(e) => setProjStatus(e.target.value as Project["status"])}
+                  onChange={(e) => setProjStatus(e.target.value as "Planning" | "In Progress" | "Completed" | "On Hold")}
                   className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-semibold text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 >
                   <option value="Planning">Planning</option>
@@ -711,7 +766,7 @@ export function UniversalCreateModal({
                 </label>
                 <select
                   value={goalCategory}
-                  onChange={(e) => setGoalCategory(e.target.value as Goal["category"])}
+                  onChange={(e) => setGoalCategory(e.target.value as "Academic" | "Career" | "Health" | "Personal" | "Financial")}
                   className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-semibold text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 >
                   <option value="Academic">Academic</option>

@@ -1,19 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CalendarDays,
-  Heart,
   PenLine,
   Search,
   Trash2,
-  Tag,
+  Loader2,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
-import {
-  addDiaryEntry,
-  deleteDiaryEntry,
-  getDiaryEntries,
-  type DiaryEntry,
-} from "../../lib/diaryStorage";
+import { api } from "../../lib/api";
+
+export interface DiaryEntry {
+  id: string;
+  title: string;
+  content: string;
+  mood: string;
+  tags?: string[];
+  date?: string;
+  createdAt?: string;
+}
 
 const MOODS = [
   { emoji: "😊", label: "Happy" },
@@ -36,28 +40,9 @@ const SUGGESTED_TAGS = [
   "growth",
 ];
 
-const STARTER_ENTRY: Omit<DiaryEntry, "id" | "createdAt"> = {
-  title: "A fresh start to the new semester",
-  content:
-    "Feeling optimistic about building better daily routines and keeping up with coursework. Spent some time organizing my notes and enjoying a warm matcha latte this afternoon. Taking things one day at a time.",
-  mood: "🥰",
-  tags: ["college", "growth", "gratitude"],
-};
-
 export default function Diary() {
-  const [entries, setEntries] = useState<DiaryEntry[]>(() => {
-    const existing = getDiaryEntries();
-    if (existing.length === 0) {
-      const starter = {
-        ...STARTER_ENTRY,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-      };
-      addDiaryEntry(starter);
-      return [starter];
-    }
-    return existing;
-  });
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Inline Quick Entry State
   const [title, setTitle] = useState("");
@@ -70,27 +55,68 @@ export default function Diary() {
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
 
+  async function fetchEntries() {
+    setLoading(true);
+    const { data } = await api.journals.getAll();
+    if (data?.journals) {
+      setEntries(
+        data.journals.map((j: any) => ({
+          id: j.id,
+          title: j.title,
+          content: j.entry || j.content || "",
+          mood: j.mood || "😊",
+          tags: Array.isArray(j.tags) ? j.tags : ["college"],
+          date: j.date,
+          createdAt: j.createdAt,
+        }))
+      );
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchEntries();
+    const handleSync = () => {
+      fetchEntries();
+    };
+    window.addEventListener("lumi-sync", handleSync);
+    return () => window.removeEventListener("lumi-sync", handleSync);
+  }, []);
+
   function toggleTag(tag: string) {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   }
 
-  function handleSaveEntry(e: React.FormEvent) {
+  async function handleSaveEntry(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() && !content.trim()) return;
 
-    const newEntry: DiaryEntry = {
-      id: crypto.randomUUID(),
+    const { data } = await api.journals.create({
       title: title.trim() || "Untitled reflection",
-      content: content.trim(),
+      entry: content.trim(),
       mood: selectedMood,
       tags: selectedTags,
-      createdAt: new Date().toISOString(),
-    };
+      date: new Date().toISOString().split("T")[0],
+    });
 
-    addDiaryEntry(newEntry);
-    setEntries(getDiaryEntries());
+    if (data?.journal) {
+      setEntries((prev) => [
+        {
+          id: data.journal.id,
+          title: data.journal.title,
+          content: data.journal.entry,
+          mood: data.journal.mood,
+          tags: selectedTags.length > 0 ? selectedTags : ["college"],
+          date: data.journal.date,
+          createdAt: data.journal.createdAt,
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync"));
+    }
+
     setTitle("");
     setContent("");
     setSelectedMood("😊");
@@ -98,22 +124,24 @@ export default function Diary() {
     setIsExpanded(false);
   }
 
-  function handleDelete(id: string) {
-    deleteDiaryEntry(id);
-    setEntries(getDiaryEntries());
+  async function handleDelete(id: string) {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+    await api.journals.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync"));
   }
 
   const filteredEntries = entries.filter((entry) => {
     const matchesSearch =
       entry.title.toLowerCase().includes(search.toLowerCase()) ||
       entry.content.toLowerCase().includes(search.toLowerCase()) ||
-      entry.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
+      (entry.tags || []).some((t) => t.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesTag = tagFilter ? entry.tags.includes(tagFilter) : true;
+    const matchesTag = tagFilter ? (entry.tags || []).includes(tagFilter) : true;
     return matchesSearch && matchesTag;
   });
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "Today";
     return new Date(dateStr).toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
@@ -188,185 +216,180 @@ export default function Diary() {
 
             <input
               type="text"
-              placeholder="Give today a title (e.g. Afternoon coffee & breakthroughs)..."
+              placeholder="Give your thoughts a title (optional)..."
               value={title}
               onFocus={() => setIsExpanded(true)}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-white/80 bg-white/90 px-3.5 py-2.5 text-xs font-semibold text-[#17151C] placeholder:text-[#8D8792] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
+              className="w-full rounded-xl border border-[#E8E3F0] bg-white/90 px-4 py-2.5 text-xs font-semibold text-[#17151C] placeholder:text-[#8D8792] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
             />
 
-            {(isExpanded || content) && (
-              <>
-                <textarea
-                  placeholder="Pour your thoughts, feelings, highlights of the day, or lessons learned..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={4}
-                  className="w-full rounded-xl border border-white/80 bg-white/90 p-3.5 text-xs font-medium text-[#17151C] leading-relaxed placeholder:text-[#8D8792] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs resize-none"
-                />
+            <textarea
+              rows={isExpanded ? 4 : 2}
+              placeholder="What happened today? How are you feeling? Capture gratitude or lessons..."
+              value={content}
+              onFocus={() => setIsExpanded(true)}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full rounded-xl border border-[#E8E3F0] bg-white/90 p-4 text-xs font-medium text-[#17151C] placeholder:text-[#8D8792] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none resize-none leading-relaxed shadow-2xs transition-all"
+            />
 
-                {/* Tags Picker */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965] mr-1 flex items-center gap-1">
-                    <Tag size={11} /> Tags:
-                  </span>
-                  {SUGGESTED_TAGS.map((t) => {
-                    const isSelected = selectedTags.includes(t);
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => toggleTag(t)}
-                        className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition cursor-pointer ${
-                          isSelected
-                            ? "bg-[#17151C] border-[#17151C] text-white shadow-2xs"
-                            : "bg-white/80 border-[#E8E3F0] text-[#5F5965] hover:bg-white"
-                        }`}
-                      >
-                        #{t}
-                      </button>
-                    );
-                  })}
-                </div>
+            {/* Tags & Action Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-bold text-[#8D8792] uppercase mr-1">
+                  Tags:
+                </span>
+                {SUGGESTED_TAGS.slice(0, 5).map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleTag(tag)}
+                    className={`rounded-lg px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer ${
+                      selectedTags.includes(tag)
+                        ? "bg-[#17151C] text-white"
+                        : "bg-white/80 border border-[#E8E3F0] text-[#5F5965] hover:bg-white"
+                    }`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
 
-                <div className="flex justify-end gap-2.5 pt-2">
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                {isExpanded && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setTitle("");
-                      setContent("");
-                      setSelectedTags([]);
-                      setIsExpanded(false);
-                    }}
-                    className="rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:bg-white/60 cursor-pointer"
+                    onClick={() => setIsExpanded(false)}
+                    className="rounded-xl px-3.5 py-2 text-xs font-semibold text-[#5F5965] hover:bg-white/50 cursor-pointer"
                   >
-                    Clear
+                    Collapse
                   </button>
-                  <button
-                    type="submit"
-                    disabled={!title.trim() && !content.trim()}
-                    className="flex items-center gap-1.5 rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
-                  >
-                    <Heart size={13} />
-                    <span>Save Entry</span>
-                  </button>
-                </div>
-              </>
-            )}
+                )}
+                <button
+                  type="submit"
+                  disabled={!title.trim() && !content.trim()}
+                  className="rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2D263B] disabled:opacity-50 cursor-pointer"
+                >
+                  Save Reflection
+                </button>
+              </div>
+            </div>
           </form>
         </Card>
 
         {/* ═══════════════════════════════════════
-            SEARCH & TAG FILTER BAR
+            SEARCH & FILTER BAR
         ═══════════════════════════════════════ */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8D8792]"
+            />
+            <input
+              type="text"
+              placeholder="Search previous diary entries..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] placeholder:text-[#8D8792] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
+            />
+          </div>
+
+          {/* Tag Filter Chips */}
           <div className="flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               onClick={() => setTagFilter(null)}
-              className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
                 tagFilter === null
-                  ? "bg-[#EEEAFE] border border-[#DDD8F2] text-[#17151C] shadow-2xs"
-                  : "bg-white/80 border border-[#E8E3F0] text-[#5F5965] hover:text-[#17151C]"
+                  ? "bg-[#17151C] text-white shadow-2xs"
+                  : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
               }`}
             >
-              All Entries ({entries.length})
+              All
             </button>
-            {SUGGESTED_TAGS.slice(0, 5).map((t) => (
+            {SUGGESTED_TAGS.slice(0, 4).map((tag) => (
               <button
-                key={t}
+                key={tag}
                 type="button"
-                onClick={() => setTagFilter(tagFilter === t ? null : t)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                  tagFilter === t
-                    ? "bg-[#EEEAFE] border border-[#DDD8F2] text-[#17151C] shadow-2xs"
-                    : "bg-white/80 border border-[#E8E3F0] text-[#5F5965] hover:text-[#17151C]"
+                onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                  tagFilter === tag
+                    ? "bg-[#9E96D8] text-white shadow-2xs"
+                    : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#EEEAFE]"
                 }`}
               >
-                #{t}
+                #{tag}
               </button>
             ))}
-          </div>
-
-          <div className="relative flex-1 sm:w-64">
-            <Search size={14} className="absolute left-3.5 top-3 text-[#8D8792]" />
-            <input
-              type="text"
-              placeholder="Search diary thoughts..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] shadow-2xs outline-none focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30"
-            />
           </div>
         </div>
 
         {/* ═══════════════════════════════════════
-            ENTRIES MASONRY / GRID
+            ENTRIES TIMELINE FEED
         ═══════════════════════════════════════ */}
-        {filteredEntries.length === 0 ? (
-          <Card variant="peach" className="p-10 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-white">
-              🌷
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-[#9E96D8]" />
+          </div>
+        ) : filteredEntries.length === 0 ? (
+          <Card variant="default" className="flex flex-col items-center justify-center p-12 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEAFE] text-2xl">
+              ✍️
             </div>
-            <h3 className="font-serif text-2xl font-bold text-[#17151C]">
-              No entries found
-            </h3>
-            <p className="mt-1 text-xs text-[#5F5965]">
-              Write down your thoughts in the box above to begin filling your journal.
+            <h3 className="font-serif text-lg font-bold text-[#17151C]">No journal entries found</h3>
+            <p className="mt-1 text-xs text-[#5F5965] max-w-xs">
+              {search || tagFilter
+                ? "No entries match your search query."
+                : "Your private space is quiet. Write your first thought in the box above."}
             </p>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">
             {filteredEntries.map((entry) => (
               <Card
                 key={entry.id}
-                variant="glass"
+                variant="default"
                 hoverEffect
-                className="group relative flex flex-col justify-between p-6 border-[#E8E3F0] bg-white/90"
+                className="group p-5 bg-white border-[#E8E3F0] transition duration-200"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-[#8D8792]">
-                      <CalendarDays size={13} className="text-[#9E96D8]" />
-                      <span>{formatDate(entry.createdAt)}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FDF3EC] text-base border border-[#F1D2C9]"
-                        title={entry.mood}
-                      >
-                        {entry.mood || "😊"}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(entry.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition opacity-0 group-hover:opacity-100 cursor-pointer"
-                        title="Delete entry"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                <div className="flex items-start justify-between gap-3 mb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F7F5F8] text-base border border-[#E8E3F0]">
+                      {entry.mood}
+                    </span>
+                    <div>
+                      <h3 className="font-serif text-base font-bold text-[#17151C]">
+                        {entry.title}
+                      </h3>
+                      <p className="text-[10px] text-[#8D8792] font-semibold flex items-center gap-1 mt-0.5">
+                        <CalendarDays size={11} className="text-[#9E96D8]" />
+                        {formatDate(entry.date || entry.createdAt)}
+                      </p>
                     </div>
                   </div>
 
-                  <h3 className="font-serif font-bold text-lg text-[#17151C] leading-snug tracking-tight">
-                    {entry.title}
-                  </h3>
-
-                  <p className="mt-2.5 text-xs font-normal text-[#5F5965] leading-relaxed whitespace-pre-wrap">
-                    {entry.content}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(entry.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#8D8792] hover:text-[#D84C2C] hover:bg-[#FDECE8] transition cursor-pointer"
+                    title="Delete entry"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
 
+                <p className="text-xs text-[#5F5965] font-normal leading-relaxed whitespace-pre-wrap pl-10">
+                  {entry.content}
+                </p>
+
                 {entry.tags && entry.tags.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-[#E8E3F0] flex flex-wrap gap-1.5">
-                    {entry.tags.map((tag) => (
+                  <div className="mt-4 pt-3 border-t border-[#F7F5F8] flex flex-wrap gap-1.5 pl-10">
+                    {entry.tags.map((t) => (
                       <span
-                        key={tag}
-                        className="rounded-md bg-[#EEEAFE] border border-[#DDD8F2] px-2 py-0.5 text-[10px] font-semibold text-[#5F5965]"
+                        key={t}
+                        className="rounded-md bg-[#F7F5F8] border border-[#E8E3F0] px-2 py-0.5 text-[10px] font-semibold text-[#5F5965]"
                       >
-                        #{tag}
+                        #{t}
                       </span>
                     ))}
                   </div>

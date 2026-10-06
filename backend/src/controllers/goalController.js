@@ -1,59 +1,88 @@
-const { readDB, writeDB } = require("../services/store");
+const goalService = require("../services/goalService");
 
-function getGoals(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const userGoals = db.goals.filter((g) => g.userId === userId || !g.userId);
-  res.json({ goals: userGoals });
-}
-
-function createGoal(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const { title, category, targetDate, whyItMatters, milestones } = req.body;
-
-  const newGoal = {
-    id: "g-" + Date.now(),
-    userId,
-    title: title || "New Goal",
-    category: category || "Personal",
-    targetDate: targetDate || "",
-    whyItMatters: whyItMatters || "",
-    progress: 0,
-    milestones: Array.isArray(milestones) ? milestones : [],
-    createdAt: new Date().toISOString(),
-  };
-
-  db.goals.unshift(newGoal);
-  writeDB(db);
-  res.status(201).json({ message: "Goal created", goal: newGoal });
-}
-
-function updateGoal(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  const goalIndex = db.goals.findIndex((g) => g.id === id);
-
-  if (goalIndex === -1) {
-    return res.status(404).json({ error: "Goal not found" });
+/**
+ * Retrieves all goals for the authenticated user.
+ */
+async function getGoals(req, res) {
+  try {
+    const userId = req.user.id;
+    const goals = await goalService.getGoalsByUserId(userId);
+    res.json({ goals });
+  } catch (err) {
+    console.error("Get goals error:", err);
+    res.status(500).json({ error: "Internal server error retrieving goals" });
   }
-
-  db.goals[goalIndex] = {
-    ...db.goals[goalIndex],
-    ...req.body,
-    updatedAt: new Date().toISOString(),
-  };
-
-  writeDB(db);
-  res.json({ message: "Goal updated", goal: db.goals[goalIndex] });
 }
 
-function deleteGoal(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  db.goals = db.goals.filter((g) => g.id !== id);
-  writeDB(db);
-  res.json({ message: "Goal deleted" });
+/**
+ * Creates a new goal for the authenticated user.
+ */
+async function createGoal(req, res) {
+  try {
+    const userId = req.user.id;
+    const { title, description, category, targetDate, whyItMatters, milestones } = req.body;
+
+    if (!title || typeof title !== "string" || !title.trim()) {
+      return res.status(400).json({ error: "Goal title is required" });
+    }
+
+    const newGoal = await goalService.createGoal({
+      userId,
+      title,
+      description,
+      category,
+      targetDate,
+      whyItMatters,
+      milestones,
+    });
+
+    res.status(201).json({ message: "Goal created", goal: newGoal });
+  } catch (err) {
+    console.error("Create goal error:", err);
+    res.status(500).json({ error: "Internal server error creating goal" });
+  }
+}
+
+/**
+ * Updates a goal for the authenticated user.
+ */
+async function updateGoal(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const updatedGoal = await goalService.updateGoal(id, userId, req.body);
+
+    if (!updatedGoal) {
+      return res.status(404).json({ error: "Goal not found" });
+    }
+
+    res.json({ message: "Goal updated", goal: updatedGoal });
+  } catch (err) {
+    console.error("Update goal error:", err);
+    res.status(500).json({ error: "Internal server error updating goal" });
+  }
+}
+
+/**
+ * Deletes a goal for the authenticated user.
+ */
+async function deleteGoal(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const deleted = await goalService.deleteGoal(id, userId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Goal not found" });
+    }
+
+    res.json({ message: "Goal deleted" });
+  } catch (err) {
+    console.error("Delete goal error:", err);
+    res.status(500).json({ error: "Internal server error deleting goal" });
+  }
 }
 
 module.exports = {

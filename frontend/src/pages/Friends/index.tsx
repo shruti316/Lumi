@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
+import { api } from "../../lib/api";
 
 interface FriendProfile {
   id: string;
@@ -377,6 +378,61 @@ export default function Friends() {
   const activeFriend = activeConversation ? friends[activeConversation.friendId] : null;
 
   useEffect(() => {
+    async function loadFeedAndConversations() {
+      try {
+        const feedRes = await api.friends.getFeed();
+        if (feedRes.data?.feed && feedRes.data.feed.length > 0) {
+          setMemories(
+            feedRes.data.feed.map((f: any) => ({
+              id: f.id,
+              authorId: f.authorId || f.userId || "u-1",
+              authorName: f.authorName || "LUMI Friend",
+              authorAvatar: f.authorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80",
+              authorHandle: f.authorHandle || "@lumi_friend",
+              title: f.title,
+              caption: f.caption || "",
+              imageUrl: f.imageUrl || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+              location: f.location,
+              timeAgo: "Recently",
+              likes: f.likesCount || 0,
+              userLiked: false,
+              reactions: f.reactions || { "✨": 1 },
+              comments: Array.isArray(f.comments) ? f.comments : [],
+            }))
+          );
+        }
+
+        const convRes = await api.messages.getConversations();
+        if (convRes.data?.conversations && convRes.data.conversations.length > 0) {
+          setConversations(
+            convRes.data.conversations.map((c: any) => ({
+              id: c.id,
+              friendId: c.friendId || "u-1",
+              unreadCount: 0,
+              lastMessage: c.lastMessage || "Started a conversation",
+              lastTimestamp: "Recently",
+              messages: Array.isArray(c.messages)
+                ? c.messages.map((m: any) => ({
+                    id: m.id,
+                    senderId: m.senderId === "me" ? "me" : m.senderId,
+                    text: m.text || "",
+                    mediaUrl: m.mediaUrl,
+                    timestamp: m.timestamp || "Today",
+                    read: true,
+                  }))
+                : [],
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load friend feed or messages:", err);
+      }
+    }
+
+    loadFeedAndConversations();
+  }, []);
+
+  useEffect(() => {
     function handleProfileSync(e: Event) {
       const customEvent = e as CustomEvent<{ avatarUrl?: string }>;
       if (customEvent.detail) {
@@ -391,7 +447,7 @@ export default function Friends() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeConversation?.messages]);
 
-  function handleToggleLike(id: string) {
+  async function handleToggleLike(id: string) {
     setMemories((prev) =>
       prev.map((mem) => {
         if (mem.id === id) {
@@ -405,9 +461,10 @@ export default function Friends() {
         return mem;
       })
     );
+    await api.friends.react(id, "heart");
   }
 
-  function handleAddReaction(id: string, emoji: string) {
+  async function handleAddReaction(id: string, emoji: string) {
     setMemories((prev) =>
       prev.map((mem) => {
         if (mem.id === id) {
@@ -424,9 +481,11 @@ export default function Friends() {
         return mem;
       })
     );
+    const reactionType = emoji === "❤️" ? "heart" : emoji === "✨" ? "sparkle" : "fire";
+    await api.friends.react(id, reactionType);
   }
 
-  function handleAddComment(memId: string, e: React.FormEvent) {
+  async function handleAddComment(memId: string, e: React.FormEvent) {
     e.preventDefault();
     const text = commentInput[memId]?.trim();
     if (!text) return;
@@ -452,9 +511,10 @@ export default function Friends() {
     );
 
     setCommentInput((prev) => ({ ...prev, [memId]: "" }));
+    await api.friends.comment(memId, text);
   }
 
-  function handleSendMessage(e?: React.FormEvent) {
+  async function handleSendMessage(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if ((!chatInputText.trim() && !attachmentPreview) || !activeConvId) return;
 
@@ -481,9 +541,14 @@ export default function Friends() {
       })
     );
 
+    const sentText = chatInputText.trim() || "Sent an image";
+    const sentMedia = attachmentPreview || undefined;
+
     setChatInputText("");
     setAttachmentPreview(null);
     setShowEmojiPicker(false);
+
+    await api.messages.send(activeConvId, sentText, sentMedia);
   }
 
   function handleToggleMessageReaction(msgId: string, emoji: string) {

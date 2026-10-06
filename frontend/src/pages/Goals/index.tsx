@@ -1,14 +1,21 @@
-import { useState } from "react";
-import { Plus, Trash2, CheckCircle2, Clock, Sparkles } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Trash2, CheckCircle2, Clock, Sparkles, Loader2 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import {
-  getGoals,
-  addGoal,
-  updateGoal,
-  deleteGoal,
-  type Goal,
-} from "../../lib/lifeOSStorage";
+import { api } from "../../lib/api";
+
+export interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  category: "Academic" | "Personal" | "Career" | "Health";
+  deadline: string;
+  targetDate?: string;
+  progress: number;
+  status: "In Progress" | "Completed";
+  milestones?: string[];
+  createdAt?: string;
+}
 
 const CATEGORIES = [
   { name: "Academic", icon: "📚", desc: "Grades, courses & exam targets" },
@@ -18,7 +25,8 @@ const CATEGORIES = [
 ] as const;
 
 export default function Goals() {
-  const [goals, setGoals] = useState<Goal[]>(() => getGoals());
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -27,23 +35,55 @@ export default function Goals() {
   const [deadline, setDeadline] = useState("");
   const [progress, setProgress] = useState(0);
 
-  function handleCreateGoal(e: React.FormEvent) {
+  async function fetchGoals() {
+    setLoading(true);
+    const { data } = await api.goals.getAll();
+    if (data?.goals) {
+      setGoals(
+        data.goals.map((g: any) => ({
+          ...g,
+          category: g.category || "Personal",
+          deadline: g.targetDate || g.deadline || "Ongoing",
+          status: g.status || (g.progress >= 100 ? "Completed" : "In Progress"),
+          milestones: g.milestones || [],
+        }))
+      );
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchGoals();
+    window.addEventListener("lumi-sync", fetchGoals);
+    return () => window.removeEventListener("lumi-sync", fetchGoals);
+  }, []);
+
+  async function handleCreateGoal(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
 
-    const newGoal: Goal = {
-      id: crypto.randomUUID(),
+    const { data } = await api.goals.create({
       title: title.trim(),
       description: description.trim(),
       category,
-      deadline: deadline || "Ongoing",
+      targetDate: deadline || "Ongoing",
       progress,
       status: progress >= 100 ? "Completed" : "In Progress",
-      createdAt: new Date().toISOString(),
-    };
+    });
 
-    addGoal(newGoal);
-    setGoals(getGoals());
+    if (data?.goal) {
+      setGoals((prev) => [
+        {
+          ...data.goal,
+          category: data.goal.category || category,
+          deadline: data.goal.targetDate || deadline || "Ongoing",
+          status: data.goal.status || (progress >= 100 ? "Completed" : "In Progress"),
+          milestones: data.goal.milestones || [],
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "goal" } }));
+    }
 
     setTitle("");
     setDescription("");
@@ -57,19 +97,29 @@ export default function Goals() {
     setShowModal(true);
   }
 
-  function handleToggleStatus(goal: Goal) {
-    const updated: Goal = {
-      ...goal,
-      status: goal.status === "Completed" ? "In Progress" : "Completed",
-      progress: goal.status === "Completed" ? 50 : 100,
-    };
-    updateGoal(updated);
-    setGoals(getGoals());
+  async function handleToggleStatus(goal: Goal) {
+    const isCompleted = goal.status === "Completed";
+    const newStatus = isCompleted ? "In Progress" : "Completed";
+    const newProgress = isCompleted ? 50 : 100;
+
+    // Optimistic UI update
+    setGoals((prev) =>
+      prev.map((g) =>
+        g.id === goal.id ? { ...g, status: newStatus, progress: newProgress } : g
+      )
+    );
+
+    await api.goals.update(goal.id, {
+      status: newStatus,
+      progress: newProgress,
+    });
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "goal" } }));
   }
 
-  function handleDelete(id: string) {
-    deleteGoal(id);
-    setGoals(getGoals());
+  async function handleDelete(id: string) {
+    setGoals((prev) => prev.filter((g) => g.id !== id));
+    await api.goals.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "goal" } }));
   }
 
   const completedCount = goals.filter((g) => g.status === "Completed").length;
@@ -142,7 +192,11 @@ export default function Goals() {
         {/* ═══════════════════════════════════════
             GOALS LIST / EMPTY STATE
         ═══════════════════════════════════════ */}
-        {goals.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-[#9E96D8]" />
+          </div>
+        ) : goals.length === 0 ? (
           <div className="space-y-6">
             <Card variant="lavender" className="p-10 text-center">
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-white">

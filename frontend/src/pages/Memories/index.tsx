@@ -1,27 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Camera,
   ImageIcon,
   Plus,
-  Sparkles,
   Trash2,
-  X,
-  Calendar,
   Lock,
   Users,
-  Star,
   MapPin,
-  Music,
   Filter,
+  Loader2,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import {
-  addMemory,
-  deleteMemory,
-  getMemories,
-  type Memory,
-} from "../../lib/lifeOSStorage";
+import { api } from "../../lib/api";
+
+export interface Memory {
+  id: string;
+  title: string;
+  imageUrl: string;
+  date: string;
+  caption: string;
+  location?: string;
+  song?: string;
+  visibility?: "private" | "friends" | "close_friends";
+  isShared?: boolean;
+  tags?: string[];
+  createdAt?: string;
+}
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -33,7 +38,8 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export default function Memories() {
-  const [memories, setMemories] = useState<Memory[]>(() => getMemories());
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<"all" | "private" | "shared">("all");
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<Memory | null>(null);
@@ -43,8 +49,32 @@ export default function Memories() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [caption, setCaption] = useState("");
   const [location, setLocation] = useState("");
-  const [song, setSong] = useState("");
   const [visibility, setVisibility] = useState<"private" | "friends" | "close_friends">("private");
+
+  async function fetchMemories() {
+    setLoading(true);
+    const { data } = await api.memories.getAll();
+    if (data?.memories) {
+      setMemories(
+        data.memories.map((m: any) => ({
+          ...m,
+          imageUrl: m.imageUrl || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+          visibility: m.isShared ? "friends" : "private",
+          date: m.date || new Date().toISOString().split("T")[0],
+        }))
+      );
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchMemories();
+    const handleSync = () => {
+      fetchMemories();
+    };
+    window.addEventListener("lumi-sync", handleSync);
+    return () => window.removeEventListener("lumi-sync", handleSync);
+  }, []);
 
   function resetForm() {
     setTitle("");
@@ -52,7 +82,6 @@ export default function Memories() {
     setDate(new Date().toISOString().split("T")[0]);
     setCaption("");
     setLocation("");
-    setSong("");
     setVisibility("private");
   }
 
@@ -78,46 +107,56 @@ export default function Memories() {
       });
   }
 
-  function handleCreateMemory(e: React.FormEvent) {
+  async function handleCreateMemory(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !imageUrl.trim()) return;
 
-    const memory: Memory = {
-      id: crypto.randomUUID(),
+    const isShared = visibility === "friends" || visibility === "close_friends";
+
+    const { data } = await api.memories.create({
       title: title.trim(),
       imageUrl: imageUrl.trim(),
       date,
       caption: caption.trim(),
-      location: location.trim() || undefined,
-      song: song.trim() || undefined,
-      visibility,
-      tags: [],
-      createdAt: new Date().toISOString(),
-    };
+      location: location.trim() || "",
+      isShared,
+    });
 
-    addMemory(memory);
-    setMemories(getMemories());
+    if (data?.memory) {
+      setMemories((prev) => [
+        {
+          ...data.memory,
+          visibility,
+          isShared,
+          imageUrl: data.memory.imageUrl || imageUrl,
+          date: data.memory.date || date,
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "memory" } }));
+    }
+
     resetForm();
     setShowModal(false);
   }
 
-  function handleDelete(id: string) {
-    deleteMemory(id);
-    setMemories(getMemories());
-
+  async function handleDelete(id: string) {
+    setMemories((prev) => prev.filter((m) => m.id !== id));
     if (selectedImage?.id === id) {
       setSelectedImage(null);
     }
+    await api.memories.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "memory" } }));
   }
 
   const filteredMemories = memories.filter((mem) => {
-    if (activeFilter === "private") return !mem.visibility || mem.visibility === "private";
-    if (activeFilter === "shared") return mem.visibility === "friends" || mem.visibility === "close_friends";
+    if (activeFilter === "private") return !mem.isShared && (!mem.visibility || mem.visibility === "private");
+    if (activeFilter === "shared") return mem.isShared || mem.visibility === "friends" || mem.visibility === "close_friends";
     return true;
   });
 
-  const privateCount = memories.filter((m) => !m.visibility || m.visibility === "private").length;
-  const sharedCount = memories.filter((m) => m.visibility === "friends" || m.visibility === "close_friends").length;
+  const privateCount = memories.filter((m) => !m.isShared && (!m.visibility || m.visibility === "private")).length;
+  const sharedCount = memories.filter((m) => m.isShared || m.visibility === "friends" || m.visibility === "close_friends").length;
 
   return (
     <div className="min-h-screen pb-28 text-[#17151C] lumi-animate-fade-up">
@@ -184,9 +223,9 @@ export default function Memories() {
                   : "text-[#5F5965] hover:text-[#17151C]"
               }`}
             >
-              <Lock size={13} className={activeFilter === "private" ? "text-[#9E96D8]" : ""} />
-              <span>Personal Vault</span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2]">
+              <Lock size={13} className={activeFilter === "private" ? "text-[#8D8792]" : ""} />
+              <span>Private Vault</span>
+              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#5F5965] border border-[#DDD8F2]">
                 {privateCount}
               </span>
             </button>
@@ -201,283 +240,96 @@ export default function Memories() {
               }`}
             >
               <Users size={13} className={activeFilter === "shared" ? "text-[#9E96D8]" : ""} />
-              <span>Shared Moments</span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2]">
+              <span>Shared Feed</span>
+              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#9E96D8] border border-[#DDD8F2]">
                 {sharedCount}
               </span>
             </button>
           </div>
-
-          <span className="text-xs text-[#8D8792] font-medium hidden sm:inline-block">
-            Showing {filteredMemories.length} {filteredMemories.length === 1 ? "entry" : "entries"}
-          </span>
         </div>
 
         {/* ═══════════════════════════════════════
-            MEMORY WALL SCRAPBOOK VIEW
+            MEMORIES MASONRY / GRID
         ═══════════════════════════════════════ */}
-        {memories.length === 0 ? (
-          <div className="space-y-6">
-            <Card variant="lavender" className="p-12 text-center border-[#DDD8F2]">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-[#9E96D8] shadow-sm border border-white">
-                <Camera size={28} />
-              </div>
-
-              <h2 className="mt-4 font-serif text-3xl font-bold text-[#17151C]">
-                Your memories will live here.
-              </h2>
-
-              <p className="mx-auto mt-2 max-w-md text-xs sm:text-sm font-normal leading-relaxed text-[#5F5965]">
-                Save the little moments worth keeping — campus sunsets, late-night study sessions, coffee dates, and milestones.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  resetForm();
-                  setShowModal(true);
-                }}
-                className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#17151C] px-6 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[#2D263B] hover:-translate-y-0.5 active:scale-95 cursor-pointer"
-              >
-                <Plus size={15} />
-                <span>+ Create First Memory</span>
-              </button>
-            </Card>
-
-            <Card variant="pearl" className="p-6 border-[#E8E3F0]">
-              <span className="mb-3.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#5F5965]">
-                <Sparkles size={14} className="text-[#9E96D8]" />
-                Inspiration for your digital scrapbook
-              </span>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-[#E8E3F0] bg-white p-4 shadow-2xs">
-                  <p className="font-semibold text-xs text-[#17151C]">
-                    ☕ Campus Coffee Spots
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#5F5965]">
-                    Your favorite morning brew, cozy study nook, or cafe table.
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-[#E8E3F0] bg-white p-4 shadow-2xs">
-                  <p className="font-semibold text-xs text-[#17151C]">
-                    💻 Milestone Builds
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#5F5965]">
-                    Snap a photo when shipping a project or acing an exam.
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-[#E8E3F0] bg-white p-4 shadow-2xs">
-                  <p className="font-semibold text-xs text-[#17151C]">
-                    🌷 Golden Hour Walks
-                  </p>
-                  <p className="mt-1 text-[11px] text-[#5F5965]">
-                    Scenic skies on the walk across campus and quiet moments.
-                  </p>
-                </div>
-              </div>
-            </Card>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-[#9E96D8]" />
           </div>
         ) : filteredMemories.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EEEAFE] text-[#9E96D8] border border-[#DDD8F2]">
-              <Filter size={24} />
+          <Card variant="default" className="flex flex-col items-center justify-center p-12 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEAFE] text-[#9E96D8]">
+              <Camera size={22} />
             </div>
-            <h3 className="font-serif text-xl font-bold text-[#17151C]">No memories in this view</h3>
-            <p className="mt-1 text-xs text-[#5F5965] max-w-sm mx-auto">
-              {activeFilter === "private"
-                ? "You don't have any private vault memories yet."
-                : "You haven't shared any memories with friends yet."}
+            <h3 className="font-serif text-lg font-bold text-[#17151C]">No memories yet</h3>
+            <p className="mt-1 text-xs text-[#5F5965] max-w-xs">
+              Take photos of little moments, sunsets, latte art, or study sessions and pin them to your scrapbook.
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                resetForm();
-                if (activeFilter === "shared") setVisibility("friends");
-                setShowModal(true);
-              }}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#17151C] px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] cursor-pointer"
-            >
-              <Plus size={14} />
-              <span>Add a memory here</span>
-            </button>
-          </div>
+          </Card>
         ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
-            {filteredMemories.map((mem, idx) => {
-              const rotations = ["hover:rotate-0", "rotate-0.5 hover:rotate-0", "-rotate-0.5 hover:rotate-0"];
-              const rotationClass = rotations[idx % rotations.length];
-
-              const isShared = mem.visibility === "friends" || mem.visibility === "close_friends";
-
-              return (
-                <div
-                  key={mem.id}
-                  className={`break-inside-avoid rounded-3xl bg-white p-4 shadow-[0_10px_30px_rgba(80,70,120,0.08)] border border-[#E8E3F0] transition-all duration-300 hover:shadow-[0_16px_40px_rgba(80,70,120,0.14)] hover:scale-[1.01] ${rotationClass}`}
-                >
-                  {/* Image container */}
-                  <div
-                    className="relative w-full cursor-pointer overflow-hidden rounded-2xl bg-[#FAF8FC] border border-black/5 group"
-                    onClick={() => setSelectedImage(mem)}
-                  >
-                    <img
-                      src={mem.imageUrl}
-                      alt={mem.title}
-                      className="w-full object-cover max-h-80 transition duration-500 group-hover:scale-103"
-                    />
-
-                    {/* Visibility badge overlay */}
-                    <div className="absolute top-2.5 right-2.5">
-                      {isShared ? (
-                        <span className="flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2] shadow-sm">
-                          <Users size={10} />
-                          <span>Shared</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-[#5F5965] border border-[#E8E3F0] shadow-sm">
-                          <Lock size={10} />
-                          <span>Private</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="absolute inset-0 flex items-end justify-between bg-gradient-to-t from-black/60 via-transparent to-transparent p-3.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-white">
-                        <ImageIcon size={14} />
-                        View Full Photograph
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Caption & Metadata Footer */}
-                  <div className="mt-3.5 px-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-serif font-bold text-base text-[#17151C] leading-snug">
-                        {mem.title}
-                      </h3>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(mem.id)}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#8D8792] transition hover:bg-[#FDF0F6] hover:text-[#D99BB8] cursor-pointer"
-                        title="Delete memory"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#8D8792]">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={11} className="text-[#9E96D8]" />
-                        <span>{mem.date}</span>
-                      </span>
-                      {mem.location && (
-                        <span className="flex items-center gap-1 text-[#5F5965]">
-                          <MapPin size={11} className="text-[#E8B9CD]" />
-                          <span>{mem.location}</span>
-                        </span>
-                      )}
-                      {mem.song && (
-                        <span className="flex items-center gap-1 text-[#6B5BA5]">
-                          <Music size={11} className="text-[#9E96D8]" />
-                          <span>{mem.song}</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {mem.caption && (
-                      <p className="mt-2 text-xs leading-relaxed text-[#5F5965] bg-[#FAF8FC] border border-[#E8E3F0] rounded-xl p-2.5">
-                        “{mem.caption}”
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════
-            FULL LIGHTBOX MODAL
-        ═══════════════════════════════════════ */}
-        {selectedImage && (
-          <div
-            className="fixed inset-0 z-50 flex select-none items-center justify-center bg-[#17151C]/65 p-4 backdrop-blur-md lumi-animate-fade-up"
-            onClick={() => setSelectedImage(null)}
-          >
-            <div
-              className="relative w-full max-w-xl rounded-3xl border border-[#E8E3F0] bg-white p-6 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedImage(null)}
-                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black cursor-pointer shadow-md"
-                aria-label="Close image"
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredMemories.map((mem) => (
+              <div
+                key={mem.id}
+                onClick={() => setSelectedImage(mem)}
+                className="group relative overflow-hidden rounded-2xl border border-[#E8E3F0] bg-white shadow-2xs transition duration-300 hover:-translate-y-1 hover:shadow-md cursor-pointer"
               >
-                <X size={16} />
-              </button>
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F7F5F8]">
+                  <img
+                    src={mem.imageUrl}
+                    alt={mem.title}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-              <img
-                src={selectedImage.imageUrl}
-                alt={selectedImage.title}
-                className="h-88 w-full rounded-2xl object-cover shadow-inner"
-              />
-
-              <div className="mt-4 px-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-serif text-2xl font-bold text-[#17151C]">
-                    {selectedImage.title}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#8D8792] font-semibold bg-[#FAF8FC] border border-[#E8E3F0] px-2.5 py-1 rounded-full">
-                      {selectedImage.date}
-                    </span>
-                    {selectedImage.visibility && (
-                      <span className="text-xs text-[#6B5BA5] font-semibold bg-[#EEEAFE] border border-[#DDD8F2] px-2.5 py-1 rounded-full capitalize">
-                        {selectedImage.visibility.replace("_", " ")}
-                      </span>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(mem.id);
+                    }}
+                    className="absolute right-2.5 top-2.5 rounded-xl bg-white/90 p-1.5 text-[#8D8792] shadow-sm opacity-0 group-hover:opacity-100 hover:text-[#D84C2C] hover:bg-[#FDECE8] transition cursor-pointer"
+                    title="Delete memory"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
 
-                {(selectedImage.location || selectedImage.song) && (
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[#5F5965]">
-                    {selectedImage.location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin size={12} className="text-[#E8B9CD]" />
-                        <span>{selectedImage.location}</span>
-                      </span>
-                    )}
-                    {selectedImage.song && (
-                      <span className="flex items-center gap-1">
-                        <Music size={12} className="text-[#9E96D8]" />
-                        <span>{selectedImage.song}</span>
-                      </span>
-                    )}
+                <div className="p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-serif text-base font-bold text-[#17151C] line-clamp-1">
+                      {mem.title}
+                    </h3>
+                    <span className="text-[10px] font-semibold text-[#8D8792]">
+                      {mem.date}
+                    </span>
                   </div>
-                )}
 
-                {selectedImage.caption && (
-                  <p className="mt-2.5 text-xs leading-relaxed text-[#5F5965] bg-[#FAF8FC] p-3 rounded-xl border border-[#E8E3F0]">
-                    “{selectedImage.caption}”
-                  </p>
-                )}
+                  {mem.caption && (
+                    <p className="mt-1.5 text-xs text-[#5F5965] line-clamp-2 leading-relaxed">
+                      {mem.caption}
+                    </p>
+                  )}
+
+                  {mem.location && (
+                    <div className="mt-2.5 flex items-center gap-1 text-[11px] font-semibold text-[#8D8792]">
+                      <MapPin size={12} className="text-[#9E96D8]" />
+                      <span>{mem.location}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         )}
 
         {/* ═══════════════════════════════════════
-            ADD MEMORY MODAL
+            CREATE MEMORY MODAL
         ═══════════════════════════════════════ */}
         <Modal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          title="Add a Photograph to Memory Wall"
-          subtitle="Keep moments, campus life, and little stories safe in LUMI."
+          title="Create Memory Snapshot"
+          subtitle="Pin a photograph and reflection to your memory vault."
         >
           <form onSubmit={handleCreateMemory} className="space-y-4">
             <div>
@@ -486,34 +338,62 @@ export default function Memories() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Rainy Afternoon in the Library"
+                autoFocus
+                placeholder="e.g. Golden hour study session by the bay"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-[#17151C] mb-1">
+                Image URL or Photo Upload *
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="url"
+                  placeholder="https://images.unsplash.com/..."
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                />
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 rounded-xl border border-[#E8E3F0] bg-[#F7F5F8] px-3 py-1.5 text-xs font-semibold text-[#5F5965] hover:bg-[#EEEAFE] cursor-pointer">
+                    <ImageIcon size={13} />
+                    <span>Upload local image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e.target.files?.[0])}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                  Date *
+                  Date
                 </label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
-                  required
                 />
               </div>
+
               <div>
                 <label className="block text-xs font-semibold text-[#17151C] mb-1">
                   Location (optional)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Central Library 3rd Floor"
+                  placeholder="e.g. San Francisco Pier"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
@@ -523,58 +403,7 @@ export default function Memories() {
 
             <div>
               <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Upload Image File
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageUpload(e.target.files?.[0])}
-                className="w-full rounded-xl border border-[#E8E3F0] bg-white p-2 text-xs font-medium text-[#5F5965] file:mr-3 file:rounded-lg file:border-0 file:bg-[#17151C] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white cursor-pointer shadow-2xs"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Or Image URL
-              </label>
-              <input
-                type="text"
-                placeholder="https://images.unsplash.com/..."
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
-              />
-            </div>
-
-            {imageUrl && (
-              <div className="overflow-hidden rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] p-2">
-                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8D8792]">
-                  Preview
-                </p>
-                <img
-                  src={imageUrl}
-                  alt="Preview"
-                  className="h-44 w-full rounded-lg object-cover"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Soundtrack / Song Tag (optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Kyoto - Phoebe Bridgers"
-                value={song}
-                onChange={(e) => setSong(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Story / Note / Caption
+                Caption & Story
               </label>
               <textarea
                 placeholder="Write a little note about what happened on this day..."
@@ -590,7 +419,7 @@ export default function Memories() {
               <label className="block text-xs font-semibold text-[#17151C] mb-1.5">
                 Visibility & Sharing
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setVisibility("private")}
@@ -602,41 +431,25 @@ export default function Memories() {
                 >
                   <div className="flex items-center gap-1 text-xs font-bold text-[#17151C]">
                     <Lock size={12} className="text-[#8D8792]" />
-                    <span>Private</span>
+                    <span>Private Vault</span>
                   </div>
-                  <p className="text-[10px] text-[#8D8792] mt-0.5">Only you</p>
+                  <p className="text-[10px] text-[#8D8792] mt-0.5">Only visible to you</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setVisibility("friends")}
                   className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
-                    visibility === "friends"
+                    visibility === "friends" || visibility === "close_friends"
                       ? "bg-[#FAF8FC] border-[#9E96D8] ring-1 ring-[#9E96D8]"
                       : "border-[#E8E3F0] bg-white hover:bg-[#FAF8FC]"
                   }`}
                 >
                   <div className="flex items-center gap-1 text-xs font-bold text-[#17151C]">
                     <Users size={12} className="text-[#9E96D8]" />
-                    <span>Friends</span>
+                    <span>Friend Feed</span>
                   </div>
-                  <p className="text-[10px] text-[#8D8792] mt-0.5">Shared feed</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setVisibility("close_friends")}
-                  className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
-                    visibility === "close_friends"
-                      ? "bg-[#FAF8FC] border-[#9E96D8] ring-1 ring-[#9E96D8]"
-                      : "border-[#E8E3F0] bg-white hover:bg-[#FAF8FC]"
-                  }`}
-                >
-                  <div className="flex items-center gap-1 text-xs font-bold text-[#17151C]">
-                    <Star size={12} className="text-[#E8B9CD]" />
-                    <span>Close</span>
-                  </div>
-                  <p className="text-[10px] text-[#8D8792] mt-0.5">Favorites</p>
+                  <p className="text-[10px] text-[#8D8792] mt-0.5">Shared on community feed</p>
                 </button>
               </div>
             </div>

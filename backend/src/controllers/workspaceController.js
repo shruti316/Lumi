@@ -1,115 +1,148 @@
-const { readDB, writeDB } = require("../services/store");
+const workspaceService = require("../services/workspaceService");
 
+// ==========================================
 // NOTES
-function getNotes(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const userNotes = db.notes.filter((n) => n.userId === userId || !n.userId);
-  res.json({ notes: userNotes });
-}
+// ==========================================
 
-function createNote(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const { title, category, tags, content } = req.body;
-
-  const newNote = {
-    id: "n-" + Date.now(),
-    userId,
-    title: title || "Untitled Note",
-    category: category || "General",
-    tags: Array.isArray(tags) ? tags : [],
-    content: content || "",
-    updatedAt: new Date().toISOString(),
-  };
-
-  db.notes.unshift(newNote);
-  writeDB(db);
-  res.status(201).json({ message: "Note created", note: newNote });
-}
-
-function updateNote(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  const noteIndex = db.notes.findIndex((n) => n.id === id);
-
-  if (noteIndex === -1) {
-    return res.status(404).json({ error: "Note not found" });
+async function getNotes(req, res) {
+  try {
+    const userId = req.user.id;
+    const notes = await workspaceService.getNotesByUserId(userId);
+    res.json({ notes });
+  } catch (err) {
+    console.error("Get notes error:", err);
+    res.status(500).json({ error: "Internal server error retrieving notes" });
   }
-
-  db.notes[noteIndex] = {
-    ...db.notes[noteIndex],
-    ...req.body,
-    updatedAt: new Date().toISOString(),
-  };
-
-  writeDB(db);
-  res.json({ message: "Note updated", note: db.notes[noteIndex] });
 }
 
-function deleteNote(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  db.notes = db.notes.filter((n) => n.id !== id);
-  writeDB(db);
-  res.json({ message: "Note deleted" });
+async function createNote(req, res) {
+  try {
+    const userId = req.user.id;
+    const { title, category, tags, content } = req.body;
+
+    const newNote = await workspaceService.createNote({
+      userId,
+      title,
+      category,
+      tags,
+      content,
+    });
+
+    res.status(201).json({ message: "Note created", note: newNote });
+  } catch (err) {
+    console.error("Create note error:", err);
+    res.status(500).json({ error: "Internal server error creating note" });
+  }
 }
 
+async function updateNote(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const updatedNote = await workspaceService.updateNote(id, userId, req.body);
+
+    if (!updatedNote) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.json({ message: "Note updated", note: updatedNote });
+  } catch (err) {
+    console.error("Update note error:", err);
+    res.status(500).json({ error: "Internal server error updating note" });
+  }
+}
+
+async function deleteNote(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const deleted = await workspaceService.deleteNote(id, userId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.json({ message: "Note deleted" });
+  } catch (err) {
+    console.error("Delete note error:", err);
+    res.status(500).json({ error: "Internal server error deleting note" });
+  }
+}
+
+// ==========================================
 // PROJECTS
-function getProjects(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const userProjects = db.projects.filter((p) => p.userId === userId || !p.userId);
-  res.json({ projects: userProjects });
-}
+// ==========================================
 
-function createProject(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const { name, description, deadline, status, tasks } = req.body;
-
-  const newProject = {
-    id: "p-" + Date.now(),
-    userId,
-    name: name || "New Project",
-    description: description || "",
-    deadline: deadline || "",
-    status: status || "in-progress",
-    progress: 0,
-    tasks: Array.isArray(tasks) ? tasks : [],
-    updatedAt: new Date().toISOString(),
-  };
-
-  db.projects.unshift(newProject);
-  writeDB(db);
-  res.status(201).json({ message: "Project created", project: newProject });
-}
-
-function updateProject(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  const projectIndex = db.projects.findIndex((p) => p.id === id);
-
-  if (projectIndex === -1) {
-    return res.status(404).json({ error: "Project not found" });
+async function getProjects(req, res) {
+  try {
+    const userId = req.user.id;
+    const projects = await workspaceService.getProjectsByUserId(userId);
+    res.json({ projects });
+  } catch (err) {
+    console.error("Get projects error:", err);
+    res.status(500).json({ error: "Internal server error retrieving projects" });
   }
-
-  db.projects[projectIndex] = {
-    ...db.projects[projectIndex],
-    ...req.body,
-    updatedAt: new Date().toISOString(),
-  };
-
-  writeDB(db);
-  res.json({ message: "Project updated", project: db.projects[projectIndex] });
 }
 
-function deleteProject(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  db.projects = db.projects.filter((p) => p.id !== id);
-  writeDB(db);
-  res.json({ message: "Project deleted" });
+async function createProject(req, res) {
+  try {
+    const userId = req.user.id;
+    const { name, description, deadline, status, progress, notes, tasks } = req.body;
+
+    const newProject = await workspaceService.createProject({
+      userId,
+      name,
+      description,
+      deadline,
+      status,
+      progress,
+      notes,
+      tasks,
+    });
+
+    res.status(201).json({ message: "Project created", project: newProject });
+  } catch (err) {
+    console.error("Create project error:", err);
+    res.status(500).json({ error: "Internal server error creating project" });
+  }
+}
+
+async function updateProject(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const updatedProject = await workspaceService.updateProject(id, userId, req.body);
+
+    if (!updatedProject) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    res.json({ message: "Project updated", project: updatedProject });
+  } catch (err) {
+    console.error("Update project error:", err);
+    res.status(500).json({ error: "Internal server error updating project" });
+  }
+}
+
+async function deleteProject(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const deleted = await workspaceService.deleteProject(id, userId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    res.json({ message: "Project deleted" });
+  } catch (err) {
+    console.error("Delete project error:", err);
+    res.status(500).json({ error: "Internal server error deleting project" });
+  }
 }
 
 module.exports = {

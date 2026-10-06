@@ -16,40 +16,22 @@ import {
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import {
-  addBook,
-  deleteBook,
-  getBooks,
-  updateBook,
-  type Book,
-} from "../../lib/readingStorage";
+import { api } from "../../lib/api";
 
-const STARTER_BOOKS: Omit<Book, "id" | "createdAt">[] = [
-  {
-    title: "Atomic Habits",
-    author: "James Clear",
-    cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80",
-    status: "reading",
-    currentPage: 142,
-    totalPages: 320,
-    rating: 5,
-    whyIPickedIt: "Recommended for building positive daily systems.",
-    notes: "Habits are the compound interest of self-improvement.",
-    favoriteQuote: "You do not rise to the level of your goals. You fall to the level of your systems.",
-  },
-  {
-    title: "Before the Coffee Gets Cold",
-    author: "Toshikazu Kawaguchi",
-    cover: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80",
-    status: "want-to-read",
-    currentPage: 0,
-    totalPages: 213,
-    rating: 0,
-    whyIPickedIt: "A cozy Tokyo cafe that lets visitors travel back in time.",
-    notes: "",
-    favoriteQuote: "",
-  },
-];
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  cover: string;
+  status: "reading" | "want-to-read" | "completed";
+  currentPage: number;
+  totalPages: number;
+  rating: number;
+  whyIPickedIt?: string;
+  notes?: string;
+  favoriteQuote?: string;
+  createdAt?: string;
+}
 
 const EMPTY_BOOK_FORM = {
   title: "",
@@ -65,19 +47,7 @@ const EMPTY_BOOK_FORM = {
 };
 
 export default function Reading() {
-  const [books, setBooks] = useState<Book[]>(() => {
-    const existing = getBooks();
-    if (existing.length === 0) {
-      const starters = STARTER_BOOKS.map((b) => ({
-        ...b,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-      }));
-      starters.forEach((b) => addBook(b));
-      return starters;
-    }
-    return existing;
-  });
+  const [books, setBooks] = useState<Book[]>([]);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -94,6 +64,37 @@ export default function Reading() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [showReadingTimer, setShowReadingTimer] = useState(false);
 
+  async function fetchBooks() {
+    const { data } = await api.reading.getAll();
+    if (data?.books) {
+      setBooks(
+        data.books.map((b: any) => ({
+          id: b.id,
+          title: b.title,
+          author: b.author,
+          cover: b.cover,
+          status: b.status === "want_to_read" ? "want-to-read" : b.status,
+          currentPage: Number(b.currentPage) || 0,
+          totalPages: Number(b.totalPages) || 300,
+          rating: Number(b.rating) || 0,
+          notes: b.notes || "",
+          whyIPickedIt: b.whyIPickedIt || "",
+          favoriteQuote: b.favoriteQuote || "",
+          createdAt: b.createdAt,
+        }))
+      );
+    }
+  }
+
+  useEffect(() => {
+    fetchBooks();
+    const handleSync = () => {
+      fetchBooks();
+    };
+    window.addEventListener("lumi-sync", handleSync);
+    return () => window.removeEventListener("lumi-sync", handleSync);
+  }, []);
+
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
     if (isSessionActive && sessionSecondsLeft > 0) {
@@ -106,12 +107,11 @@ export default function Reading() {
     return () => clearInterval(timer);
   }, [isSessionActive, sessionSecondsLeft]);
 
-  function handleSaveBook(e: React.FormEvent) {
+  async function handleSaveBook(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim() || !form.author.trim()) return;
 
-    const newBook: Book = {
-      id: crypto.randomUUID(),
+    const payload = {
       title: form.title.trim(),
       author: form.author.trim(),
       cover: form.cover.trim(),
@@ -119,39 +119,68 @@ export default function Reading() {
       currentPage: Number(form.currentPage) || 0,
       totalPages: Number(form.totalPages) || 0,
       rating: Number(form.rating) || 0,
-      whyIPickedIt: form.whyIPickedIt.trim(),
-      notes: form.notes.trim(),
-      favoriteQuote: form.favoriteQuote.trim(),
-      createdAt: new Date().toISOString(),
+      notes: [form.notes, form.whyIPickedIt, form.favoriteQuote].filter(Boolean).join(" | "),
     };
 
-    addBook(newBook);
-    setBooks(getBooks());
+    const { data } = await api.reading.create(payload);
+    if (data?.book) {
+      const newBook: Book = {
+        id: data.book.id,
+        title: data.book.title,
+        author: data.book.author,
+        cover: data.book.cover,
+        status: data.book.status === "want_to_read" ? "want-to-read" : data.book.status,
+        currentPage: Number(data.book.currentPage) || 0,
+        totalPages: Number(data.book.totalPages) || 300,
+        rating: Number(data.book.rating) || 0,
+        whyIPickedIt: form.whyIPickedIt.trim(),
+        notes: form.notes.trim(),
+        favoriteQuote: form.favoriteQuote.trim(),
+        createdAt: data.book.createdAt,
+      };
+      setBooks((prev) => [newBook, ...prev]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "reading" } }));
+    }
     setForm(EMPTY_BOOK_FORM);
     setShowModal(false);
   }
 
-  function handleQuickUpdatePage(book: Book, newPage: number) {
+  async function handleQuickUpdatePage(book: Book, newPage: number) {
     const clampedPage = Math.max(0, Math.min(book.totalPages || 9999, newPage));
     const isNowComplete = clampedPage >= book.totalPages && book.totalPages > 0;
+    const newStatus: Book["status"] = isNowComplete ? "completed" : book.status;
+
+    setBooks((prev) =>
+      prev.map((b) =>
+        b.id === book.id
+          ? { ...b, currentPage: clampedPage, status: newStatus }
+          : b
+      )
+    );
+
     const updated: Book = {
       ...book,
       currentPage: clampedPage,
-      status: isNowComplete ? "completed" : book.status,
+      status: newStatus,
     };
-    updateBook(updated);
-    setBooks(getBooks());
     if (selectedBook?.id === book.id) {
       setSelectedBook(updated);
     }
+
+    await api.reading.update(book.id, {
+      currentPage: clampedPage,
+      status: newStatus,
+    });
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "reading" } }));
   }
 
-  function handleDelete(id: string) {
-    deleteBook(id);
-    setBooks(getBooks());
+  async function handleDelete(id: string) {
+    setBooks((prev) => prev.filter((b) => b.id !== id));
     if (selectedBook?.id === id) {
       setSelectedBook(null);
     }
+    await api.reading.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "reading" } }));
   }
 
   const currentlyReadingList = books.filter((b) => b.status === "reading");
@@ -648,11 +677,13 @@ export default function Reading() {
                     <button
                       key={star}
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         const updated = { ...selectedBook, rating: star };
-                        updateBook(updated);
-                        setBooks(getBooks());
+                        setBooks((prev) =>
+                          prev.map((b) => (b.id === selectedBook.id ? updated : b))
+                        );
                         setSelectedBook(updated);
+                        await api.reading.update(selectedBook.id, { rating: star });
                       }}
                       className="p-1 hover:scale-110 transition cursor-pointer"
                     >

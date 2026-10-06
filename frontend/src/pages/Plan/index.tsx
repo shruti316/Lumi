@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CheckSquare,
   CalendarDays,
@@ -11,13 +11,7 @@ import {
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import {
-  getTasks,
-  addTask,
-  updateTask,
-  deleteTask,
-  type Task,
-} from "../../lib/storage";
+import { api } from "../../lib/api";
 import {
   getScheduleBlocks,
   addScheduleBlock,
@@ -25,6 +19,15 @@ import {
   deleteScheduleBlock,
   type ScheduleBlock,
 } from "../../lib/lifeOSStorage";
+
+export interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  priority?: "low" | "medium" | "high";
+  dueDate?: string;
+  createdAt?: string;
+}
 
 const SCHEDULE_CATEGORIES = [
   { name: "Class", color: "bg-[#EEEAFE] text-[#6B5BA5] border-[#DCD8F2]" },
@@ -39,7 +42,7 @@ export default function Plan() {
   const [activeTab, setActiveTab] = useState<"tasks" | "schedule">("tasks");
 
   // Task State
-  const [tasks, setTasks] = useState<Task[]>(() => getTasks());
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [taskFilter, setTaskFilter] = useState<"all" | "pending" | "completed">("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | "high" | "medium" | "low">("all");
   const [taskSearch, setTaskSearch] = useState("");
@@ -60,35 +63,72 @@ export default function Plan() {
   const [blockCategory, setBlockCategory] = useState<ScheduleBlock["category"]>("Study");
   const [blockNotes, setBlockNotes] = useState("");
 
+  async function fetchTasks() {
+    const { data } = await api.tasks.getAll();
+    if (data?.tasks) {
+      setTasks(
+        data.tasks.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          completed: Boolean(t.completed),
+          priority: t.priority || "medium",
+          dueDate: t.dueDate,
+          createdAt: t.createdAt,
+        }))
+      );
+    }
+  }
+
+  useEffect(() => {
+    fetchTasks();
+    window.addEventListener("lumi-sync", fetchTasks);
+    return () => window.removeEventListener("lumi-sync", fetchTasks);
+  }, []);
+
   // Task Actions
-  function handleCreateTask(e: React.FormEvent) {
+  async function handleCreateTask(e: React.FormEvent) {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
-    const newTask: Task = {
-      id: crypto.randomUUID(),
+    const payload = {
       title: newTaskTitle.trim(),
       completed: false,
       priority: newTaskPriority,
-      createdAt: new Date().toISOString(),
     };
 
-    addTask(newTask);
-    setTasks(getTasks());
+    const { data } = await api.tasks.create(payload);
+    if (data?.task) {
+      setTasks((prev) => [
+        {
+          id: data.task.id,
+          title: data.task.title,
+          completed: Boolean(data.task.completed),
+          priority: data.task.priority || "medium",
+          dueDate: data.task.dueDate,
+          createdAt: data.task.createdAt,
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "task" } }));
+    }
     setNewTaskTitle("");
     setNewTaskPriority("medium");
     setShowTaskModal(false);
   }
 
-  function handleToggleTask(task: Task) {
-    const updated = { ...task, completed: !task.completed };
-    updateTask(updated);
-    setTasks(getTasks());
+  async function handleToggleTask(task: Task) {
+    const nextCompleted = !task.completed;
+    setTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, completed: nextCompleted } : t))
+    );
+    await api.tasks.update(task.id, { completed: nextCompleted });
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "task" } }));
   }
 
-  function handleDeleteTask(id: string) {
-    deleteTask(id);
-    setTasks(getTasks());
+  async function handleDeleteTask(id: string) {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+    await api.tasks.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "task" } }));
   }
 
   // Schedule Actions

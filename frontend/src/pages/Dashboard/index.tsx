@@ -28,26 +28,65 @@ import {
   RotateCw,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
-import { getTasks, updateTask, addTask, type Task } from "../../lib/storage";
-import { getHabits, type Habit } from "../../lib/habitStorage";
-import {
-  getGoals,
-  getMemories,
-  type Goal,
-  type Memory,
-} from "../../lib/lifeOSStorage";
-import { getBooks, type Book } from "../../lib/readingStorage";
+import { api } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
+import { spotify, type SpotifyTrack } from "../../lib/spotify";
 import type { CreateTemplateType } from "../../components/common/UniversalCreateModal";
+
+export interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  priority?: "low" | "medium" | "high";
+  dueDate?: string;
+  createdAt?: string;
+}
+
+export interface Habit {
+  id: string;
+  name: string;
+  emoji: string;
+  completedDates: string[];
+  streak?: number;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  category?: string;
+  progress?: number;
+  deadline?: string;
+  status?: string;
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  cover?: string;
+  status: "reading" | "want-to-read" | "completed";
+  currentPage: number;
+  totalPages: number;
+  rating?: number;
+}
+
+export interface Memory {
+  id: string;
+  title: string;
+  imageUrl?: string;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Data States
-  const [tasks, setTasks] = useState<Task[]>(() => getTasks());
-  const [habits, setHabits] = useState<Habit[]>(() => getHabits());
-  const [goals, setGoals] = useState<Goal[]>(() => getGoals());
-  const [books, setBooks] = useState<Book[]>(() => getBooks());
-  const [memories, setMemories] = useState<Memory[]>(() => getMemories());
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
 
   // Notifications State Foundation
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -140,25 +179,118 @@ export default function Dashboard() {
   // Quick Capture State
   const [quickCaptureText, setQuickCaptureText] = useState("");
 
-  // Music Player Mock State
+  // Music Player & Spotify State
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLikedSong, setIsLikedSong] = useState(true);
+  const [spotifyTrack, setSpotifyTrack] = useState<SpotifyTrack | null>(null);
+  const [friendsFeed, setFriendsFeed] = useState<any[]>([]);
 
-  // Sync listener
-  useEffect(() => {
-    function syncData() {
-      setTasks(getTasks());
-      setHabits(getHabits());
-      setGoals(getGoals());
-      setBooks(getBooks());
-      setMemories(getMemories());
+  async function loadDashboardData() {
+    try {
+      const [tasksRes, habitsRes, goalsRes, booksRes, memoriesRes, friendsRes] = await Promise.allSettled([
+        api.tasks.getAll(),
+        api.habits.getAll(),
+        api.goals.getAll(),
+        api.reading.getAll(),
+        api.memories.getAll(),
+        api.friends.getFeed(),
+      ]);
+
+      if (tasksRes.status === "fulfilled" && tasksRes.value.data?.tasks) {
+        setTasks(
+          tasksRes.value.data.tasks.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            completed: Boolean(t.completed),
+            priority: t.priority || "medium",
+            dueDate: t.dueDate,
+            createdAt: t.createdAt,
+          }))
+        );
+      }
+
+      if (habitsRes.status === "fulfilled" && habitsRes.value.data?.habits) {
+        setHabits(
+          habitsRes.value.data.habits.map((h: any) => ({
+            id: h.id,
+            name: h.name,
+            emoji: h.emoji || "✨",
+            completedDates: h.completedDates || [],
+            streak: h.streak || 0,
+          }))
+        );
+      }
+
+      if (goalsRes.status === "fulfilled" && goalsRes.value.data?.goals) {
+        setGoals(
+          goalsRes.value.data.goals.map((g: any) => ({
+            id: g.id,
+            title: g.title,
+            description: g.description,
+            category: g.category,
+            progress: g.progress || 0,
+            deadline: g.deadline,
+            status: g.status,
+          }))
+        );
+      }
+
+      if (booksRes.status === "fulfilled" && booksRes.value.data?.books) {
+        setBooks(
+          booksRes.value.data.books.map((b: any) => ({
+            id: b.id,
+            title: b.title,
+            author: b.author,
+            cover: b.cover,
+            status: b.status === "want_to_read" ? "want-to-read" : b.status,
+            currentPage: Number(b.currentPage) || 0,
+            totalPages: Number(b.totalPages) || 300,
+            rating: Number(b.rating) || 0,
+          }))
+        );
+      }
+
+      if (memoriesRes.status === "fulfilled" && memoriesRes.value.data?.memories) {
+        setMemories(
+          memoriesRes.value.data.memories.map((m: any) => ({
+            id: m.id,
+            title: m.title,
+            imageUrl: m.imageUrl || m.image_url,
+          }))
+        );
+      }
+
+      if (friendsRes.status === "fulfilled" && friendsRes.value.data?.feed) {
+        setFriendsFeed(friendsRes.value.data.feed);
+      }
+
+      // Check Spotify live status
+      if (spotify.isConnected()) {
+        try {
+          const current = await spotify.getCurrentlyPlaying();
+          if (current) {
+            setSpotifyTrack(current);
+            setIsPlaying(current.isPlaying);
+          } else {
+            const recent = await spotify.getRecentlyPlayed(1);
+            if (recent.length > 0) {
+              setSpotifyTrack(recent[0]);
+              setIsPlaying(false);
+            }
+          }
+        } catch (spotifyErr) {
+          console.warn("Spotify fetch error in dashboard:", spotifyErr);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load dashboard data:", err);
     }
-    window.addEventListener("storage", syncData);
-    window.addEventListener("storage-sync", syncData);
-    return () => {
-      window.removeEventListener("storage", syncData);
-      window.removeEventListener("storage-sync", syncData);
-    };
+  }
+
+  useEffect(() => {
+    loadDashboardData();
+    window.addEventListener("lumi-sync", loadDashboardData);
+    return () => window.removeEventListener("lumi-sync", loadDashboardData);
   }, []);
 
   // Today Date & Greeting Logic
@@ -260,15 +392,33 @@ export default function Dashboard() {
 
   const focusTasksList = tasks.length > 0 ? tasks.slice(0, 4) : defaultFocusTasks;
 
-  function handleToggleTask(task: Task) {
+  async function handleToggleTask(task: Task) {
     if (tasks.some((t) => t.id === task.id)) {
-      const updated = { ...task, completed: !task.completed };
-      updateTask(updated);
-      setTasks(getTasks());
+      const nextCompleted = !task.completed;
+      setTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, completed: nextCompleted } : t))
+      );
+      await api.tasks.update(task.id, { completed: nextCompleted });
     } else {
-      const newTask: Task = { ...task, id: crypto.randomUUID(), completed: !task.completed };
-      addTask(newTask);
-      setTasks(getTasks());
+      const payload = {
+        title: task.title,
+        completed: true,
+        priority: task.priority || "medium",
+      };
+      const { data } = await api.tasks.create(payload);
+      if (data?.task) {
+        setTasks((prev) => [
+          {
+            id: data.task.id,
+            title: data.task.title,
+            completed: Boolean(data.task.completed),
+            priority: data.task.priority || "medium",
+            dueDate: data.task.dueDate,
+            createdAt: data.task.createdAt,
+          },
+          ...prev,
+        ]);
+      }
     }
   }
 
@@ -293,7 +443,7 @@ export default function Dashboard() {
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight text-[#17151C] flex items-center gap-2">
-              <span>{greeting}, Shru!</span>
+              <span>{greeting}, {user?.name ? user.name.split(" ")[0] : "Shru"}!</span>
               <span className="text-2xl sm:text-3xl">☀️</span>
             </h1>
             <p className="mt-1 text-xs sm:text-sm font-normal text-[#5F5965]">
@@ -559,11 +709,59 @@ export default function Dashboard() {
         </section>
 
         {/* ═══════════════════════════════════════════════════
+            DYNAMIC DAILY MINDSET BANNER (FULL WIDTH HORIZONTAL HERO)
+        ═══════════════════════════════════════════════════ */}
+        <section className="mb-6">
+          <div className="relative overflow-hidden rounded-3xl bg-[#17151C] text-white p-6 sm:p-7 shadow-md border border-[#2D263B] group">
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-35 transition-all duration-700 group-hover:scale-105"
+              style={{
+                backgroundImage: `url('${currentMindset.image}')`,
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/40" />
+
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#B8B3E8]">
+                    Daily Mindset
+                  </span>
+                  <span className="text-white/40">•</span>
+                  <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[9px] font-semibold text-white/90">
+                    {currentMindset.tag}
+                  </span>
+                </div>
+
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-white leading-snug drop-shadow-xs">
+                  "{currentMindset.quote}"
+                </h2>
+                <p className="mt-1.5 text-xs sm:text-sm text-white/80 font-normal leading-relaxed drop-shadow-xs">
+                  {currentMindset.supporting}
+                </p>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-2 self-start sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => setMindsetIndex((prev) => prev + 1)}
+                  className="flex items-center gap-2 rounded-2xl bg-white/15 hover:bg-white/25 px-4 py-2 text-xs font-semibold text-white transition backdrop-blur-xs cursor-pointer active:scale-95 border border-white/10 shadow-2xs"
+                  title="Shuffle next inspiration"
+                >
+                  <RotateCw size={13} />
+                  <span>Next Quote</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════
             MAIN GRID (ROW 2 & ROW 3)
         ═══════════════════════════════════════════════════ */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           {/* ===================================================
-              COLUMN 1 (LEFT / 4 COLS): TODAY'S FOCUS & UPCOMING & QUOTE
+              COLUMN 1 (LEFT / 4 COLS): TODAY'S FOCUS & UPCOMING
           =================================================== */}
           <div className="lg:col-span-4 space-y-5">
             {/* CARD: TODAY'S FOCUS */}
@@ -703,48 +901,6 @@ export default function Dashboard() {
                 </div>
               </div>
             </Card>
-
-            {/* CARD: DYNAMIC DAILY MINDSET BANNER */}
-            <div className="relative overflow-hidden rounded-3xl bg-[#17151C] text-white p-6 shadow-md border border-[#2D263B] group">
-              <div
-                className="absolute inset-0 bg-cover bg-center opacity-45 transition-all duration-700 group-hover:scale-105"
-                style={{
-                  backgroundImage: `url('${currentMindset.image}')`,
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30" />
-
-              <div className="relative z-10 flex flex-col justify-between min-h-32">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#B8B3E8]">
-                      Daily Mindset
-                    </span>
-                    <span className="text-white/40">•</span>
-                    <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-semibold text-white/90">
-                      {currentMindset.tag}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setMindsetIndex((prev) => prev + 1)}
-                    className="rounded-full p-1.5 bg-white/15 hover:bg-white/30 text-white/90 transition backdrop-blur-xs cursor-pointer active:scale-95"
-                    title="Next inspiration"
-                  >
-                    <RotateCw size={12} />
-                  </button>
-                </div>
-
-                <div>
-                  <h3 className="font-serif text-lg font-bold text-white leading-snug drop-shadow-xs">
-                    "{currentMindset.quote}"
-                  </h3>
-                  <p className="mt-1 text-xs text-white/90 font-normal leading-relaxed drop-shadow-xs">
-                    {currentMindset.supporting}
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* ===================================================
@@ -778,6 +934,10 @@ export default function Dashboard() {
                     <img
                       src={currentBook.cover || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80"}
                       alt={currentBook.title}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80";
+                      }}
                       className="h-24 w-17 rounded-xl object-cover shadow-sm border border-black/5 shrink-0"
                     />
 
@@ -818,24 +978,38 @@ export default function Dashboard() {
               <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1F232B] to-[#121418] text-white p-5 shadow-sm border border-[#2F3542] flex flex-col justify-between group">
                 <div>
                   <div className="flex items-center justify-between mb-3.5">
-                    <span className="text-xs font-semibold text-white/90">
-                      Now Playing
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-white/90">
+                        Now Playing
+                      </span>
+                      {spotify.isConnected() && (
+                        <span className="rounded-full bg-[#1DB954]/20 text-[#1DB954] border border-[#1DB954]/40 px-2 py-0.5 text-[9px] font-bold">
+                          Spotify
+                        </span>
+                      )}
+                    </div>
                     <a
-                      href="https://open.spotify.com"
+                      href={spotifyTrack?.spotifyUrl || "https://open.spotify.com"}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs font-semibold text-[#1DB954] hover:underline flex items-center gap-1.5"
                     >
-                      <span>Open Spotify</span>
+                      <span>{spotify.isConnected() ? "Open Player" : "Open Spotify"}</span>
                       <ExternalLink size={12} />
                     </a>
                   </div>
 
                   <div className="flex items-center gap-3.5">
                     <img
-                      src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=200&q=80"
+                      src={
+                        spotifyTrack?.albumArt ||
+                        "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=200&q=80"
+                      }
                       alt="Track cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=200&q=80";
+                      }}
                       className="h-16 w-16 rounded-xl object-cover shadow-sm shrink-0 border border-white/10"
                     />
 
@@ -843,10 +1017,10 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-white truncate">
-                            Snooze
+                            {spotifyTrack?.name || "Snooze"}
                           </p>
                           <p className="text-xs text-white/60 truncate">
-                            SZA
+                            {spotifyTrack?.artist || "SZA"}
                           </p>
                         </div>
 
@@ -895,7 +1069,7 @@ export default function Dashboard() {
                     </button>
                   </div>
 
-                  <Link to="/music" className="text-white/50 hover:text-white transition">
+                  <Link to="/music" className="text-white/50 hover:text-white transition" title="Focus Music">
                     <MoreHorizontal size={16} />
                   </Link>
                 </div>
@@ -935,6 +1109,10 @@ export default function Dashboard() {
                         <img
                           src={mem.imageUrl}
                           alt={mem.title}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80";
+                          }}
                           className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
                         />
                         {idx === 3 && (
@@ -1044,7 +1222,7 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* BOTTOM ROW: FRIENDS' MEMORIES PREVIEW */}
+            {/* BOTTOM ROW: COMPACT FRIENDS' MEMORIES PREVIEW */}
             <Card
               variant="glass"
               hoverEffect
@@ -1061,48 +1239,100 @@ export default function Dashboard() {
                   to="/friends"
                   className="text-xs font-semibold text-[#9E96D8] hover:text-[#7A70C2] flex items-center gap-1 transition"
                 >
-                  <span>See all</span>
+                  <span>See feed</span>
                   <span>→</span>
                 </Link>
               </div>
 
-              <div className="flex items-center gap-4 overflow-x-auto pb-1 scrollbar-none">
-                {[
-                  { name: "Aarav", time: "2h ago", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80" },
-                  { name: "Meera", time: "5h ago", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80" },
-                  { name: "Rohan", time: "1d ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80" },
-                  { name: "Isha", time: "2d ago", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&q=80" },
-                ].map((friend) => (
-                  <Link
-                    key={friend.name}
-                    to="/friends"
-                    className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer"
-                  >
-                    <div className="relative">
-                      <img
-                        src={friend.avatar}
-                        alt={friend.name}
-                        className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-2xs group-hover:scale-105 transition"
-                      />
-                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-[#528D6F] ring-2 ring-white" />
-                    </div>
-                    <span className="text-xs font-bold text-[#17151C]">{friend.name}</span>
-                    <span className="text-[10px] text-[#8D8792]">{friend.time}</span>
-                  </Link>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {(friendsFeed.length > 0
+                  ? friendsFeed.slice(0, 4)
+                  : [
+                      {
+                        id: "f-1",
+                        authorName: "Aarav",
+                        time: "2h ago",
+                        authorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80",
+                        imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80",
+                      },
+                      {
+                        id: "f-2",
+                        authorName: "Meera",
+                        time: "5h ago",
+                        authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
+                        imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80",
+                      },
+                      {
+                        id: "f-3",
+                        authorName: "Rohan",
+                        time: "1d ago",
+                        authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80",
+                        imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&q=80",
+                      },
+                      {
+                        id: "f-4",
+                        authorName: "Isha",
+                        time: "2d ago",
+                        authorAvatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&q=80",
+                        imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80",
+                      },
+                    ]
+                ).map((friend: any, index: number) => {
+                  const name = friend.authorName || friend.name || "Friend";
+                  const avatar =
+                    friend.authorAvatar ||
+                    friend.avatar ||
+                    `https://images.unsplash.com/photo-${1534528741775 + index}?w=150&q=80`;
+                  const memoryImg = friend.imageUrl || friend.image_url;
+
+                  return (
+                    <Link
+                      key={friend.id || name}
+                      to="/friends"
+                      className="flex items-center gap-2.5 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-2.5 hover:border-[#9E96D8]/50 hover:bg-[#F4F0FB] transition group shadow-2xs min-w-0"
+                    >
+                      <div className="relative shrink-0">
+                        <img
+                          src={avatar}
+                          alt={name}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80";
+                          }}
+                          className="h-9 w-9 rounded-full object-cover border-2 border-white shadow-2xs group-hover:scale-105 transition"
+                        />
+                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#528D6F] ring-1.5 ring-white" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#17151C] leading-tight truncate">
+                          {name}
+                        </p>
+                        <p className="text-[10px] text-[#8D8792] truncate mt-0.5">
+                          {friend.time || "Recent"}
+                        </p>
+                      </div>
+
+                      {memoryImg && (
+                        <img
+                          src={memoryImg}
+                          alt="preview"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                          className="h-8 w-8 rounded-lg object-cover shrink-0 border border-black/5"
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
 
                 <Link
                   to="/friends"
-                  className="relative h-14 w-24 overflow-hidden rounded-2xl border border-black/5 bg-[#FAF8FC] shrink-0 ml-auto hidden sm:block group"
+                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-2.5 text-xs font-semibold text-[#6B5BA5] hover:bg-[#EEEAFE] hover:text-[#17151C] hover:border-[#9E96D8] transition shadow-2xs group text-center"
                 >
-                  <img
-                    src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&q=80"
-                    alt="Shared preview"
-                    className="h-full w-full object-cover group-hover:scale-110 transition duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white text-[10px] font-bold">
-                    View Feed
-                  </div>
+                  <span>Open Feed</span>
+                  <span className="group-hover:translate-x-0.5 transition-transform">→</span>
                 </Link>
               </div>
             </Card>

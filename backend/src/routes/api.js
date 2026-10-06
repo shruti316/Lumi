@@ -22,6 +22,8 @@ router.post("/auth/signup", authController.signup);
 router.post("/auth/login", authController.login);
 router.get("/auth/me", authenticateToken, authController.getMe);
 router.put("/auth/me", authenticateToken, authController.updateMe);
+router.delete("/auth/reset-data", authenticateToken, authController.resetData);
+router.delete("/user/data", authenticateToken, authController.resetData);
 
 // ==========================================
 // 2. TASKS & PLANNER ROUTES

@@ -111,9 +111,85 @@ async function updateUser(id, updates = {}) {
   return findUserById(id);
 }
 
+/**
+ * Transactionally wipes all application domain data for the specified user ID.
+ * Leaves the user account and credentials intact.
+ */
+async function resetUserData(userId) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 1. Tasks
+    await conn.query("DELETE FROM tasks WHERE user_id = ?", [userId]);
+
+    // 2. Habits and habit completions
+    await conn.query(
+      "DELETE FROM habit_completions WHERE habit_id IN (SELECT id FROM habits WHERE user_id = ?)",
+      [userId]
+    );
+    await conn.query("DELETE FROM habits WHERE user_id = ?", [userId]);
+
+    // 3. Goals and milestones
+    await conn.query(
+      "DELETE FROM goal_milestones WHERE goal_id IN (SELECT id FROM goals WHERE user_id = ?)",
+      [userId]
+    );
+    await conn.query("DELETE FROM goals WHERE user_id = ?", [userId]);
+
+    // 4. Notes and tags
+    await conn.query(
+      "DELETE FROM note_tags WHERE note_id IN (SELECT id FROM notes WHERE user_id = ?)",
+      [userId]
+    );
+    await conn.query("DELETE FROM notes WHERE user_id = ?", [userId]);
+
+    // 5. Projects and subtasks
+    await conn.query(
+      "DELETE FROM project_subtasks WHERE project_id IN (SELECT id FROM projects WHERE user_id = ?)",
+      [userId]
+    );
+    await conn.query("DELETE FROM projects WHERE user_id = ?", [userId]);
+
+    // 6. Journals
+    await conn.query("DELETE FROM journals WHERE user_id = ?", [userId]);
+
+    // 7. Memories, tags, comments, reactions
+    await conn.query(
+      "DELETE FROM memory_tags WHERE memory_id IN (SELECT id FROM memories WHERE user_id = ?)",
+      [userId]
+    );
+    await conn.query(
+      "DELETE FROM memory_comments WHERE user_id = ? OR memory_id IN (SELECT id FROM memories WHERE user_id = ?)",
+      [userId, userId]
+    );
+    await conn.query(
+      "DELETE FROM memory_reactions WHERE user_id = ? OR memory_id IN (SELECT id FROM memories WHERE user_id = ?)",
+      [userId, userId]
+    );
+    await conn.query("DELETE FROM memories WHERE user_id = ?", [userId]);
+
+    // 8. Books
+    await conn.query("DELETE FROM books WHERE user_id = ?", [userId]);
+
+    // 9. Messages sent by user & conversation participations
+    await conn.query("DELETE FROM messages WHERE sender_id = ?", [userId]);
+    await conn.query("DELETE FROM conversation_participants WHERE user_id = ?", [userId]);
+
+    await conn.commit();
+    return true;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
 module.exports = {
   findUserByEmail,
   findUserById,
   createUser,
   updateUser,
+  resetUserData,
 };

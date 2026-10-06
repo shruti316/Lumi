@@ -14,10 +14,7 @@ import {
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import { getTasks } from "../../lib/storage";
-import { getGoals, getMemories } from "../../lib/lifeOSStorage";
-import { getHabits } from "../../lib/habitStorage";
-import { getBooks } from "../../lib/readingStorage";
+import { api } from "../../lib/api";
 
 interface UserProfileData {
   displayName: string;
@@ -61,7 +58,7 @@ export default function Profile() {
   const [newInterest, setNewInterest] = useState("");
   const [savedToast, setSavedToast] = useState(false);
 
-  // Live stats from storage
+  // Live stats from live APIs
   const [stats, setStats] = useState({
     tasksCompleted: 0,
     activeGoals: 0,
@@ -71,25 +68,72 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    const tasks = getTasks();
-    const completedTasks = tasks.filter((t) => t.completed).length;
-    const goals = getGoals();
-    const habits = getHabits();
-    const maxStreak = habits.reduce(
-      (max, h) => Math.max(max, (h as any).streak || h.completedDates?.length || 0),
-      0
-    );
-    const books = getBooks();
-    const readCount = books.filter((b) => b.status === "completed" || b.status === "Finished" as any).length;
-    const memories = getMemories();
+    async function loadStatsAndUser() {
+      try {
+        const [meRes, tasksRes, goalsRes, habitsRes, booksRes, memoriesRes] = await Promise.allSettled([
+          api.auth.getMe(),
+          api.tasks.getAll(),
+          api.goals.getAll(),
+          api.habits.getAll(),
+          api.reading.getAll(),
+          api.memories.getAll(),
+        ]);
 
-    setStats({
-      tasksCompleted: completedTasks,
-      activeGoals: goals.length,
-      habitsStreak: maxStreak,
-      booksRead: readCount,
-      memoriesSaved: memories.length,
-    });
+        if (meRes.status === "fulfilled" && meRes.value.data?.user) {
+          const u = meRes.value.data.user;
+          setProfile((prev) => {
+            const updated = {
+              ...prev,
+              displayName: u.name || prev.displayName,
+              username: u.email ? u.email.split("@")[0] : prev.username,
+              bio: u.bio || prev.bio,
+            };
+            setEditForm(updated);
+            return updated;
+          });
+        }
+
+        let completedTasks = 0;
+        if (tasksRes.status === "fulfilled" && tasksRes.value.data?.tasks) {
+          completedTasks = tasksRes.value.data.tasks.filter((t: any) => t.completed).length;
+        }
+
+        let goalsCount = 0;
+        if (goalsRes.status === "fulfilled" && goalsRes.value.data?.goals) {
+          goalsCount = goalsRes.value.data.goals.length;
+        }
+
+        let maxStreak = 0;
+        if (habitsRes.status === "fulfilled" && habitsRes.value.data?.habits) {
+          maxStreak = habitsRes.value.data.habits.reduce(
+            (max: number, h: any) => Math.max(max, h.streak || h.completedDates?.length || 0),
+            0
+          );
+        }
+
+        let readCount = 0;
+        if (booksRes.status === "fulfilled" && booksRes.value.data?.books) {
+          readCount = booksRes.value.data.books.filter((b: any) => b.status === "completed").length;
+        }
+
+        let memoriesCount = 0;
+        if (memoriesRes.status === "fulfilled" && memoriesRes.value.data?.memories) {
+          memoriesCount = memoriesRes.value.data.memories.length;
+        }
+
+        setStats({
+          tasksCompleted: completedTasks,
+          activeGoals: goalsCount,
+          habitsStreak: maxStreak,
+          booksRead: readCount,
+          memoriesSaved: memoriesCount,
+        });
+      } catch (err) {
+        console.error("Failed to load profile stats:", err);
+      }
+    }
+
+    loadStatsAndUser();
   }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,7 +176,7 @@ export default function Profile() {
     setTimeout(() => setSavedToast(false), 2500);
   }
 
-  function handleSaveProfile(e: React.FormEvent) {
+  async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     setProfile(editForm);
     localStorage.setItem("lumi_profile", JSON.stringify(editForm));
@@ -145,6 +189,11 @@ export default function Profile() {
     setShowEditModal(false);
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2500);
+
+    await api.auth.updateMe({
+      name: editForm.displayName,
+      bio: editForm.bio,
+    });
   }
 
   function handleAddInterest() {

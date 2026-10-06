@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PenLine,
   Sparkles,
@@ -13,18 +13,26 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
-import {
-  getDiaryEntries,
-  addDiaryEntry,
-  deleteDiaryEntry,
-  type DiaryEntry,
-} from "../../lib/diaryStorage";
-import {
-  getReflections,
-  addReflection,
-  deleteReflection,
-  type ReflectionEntry,
-} from "../../lib/lifeOSStorage";
+import { api } from "../../lib/api";
+
+export interface DiaryEntry {
+  id: string;
+  title: string;
+  content: string;
+  mood: string;
+  tags: string[];
+  createdAt: string;
+}
+
+export interface ReflectionEntry {
+  id: string;
+  weekOf: string;
+  wentWell: string;
+  wasDifficult: string;
+  learned: string;
+  nextWeekIntention: string;
+  createdAt: string;
+}
 
 const MOODS = [
   { emoji: "😊", label: "Happy" },
@@ -51,7 +59,7 @@ export default function Journal() {
   const [activeTab, setActiveTab] = useState<"diary" | "reflections">("diary");
 
   // Diary State
-  const [entries, setEntries] = useState<DiaryEntry[]>(() => getDiaryEntries());
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedMood, setSelectedMood] = useState("😊");
@@ -61,7 +69,7 @@ export default function Journal() {
   const [isQuickWriteOpen, setIsQuickWriteOpen] = useState(false);
 
   // Reflection State
-  const [reflections, setReflections] = useState<ReflectionEntry[]>(() => getReflections());
+  const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
   const [weekOf, setWeekOf] = useState("");
   const [wentWell, setWentWell] = useState("");
   const [wasDifficult, setWasDifficult] = useState("");
@@ -70,6 +78,50 @@ export default function Journal() {
   const [nextWeekIntention, setNextWeekIntention] = useState("");
   const [isReflectionFormOpen, setIsReflectionFormOpen] = useState(true);
 
+  async function fetchJournals() {
+    const { data } = await api.journals.getAll();
+    if (data?.journals) {
+      const diaryList: DiaryEntry[] = [];
+      const reflectionList: ReflectionEntry[] = [];
+
+      data.journals.forEach((j: any) => {
+        const isReflection = j.tags?.includes("reflection") || j.title?.startsWith("Week of ");
+        if (isReflection) {
+          reflectionList.push({
+            id: j.id,
+            weekOf: j.title || "Weekly Reflection",
+            wentWell: j.entry || j.content || "",
+            wasDifficult: "",
+            learned: "",
+            nextWeekIntention: "",
+            createdAt: j.createdAt,
+          });
+        } else {
+          diaryList.push({
+            id: j.id,
+            title: j.title,
+            content: j.entry || j.content || "",
+            mood: j.mood || "😊",
+            tags: Array.isArray(j.tags) ? j.tags : ["daily"],
+            createdAt: j.createdAt,
+          });
+        }
+      });
+
+      setEntries(diaryList);
+      setReflections(reflectionList);
+    }
+  }
+
+  useEffect(() => {
+    fetchJournals();
+    const handleSync = () => {
+      fetchJournals();
+    };
+    window.addEventListener("lumi-sync", handleSync);
+    return () => window.removeEventListener("lumi-sync", handleSync);
+  }, []);
+
   // Diary Handlers
   function toggleTag(tag: string) {
     setSelectedTags((prev) =>
@@ -77,20 +129,33 @@ export default function Journal() {
     );
   }
 
-  function handleSaveDiary(e: React.FormEvent) {
+  async function handleSaveDiary(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() && !content.trim()) return;
 
-    addDiaryEntry({
-      id: crypto.randomUUID(),
+    const payload = {
       title: title.trim() || "Untitled reflection",
-      content: content.trim(),
+      entry: content.trim(),
       mood: selectedMood,
       tags: selectedTags.length > 0 ? selectedTags : ["daily"],
-      createdAt: new Date().toISOString(),
-    });
+      date: new Date().toISOString().split("T")[0],
+    };
 
-    setEntries(getDiaryEntries());
+    const { data } = await api.journals.create(payload);
+    if (data?.journal) {
+      setEntries((prev) => [
+        {
+          id: data.journal.id,
+          title: data.journal.title,
+          content: data.journal.entry || data.journal.content || "",
+          mood: data.journal.mood || "😊",
+          tags: Array.isArray(data.journal.tags) ? data.journal.tags : ["daily"],
+          createdAt: data.journal.createdAt,
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync"));
+    }
     setTitle("");
     setContent("");
     setSelectedMood("😊");
@@ -98,13 +163,14 @@ export default function Journal() {
     setIsQuickWriteOpen(false);
   }
 
-  function handleDeleteDiary(id: string) {
-    deleteDiaryEntry(id);
-    setEntries(getDiaryEntries());
+  async function handleDeleteDiary(id: string) {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+    await api.journals.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync"));
   }
 
   // Reflection Handlers
-  function handleSaveReflection(e: React.FormEvent) {
+  async function handleSaveReflection(e: React.FormEvent) {
     e.preventDefault();
     if (!wentWell.trim() && !learned.trim() && !nextWeekIntention.trim()) return;
 
@@ -115,17 +181,41 @@ export default function Journal() {
         day: "numeric",
       })}`;
 
-    addReflection({
-      id: crypto.randomUUID(),
-      weekOf: currentWeekLabel,
-      wentWell: wentWell.trim(),
-      wasDifficult: wasDifficult.trim() + (improve.trim() ? ` • Focus: ${improve.trim()}` : ""),
-      learned: learned.trim(),
-      nextWeekIntention: nextWeekIntention.trim(),
-      createdAt: new Date().toISOString(),
-    });
+    const reflectionContent = [
+      wentWell.trim() ? `Went Well: ${wentWell.trim()}` : "",
+      wasDifficult.trim() ? `Challenges: ${wasDifficult.trim()}` : "",
+      improve.trim() ? `Focus: ${improve.trim()}` : "",
+      learned.trim() ? `Learned: ${learned.trim()}` : "",
+      nextWeekIntention.trim() ? `Intention: ${nextWeekIntention.trim()}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
 
-    setReflections(getReflections());
+    const payload = {
+      title: currentWeekLabel,
+      entry: reflectionContent,
+      mood: "😌",
+      tags: ["reflection"],
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    const { data } = await api.journals.create(payload);
+    if (data?.journal) {
+      setReflections((prev) => [
+        {
+          id: data.journal.id,
+          weekOf: currentWeekLabel,
+          wentWell: wentWell.trim(),
+          wasDifficult: wasDifficult.trim() + (improve.trim() ? ` • Focus: ${improve.trim()}` : ""),
+          learned: learned.trim(),
+          nextWeekIntention: nextWeekIntention.trim(),
+          createdAt: data.journal.createdAt,
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync"));
+    }
+
     setWentWell("");
     setWasDifficult("");
     setLearned("");
@@ -134,9 +224,10 @@ export default function Journal() {
     setWeekOf("");
   }
 
-  function handleDeleteReflection(id: string) {
-    deleteReflection(id);
-    setReflections(getReflections());
+  async function handleDeleteReflection(id: string) {
+    setReflections((prev) => prev.filter((r) => r.id !== id));
+    await api.journals.delete(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync"));
   }
 
   // Filtered Diary Entries

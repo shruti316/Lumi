@@ -1,43 +1,64 @@
-const { readDB, writeDB } = require("../services/store");
+const memoryService = require("../services/memoryService");
 
-function getMemories(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const userMemories = db.memories.filter((m) => m.userId === userId || !m.userId);
-  res.json({ memories: userMemories });
+/**
+ * Retrieves all memories for the authenticated user.
+ */
+async function getMemories(req, res) {
+  try {
+    const userId = req.user.id;
+    const memories = await memoryService.getMemoriesByUserId(userId);
+    res.json({ memories });
+  } catch (err) {
+    console.error("Get memories error:", err);
+    res.status(500).json({ error: "Internal server error retrieving memories" });
+  }
 }
 
-function createMemory(req, res) {
-  const db = readDB();
-  const userId = req.user?.id || "u-demo";
-  const { title, caption, date, location, imageUrl, isShared, tags } = req.body;
+/**
+ * Creates a new memory for the authenticated user.
+ */
+async function createMemory(req, res) {
+  try {
+    const userId = req.user.id;
+    const { title, caption, date, location, imageUrl, isShared, tags } = req.body;
 
-  const newMemory = {
-    id: "m-" + Date.now(),
-    userId,
-    title: title || "New Moment",
-    caption: caption || "",
-    date: date || new Date().toISOString().split("T")[0],
-    location: location || "",
-    imageUrl: imageUrl || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
-    isShared: Boolean(isShared),
-    tags: Array.isArray(tags) ? tags : [],
-    reactions: { heart: 0, sparkle: 0, fire: 0 },
-    comments: [],
-    createdAt: new Date().toISOString(),
-  };
+    const newMemory = await memoryService.createMemory({
+      userId,
+      title,
+      caption,
+      date,
+      location,
+      imageUrl,
+      isShared,
+      tags,
+    });
 
-  db.memories.unshift(newMemory);
-  writeDB(db);
-  res.status(201).json({ message: "Memory saved", memory: newMemory });
+    res.status(201).json({ message: "Memory saved", memory: newMemory });
+  } catch (err) {
+    console.error("Create memory error:", err);
+    res.status(500).json({ error: "Internal server error saving memory" });
+  }
 }
 
-function deleteMemory(req, res) {
-  const { id } = req.params;
-  const db = readDB();
-  db.memories = db.memories.filter((m) => m.id !== id);
-  writeDB(db);
-  res.json({ message: "Memory deleted" });
+/**
+ * Deletes a memory belonging to the authenticated user.
+ */
+async function deleteMemory(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const deleted = await memoryService.deleteMemory(id, userId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Memory not found" });
+    }
+
+    res.json({ message: "Memory deleted" });
+  } catch (err) {
+    console.error("Delete memory error:", err);
+    res.status(500).json({ error: "Internal server error deleting memory" });
+  }
 }
 
 module.exports = {

@@ -163,9 +163,26 @@ async function updateMe(req, res) {
   }
 }
 
+/**
+ * Permanently wipes user personal data while keeping the account and credentials active.
+ */
+async function resetData(req, res) {
+  try {
+    const userId = req.user.id;
+    await userService.resetUserData(userId);
+    res.json({
+      message: "Personal LUMI data has been reset successfully ✧",
+    });
+  } catch (err) {
+    console.error("ResetData error:", err);
+    res.status(500).json({ error: "Internal server error resetting user data" });
+  }
+}
+
 module.exports = {
   signup,
   login,
   getMe,
   updateMe,
+  resetData,
 };

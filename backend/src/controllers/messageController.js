@@ -1,130 +1,90 @@
-const { readDB, writeDB } = require("../services/store");
+const messageService = require("../services/messageService");
 
-function getConversations(req, res) {
-  const db = readDB();
-  const userId = req.user.id;
-
-  if (!db.conversations) {
-    db.conversations = [];
-    writeDB(db);
+/**
+ * Retrieves conversations for the authenticated user.
+ */
+async function getConversations(req, res) {
+  try {
+    const userId = req.user.id;
+    const conversations = await messageService.getConversationsByUserId(userId);
+    res.json({ conversations });
+  } catch (err) {
+    console.error("Get conversations error:", err);
+    res.status(500).json({ error: "Internal server error retrieving conversations" });
   }
-
-  // Filter conversations where the current user is a participant
-  const userConversations = db.conversations.filter((c) =>
-    c.participants.includes(userId)
-  );
-
-  res.json({ conversations: userConversations });
 }
 
-function getMessages(req, res) {
-  const { conversationId } = req.params;
-  const db = readDB();
-  const userId = req.user.id;
+/**
+ * Retrieves messages for a specific conversation.
+ */
+async function getMessages(req, res) {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user.id;
 
-  if (!db.messages) {
-    db.messages = [];
-  }
+    const messages = await messageService.getMessages(conversationId, userId);
 
-  const conversation = (db.conversations || []).find(
-    (c) => c.id === conversationId && c.participants.includes(userId)
-  );
-
-  if (!conversation) {
-    return res.status(404).json({ error: "Conversation not found or unauthorized" });
-  }
-
-  const messages = db.messages.filter((m) => m.conversationId === conversationId);
-  res.json({ messages });
-}
-
-function sendMessage(req, res) {
-  const { conversationId } = req.params;
-  const { text, mediaUrl } = req.body;
-  const userId = req.user.id;
-
-  if (!text && !mediaUrl) {
-    return res.status(400).json({ error: "Message text or media is required" });
-  }
-
-  const db = readDB();
-  if (!db.conversations) db.conversations = [];
-  if (!db.messages) db.messages = [];
-
-  const conversation = db.conversations.find(
-    (c) => c.id === conversationId && c.participants.includes(userId)
-  );
-
-  if (!conversation) {
-    return res.status(404).json({ error: "Conversation not found or unauthorized" });
-  }
-
-  const newMessage = {
-    id: "msg-" + Date.now(),
-    conversationId,
-    senderId: userId,
-    text: text || "",
-    mediaUrl: mediaUrl || null,
-    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    read: false,
-    createdAt: new Date().toISOString(),
-  };
-
-  db.messages.push(newMessage);
-
-  // Update last message preview
-  conversation.lastMessage = text || "Shared media";
-  conversation.lastTimestamp = "Just now";
-  conversation.updatedAt = new Date().toISOString();
-
-  writeDB(db);
-  res.status(201).json({ message: "Message sent", data: newMessage });
-}
-
-function startConversation(req, res) {
-  const { friendId, initialMessage } = req.body;
-  const userId = req.user.id;
-
-  if (!friendId) {
-    return res.status(400).json({ error: "friendId is required" });
-  }
-
-  const db = readDB();
-  if (!db.conversations) db.conversations = [];
-  if (!db.messages) db.messages = [];
-
-  // Check if conversation already exists
-  let conversation = db.conversations.find(
-    (c) => c.participants.includes(userId) && c.participants.includes(friendId)
-  );
-
-  if (!conversation) {
-    conversation = {
-      id: "conv-" + Date.now(),
-      participants: [userId, friendId],
-      lastMessage: initialMessage || "Started conversation",
-      lastTimestamp: "Just now",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    db.conversations.unshift(conversation);
-
-    if (initialMessage) {
-      db.messages.push({
-        id: "msg-" + Date.now(),
-        conversationId: conversation.id,
-        senderId: userId,
-        text: initialMessage,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        read: false,
-        createdAt: new Date().toISOString(),
-      });
+    if (messages === null) {
+      return res.status(404).json({ error: "Conversation not found or unauthorized" });
     }
 
-    writeDB(db);
+    res.json({ messages });
+  } catch (err) {
+    console.error("Get messages error:", err);
+    res.status(500).json({ error: "Internal server error retrieving messages" });
   }
+}
 
-  res.status(201).json({ conversation });
+/**
+ * Sends a message in a conversation.
+ */
+async function sendMessage(req, res) {
+  try {
+    const { conversationId } = req.params;
+    const { text, mediaUrl } = req.body;
+    const userId = req.user.id;
+
+    if (!text && !mediaUrl) {
+      return res.status(400).json({ error: "Message text or media is required" });
+    }
+
+    const message = await messageService.sendMessage({
+      conversationId,
+      senderId: userId,
+      text,
+      mediaUrl,
+    });
+
+    if (!message) {
+      return res.status(404).json({ error: "Conversation not found or unauthorized" });
+    }
+
+    res.status(201).json({ message: "Message sent", data: message });
+  } catch (err) {
+    console.error("Send message error:", err);
+    res.status(500).json({ error: "Internal server error sending message" });
+  }
+}
+
+/**
+ * Starts a conversation with a friend.
+ */
+async function startConversation(req, res) {
+  try {
+    const { friendId, initialMessage } = req.body;
+    const userId = req.user.id;
+
+    if (!friendId) {
+      return res.status(400).json({ error: "friendId is required" });
+    }
+
+    const conversation = await messageService.startConversation(userId, friendId, initialMessage);
+
+    res.status(201).json({ conversation });
+  } catch (err) {
+    console.error("Start conversation error:", err);
+    res.status(500).json({ error: "Internal server error starting conversation" });
+  }
 }
 
 module.exports = {

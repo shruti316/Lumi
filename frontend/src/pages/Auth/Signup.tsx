@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { AuthLayout } from "./AuthLayout";
 import { api } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,25 +42,13 @@ export default function Signup() {
     const { data, error } = await api.auth.signup({ email, password, name });
     setIsLoading(false);
 
-    if (error && !error.includes("Network error") && !error.includes("Failed to fetch")) {
-      setErrorMessage(error);
+    if (error || !data?.token || !data?.user) {
+      setErrorMessage(error || "Could not complete registration. Please try again.");
       return;
     }
 
-    const token = data?.token || `lumi_session_${Date.now()}`;
-    const user = data?.user || {
-      id: "demo-user-1",
-      email,
-      name: name.trim(),
-      handle: `@${name.trim().toLowerCase().replace(/\s+/g, ".") || "lumi.user"}`
-    };
-
-    localStorage.setItem("lumi_token", token);
-    localStorage.setItem("lumi_user", JSON.stringify(user));
-    sessionStorage.removeItem("lumi_token");
-    sessionStorage.removeItem("lumi_user");
-
-    navigate("/dashboard");
+    login(data.token, data.user, true);
+    navigate("/dashboard", { replace: true });
   }
 
   return (

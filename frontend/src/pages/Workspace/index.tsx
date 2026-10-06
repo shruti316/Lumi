@@ -1,36 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   FolderKanban,
   Plus,
   Search,
-  Pin,
   Trash2,
   Tag,
   Clock,
-  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
-import {
-  getNotes,
-  addNote,
-  updateNote,
-  deleteNote,
-  getProjects,
-  addProject,
-  updateProject,
-  deleteProject,
-  type Note,
-  type Project,
-} from "../../lib/lifeOSStorage";
+import { api } from "../../lib/api";
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  category?: string;
+  tags: string[];
+  pinned?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: "Planning" | "In Progress" | "Completed" | "On Hold";
+  progress: number;
+  deadline: string;
+  notes: string;
+  tasks?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export default function Workspace() {
   const [activeTab, setActiveTab] = useState<"notes" | "projects">("notes");
+  const [loading, setLoading] = useState(true);
 
   // Notes State
-  const [notes, setNotes] = useState<Note[]>(() => getNotes());
-  const [notesFilter, setNotesFilter] = useState<"all" | "pinned" | "recent">("all");
+  const [notes, setNotes] = useState<Note[]>([]);
   const [noteSearch, setNoteSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -41,9 +53,8 @@ export default function Workspace() {
   const [newNoteTags, setNewNoteTags] = useState("");
 
   // Projects State
-  const [projects, setProjects] = useState<Project[]>(() => getProjects());
+  const [projects, setProjects] = useState<Project[]>([]);
   const [projectStatusFilter, setProjectStatusFilter] = useState<"All" | Project["status"]>("All");
-  const [projectSearch, setProjectSearch] = useState("");
   const [showProjectModal, setShowProjectModal] = useState(false);
 
   // Project Form
@@ -53,8 +64,45 @@ export default function Workspace() {
   const [newProjDeadline, setNewProjDeadline] = useState("");
   const [newProjProgress, setNewProjProgress] = useState(0);
 
+  async function loadWorkspaceData() {
+    setLoading(true);
+    const [notesRes, projRes] = await Promise.all([
+      api.workspace.getNotes(),
+      api.workspace.getProjects(),
+    ]);
+
+    if (notesRes.data?.notes) {
+      setNotes(
+        notesRes.data.notes.map((n: any) => ({
+          ...n,
+          tags: Array.isArray(n.tags) ? n.tags : [],
+        }))
+      );
+    }
+
+    if (projRes.data?.projects) {
+      setProjects(
+        projRes.data.projects.map((p: any) => ({
+          ...p,
+          status: (p.status === "in-progress" ? "In Progress" : p.status) || "In Progress",
+          deadline: p.deadline || "Ongoing",
+          progress: Number(p.progress) || 0,
+          notes: p.notes || "",
+          tasks: Array.isArray(p.tasks) ? p.tasks : [],
+        }))
+      );
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadWorkspaceData();
+    window.addEventListener("lumi-sync", loadWorkspaceData);
+    return () => window.removeEventListener("lumi-sync", loadWorkspaceData);
+  }, []);
+
   // Note Handlers
-  function handleCreateNote(e: React.FormEvent) {
+  async function handleCreateNote(e: React.FormEvent) {
     e.preventDefault();
     if (!newNoteTitle.trim() && !newNoteContent.trim()) return;
 
@@ -63,50 +111,65 @@ export default function Workspace() {
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean);
 
-    addNote({
-      id: crypto.randomUUID(),
+    const { data } = await api.workspace.createNote({
       title: newNoteTitle.trim() || "Untitled Note",
       content: newNoteContent.trim(),
       tags: tags.length > 0 ? tags : ["college"],
-      pinned: false,
-      createdAt: new Date().toISOString(),
+      category: "General",
     });
 
-    setNotes(getNotes());
+    if (data?.note) {
+      setNotes((prev) => [
+        {
+          ...data.note,
+          tags: Array.isArray(data.note.tags) ? data.note.tags : tags,
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "note" } }));
+    }
+
     setNewNoteTitle("");
     setNewNoteContent("");
     setNewNoteTags("");
     setShowNoteModal(false);
   }
 
-  function handleTogglePin(note: Note) {
-    const updated = { ...note, pinned: !note.pinned };
-    updateNote(updated);
-    setNotes(getNotes());
-  }
-
-  function handleDeleteNote(id: string) {
-    deleteNote(id);
-    setNotes(getNotes());
+  async function handleDeleteNote(id: string) {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    await api.workspace.deleteNote(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "note" } }));
   }
 
   // Project Handlers
-  function handleCreateProject(e: React.FormEvent) {
+  async function handleCreateProject(e: React.FormEvent) {
     e.preventDefault();
     if (!newProjName.trim()) return;
 
-    addProject({
-      id: crypto.randomUUID(),
+    const { data } = await api.workspace.createProject({
       name: newProjName.trim(),
       description: newProjDesc.trim(),
       status: newProjStatus,
       progress: newProjProgress,
       deadline: newProjDeadline || "Ongoing",
       notes: "",
-      createdAt: new Date().toISOString(),
     });
 
-    setProjects(getProjects());
+    if (data?.project) {
+      setProjects((prev) => [
+        {
+          ...data.project,
+          status: (data.project.status === "in-progress" ? "In Progress" : data.project.status) || newProjStatus,
+          deadline: data.project.deadline || newProjDeadline || "Ongoing",
+          progress: Number(data.project.progress) || newProjProgress,
+          notes: data.project.notes || "",
+          tasks: Array.isArray(data.project.tasks) ? data.project.tasks : [],
+        },
+        ...prev,
+      ]);
+      window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "project" } }));
+    }
+
     setNewProjName("");
     setNewProjDesc("");
     setNewProjDeadline("");
@@ -114,49 +177,51 @@ export default function Workspace() {
     setShowProjectModal(false);
   }
 
-  function handleProgressChange(proj: Project, newProgress: number) {
-    const updated: Project = {
-      ...proj,
+  async function handleProgressChange(proj: Project, newProgress: number) {
+    const newStatus =
+      newProgress >= 100
+        ? "Completed"
+        : proj.status === "Completed"
+        ? "In Progress"
+        : proj.status;
+
+    // Optimistic UI update
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === proj.id ? { ...p, progress: newProgress, status: newStatus } : p
+      )
+    );
+
+    await api.workspace.updateProject(proj.id, {
       progress: newProgress,
-      status: newProgress >= 100 ? "Completed" : proj.status === "Completed" ? "In Progress" : proj.status,
-    };
-    updateProject(updated);
-    setProjects(getProjects());
+      status: newStatus,
+    });
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "project" } }));
   }
 
-  function handleDeleteProject(id: string) {
-    deleteProject(id);
-    setProjects(getProjects());
+  async function handleDeleteProject(id: string) {
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    await api.workspace.deleteProject(id);
+    window.dispatchEvent(new CustomEvent("lumi-sync", { detail: { type: "project" } }));
   }
-
-  // Metrics
-  const pinnedNotesCount = notes.filter((n) => n.pinned).length;
-  const activeProjectsCount = projects.filter((p) => p.status === "In Progress").length;
-  const completedProjectsCount = projects.filter((p) => p.status === "Completed").length;
 
   // Filtered Notes
-  const allNoteTags = Array.from(new Set(notes.flatMap((n) => n.tags)));
+  const allNoteTags = Array.from(new Set(notes.flatMap((n) => n.tags || [])));
   const filteredNotes = notes.filter((n) => {
     const matchesSearch =
       n.title.toLowerCase().includes(noteSearch.toLowerCase()) ||
       n.content.toLowerCase().includes(noteSearch.toLowerCase()) ||
-      n.tags.some((t) => t.toLowerCase().includes(noteSearch.toLowerCase()));
+      (n.tags || []).some((t) => t.toLowerCase().includes(noteSearch.toLowerCase()));
 
-    const matchesTag = selectedTag ? n.tags.includes(selectedTag) : true;
-    const matchesFilter =
-      notesFilter === "pinned" ? n.pinned : true;
+    const matchesTag = selectedTag ? (n.tags || []).includes(selectedTag) : true;
 
-    return matchesSearch && matchesTag && matchesFilter;
+    return matchesSearch && matchesTag;
   });
 
   // Filtered Projects
   const filteredProjects = projects.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
-      p.description.toLowerCase().includes(projectSearch.toLowerCase());
-    const matchesStatus =
-      projectStatusFilter === "All" || p.status === projectStatusFilter;
-    return matchesSearch && matchesStatus;
+    if (projectStatusFilter === "All") return true;
+    return p.status === projectStatusFilter;
   });
 
   return (
@@ -168,115 +233,50 @@ export default function Workspace() {
         <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#CCE5DC]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9E96D8]" />
               <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8792]">
-                Creative Studio & Knowledge Vault
+                Knowledge & Deliverables
               </p>
             </div>
             <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#17151C]">
-              Workspace & <span className="font-editorial-italic font-normal text-[#9E96D8]">Studio</span>
+              Creative <span className="font-editorial-italic font-normal text-[#9E96D8]">Workspace</span>
             </h1>
             <p className="mt-1 text-sm md:text-base font-normal text-[#5F5965]">
-              Quick lecture notes, conceptual knowledge, and active project builds connected in one hub.
+              Organize lecture notes, project builds, formulas & creative ideas in one calm hub.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {activeTab === "notes" ? (
-              <button
-                type="button"
-                onClick={() => setShowNoteModal(true)}
-                className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 cursor-pointer"
-              >
-                <Plus size={16} />
-                <span>New Note</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowProjectModal(true)}
-                className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 cursor-pointer"
-              >
-                <Plus size={16} />
-                <span>New Project</span>
-              </button>
-            )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (activeTab === "notes") setShowNoteModal(true);
+                else setShowProjectModal(true);
+              }}
+              className="flex items-center gap-2 rounded-xl bg-[#17151C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#2D263B] active:scale-95 w-fit cursor-pointer"
+            >
+              <Plus size={16} />
+              <span>{activeTab === "notes" ? "New Note" : "New Project"}</span>
+            </button>
           </div>
         </header>
 
         {/* ═══════════════════════════════════════
-            SUMMARY METRICS BAR
+            NAVIGATION TABS (NOTES vs PROJECTS)
         ═══════════════════════════════════════ */}
-        <section className="mb-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-          <Card variant="lavender" hoverEffect className="p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
-              Total Notes
-            </p>
-            <p className="text-2xl font-bold text-[#17151C] mt-1">
-              {notes.length}
-            </p>
-            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
-              {pinnedNotesCount} pinned references
-            </p>
-          </Card>
-
-          <Card variant="blue" hoverEffect className="p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
-              Active Projects
-            </p>
-            <p className="text-2xl font-bold text-[#17151C] mt-1">
-              {activeProjectsCount}
-            </p>
-            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
-              In development sprint
-            </p>
-          </Card>
-
-          <Card variant="default" hoverEffect className="p-4 border-[#CCE5DC] bg-gradient-to-br from-[#EEF8F4] to-white">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4A7D63]">
-              Completed Projects
-            </p>
-            <p className="text-2xl font-bold text-[#17151C] mt-1">
-              {completedProjectsCount}
-            </p>
-            <p className="mt-1 text-[11px] font-medium text-[#4A7D63]">
-              Shipped builds
-            </p>
-          </Card>
-
-          <Card variant="peach" hoverEffect className="p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5F5965]">
-              Workspace Knowledge
-            </p>
-            <p className="text-2xl font-bold text-[#17151C] mt-1 flex items-center gap-1.5">
-              <Sparkles size={18} className="text-[#D99BB8]" />
-              Synthesized
-            </p>
-            <p className="mt-1 text-[11px] font-medium text-[#5F5965]">
-              Connected life system
-            </p>
-          </Card>
-        </section>
-
-        {/* ═══════════════════════════════════════
-            PRIMARY VIEW SELECTOR TABS
-        ═══════════════════════════════════════ */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex gap-1.5 rounded-2xl border border-[#E8E3F0] bg-white/90 p-1.5 shadow-2xs">
+        <div className="mb-6 flex items-center justify-between border-b border-[#E8E3F0] pb-3">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setActiveTab("notes")}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "notes"
-                  ? "bg-[#EEEAFE] text-[#17151C] border border-[#DDD8F2] shadow-2xs"
-                  : "text-[#5F5965] hover:text-[#17151C]"
+                  ? "bg-[#17151C] text-white shadow-2xs"
+                  : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
               }`}
             >
-              <FileText size={15} className={activeTab === "notes" ? "text-[#9E96D8]" : ""} />
-              <span>Notes & Knowledge</span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2]">
-                {notes.length}
-              </span>
+              <FileText size={14} />
+              <span>Notes & Knowledge ({notes.length})</span>
             </button>
 
             <button
@@ -284,237 +284,162 @@ export default function Workspace() {
               onClick={() => setActiveTab("projects")}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition cursor-pointer ${
                 activeTab === "projects"
-                  ? "bg-[#EEEAFE] text-[#17151C] border border-[#DDD8F2] shadow-2xs"
-                  : "text-[#5F5965] hover:text-[#17151C]"
+                  ? "bg-[#17151C] text-white shadow-2xs"
+                  : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
               }`}
             >
-              <FolderKanban size={15} className={activeTab === "projects" ? "text-[#9E96D8]" : ""} />
-              <span>Projects & Studio</span>
-              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2]">
-                {projects.length}
-              </span>
+              <FolderKanban size={14} />
+              <span>Project Sprints ({projects.length})</span>
             </button>
           </div>
         </div>
 
-        {/* =========================================================
-            VIEW 1: NOTES & KNOWLEDGE
-        ========================================================= */}
-        {activeTab === "notes" && (
+        {/* Loading Indicator */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-[#9E96D8]" />
+          </div>
+        ) : activeTab === "notes" ? (
+          /* ═══════════════════════════════════════
+              NOTES TAB CONTENT
+          ═══════════════════════════════════════ */
           <div>
-            {/* Filter and Search Row */}
+            {/* Search & Tag Filter */}
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-1.5 rounded-xl border border-[#E8E3F0] bg-white/90 p-1 w-fit shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNotesFilter("all");
-                    setSelectedTag(null);
-                  }}
-                  className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                    notesFilter === "all" && !selectedTag
-                      ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
-                      : "text-[#5F5965] hover:text-[#17151C]"
-                  }`}
-                >
-                  All Notes ({notes.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNotesFilter("pinned")}
-                  className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                    notesFilter === "pinned"
-                      ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
-                      : "text-[#5F5965] hover:text-[#17151C]"
-                  }`}
-                >
-                  <Pin size={12} className={notesFilter === "pinned" ? "text-[#9E96D8]" : ""} />
-                  <span>Pinned ({pinnedNotesCount})</span>
-                </button>
-              </div>
-
-              <div className="relative flex-1 sm:w-64">
-                <Search size={14} className="absolute left-3.5 top-3 text-[#8D8792]" />
+              <div className="relative flex-1 max-w-sm">
+                <Search
+                  size={15}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8D8792]"
+                />
                 <input
                   type="text"
-                  placeholder="Search notes or tags..."
+                  placeholder="Search notes..."
                   value={noteSearch}
                   onChange={(e) => setNoteSearch(e.target.value)}
-                  className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] shadow-2xs outline-none focus:border-[#9E96D8]"
+                  className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] placeholder:text-[#8D8792] focus:border-[#9E96D8] focus:ring-2 focus:ring-[#B8B3E8]/30 outline-none shadow-2xs"
                 />
               </div>
-            </div>
 
-            {/* Tag Pills */}
-            {allNoteTags.length > 0 && (
-              <div className="mb-5 flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8D8792] mr-1 flex items-center gap-1">
-                  <Tag size={11} /> Filter:
-                </span>
-                {allNoteTags.map((t) => (
+              {allNoteTags.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
                   <button
-                    key={t}
                     type="button"
-                    onClick={() => setSelectedTag(selectedTag === t ? null : t)}
-                    className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition cursor-pointer ${
-                      selectedTag === t
-                        ? "bg-[#EEEAFE] border-[#DDD8F2] text-[#17151C] shadow-2xs"
-                        : "bg-white border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
+                    onClick={() => setSelectedTag(null)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                      selectedTag === null
+                        ? "bg-[#17151C] text-white shadow-2xs"
+                        : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
                     }`}
                   >
-                    #{t}
+                    All
                   </button>
-                ))}
-              </div>
-            )}
-
-            {/* Notes Grid */}
-            {filteredNotes.length === 0 ? (
-              <Card variant="blue" className="p-10 text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-white">
-                  📝
+                  {allNoteTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                      className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                        selectedTag === tag
+                          ? "bg-[#9E96D8] text-white shadow-2xs"
+                          : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#EEEAFE]"
+                      }`}
+                    >
+                      <Tag size={10} />
+                      <span>#{tag}</span>
+                    </button>
+                  ))}
                 </div>
-                <h3 className="font-serif text-2xl font-bold text-[#17151C]">
-                  No notes found
-                </h3>
-                <p className="mt-1 text-xs max-w-sm mx-auto font-medium text-[#5F5965]">
-                  Capture study notes, cheatsheets, formulas, and ideas in your workspace.
+              )}
+            </div>
+
+            {filteredNotes.length === 0 ? (
+              <Card variant="default" className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEAFE] text-[#9E96D8]">
+                  <FileText size={22} />
+                </div>
+                <h3 className="font-serif text-lg font-bold text-[#17151C]">No notes found</h3>
+                <p className="mt-1 text-xs text-[#5F5965] max-w-xs">
+                  Create your first note to capture lecture formulas, ideas, and cheat sheets.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setShowNoteModal(true)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] cursor-pointer"
-                >
-                  <Plus size={14} />
-                  <span>Create Note</span>
-                </button>
               </Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredNotes.map((note) => (
                   <Card
                     key={note.id}
-                    variant="glass"
+                    variant="default"
                     hoverEffect
-                    className="group relative flex flex-col justify-between p-5 border-[#E8E3F0] bg-white/95"
+                    className="group flex flex-col justify-between p-4 bg-white border-[#E8E3F0]"
                   >
                     <div>
-                      <div className="flex items-start justify-between gap-2 mb-2.5">
-                        <h3 className="font-serif font-bold text-base text-[#17151C] leading-snug truncate">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="font-serif text-base font-bold text-[#17151C] line-clamp-1">
                           {note.title}
                         </h3>
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleTogglePin(note)}
-                            className={`flex h-7 w-7 items-center justify-center rounded-lg transition cursor-pointer ${
-                              note.pinned
-                                ? "bg-[#EEEAFE] text-[#9E96D8] border border-[#DDD8F2] shadow-2xs"
-                                : "bg-[#F7F5F8] text-[#8D8792] hover:text-[#17151C]"
-                            }`}
-                            title={note.pinned ? "Unpin" : "Pin note"}
-                          >
-                            <Pin size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteNote(note.id)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
-                            title="Delete note"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-[#8D8792] hover:text-[#D84C2C] hover:bg-[#FDECE8] transition cursor-pointer"
+                          title="Delete note"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
 
-                      <p className="text-xs font-normal text-[#5F5965] line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                      <p className="text-xs text-[#5F5965] font-normal line-clamp-5 leading-relaxed whitespace-pre-wrap">
                         {note.content}
                       </p>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-[#E8E3F0] flex flex-wrap items-center justify-between gap-1 text-[10px]">
-                      <div className="flex flex-wrap gap-1">
-                        {note.tags.map((tag) => (
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-[#F7F5F8] flex flex-wrap gap-1.5">
+                        {note.tags.map((t) => (
                           <span
-                            key={tag}
-                            className="rounded-md bg-[#EEEAFE] border border-[#DDD8F2] px-2 py-0.5 font-semibold text-[#5F5965]"
+                            key={t}
+                            className="rounded-md bg-[#F7F5F8] border border-[#E8E3F0] px-2 py-0.5 text-[10px] font-semibold text-[#5F5965]"
                           >
-                            #{tag}
+                            #{t}
                           </span>
                         ))}
                       </div>
-                      <span className="font-medium text-[#8D8792]">
-                        {new Date(note.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </div>
+                    )}
                   </Card>
                 ))}
               </div>
             )}
           </div>
-        )}
-
-        {/* =========================================================
-            VIEW 2: PROJECTS & BUILDS
-        ========================================================= */}
-        {activeTab === "projects" && (
+        ) : (
+          /* ═══════════════════════════════════════
+              PROJECTS TAB CONTENT
+          ═══════════════════════════════════════ */
           <div>
-            {/* Project Filter & Search Row */}
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-1.5 rounded-xl border border-[#E8E3F0] bg-white/90 p-1 w-fit shadow-2xs">
-                {(["All", "In Progress", "Planning", "Completed", "On Hold"] as const).map(
-                  (st) => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => setProjectStatusFilter(st)}
-                      className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                        projectStatusFilter === st
-                          ? "bg-[#EEEAFE] text-[#17151C] shadow-2xs border border-[#DDD8F2]"
-                          : "text-[#5F5965] hover:text-[#17151C]"
-                      }`}
-                    >
-                      {st}
-                    </button>
-                  )
-                )}
-              </div>
-
-              <div className="relative flex-1 sm:w-64">
-                <Search size={14} className="absolute left-3.5 top-3 text-[#8D8792]" />
-                <input
-                  type="text"
-                  placeholder="Search projects..."
-                  value={projectSearch}
-                  onChange={(e) => setProjectSearch(e.target.value)}
-                  className="w-full rounded-xl border border-[#E8E3F0] bg-white pl-9 pr-3.5 py-2 text-xs font-medium text-[#17151C] shadow-2xs outline-none focus:border-[#9E96D8]"
-                />
-              </div>
+            {/* Status Filter */}
+            <div className="mb-5 flex items-center gap-1.5 overflow-x-auto pb-1">
+              {(["All", "In Progress", "Planning", "Completed", "On Hold"] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setProjectStatusFilter(st)}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer ${
+                    projectStatusFilter === st
+                      ? "bg-[#17151C] text-white shadow-2xs"
+                      : "bg-white border border-[#E8E3F0] text-[#5F5965] hover:bg-[#F7F5F8]"
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
             </div>
 
-            {/* Projects Grid */}
             {filteredProjects.length === 0 ? (
-              <Card variant="peach" className="p-10 text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-2xl shadow-2xs border border-white">
-                  🧩
+              <Card variant="default" className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EEEAFE] text-[#9E96D8]">
+                  <FolderKanban size={22} />
                 </div>
-                <h3 className="font-serif text-2xl font-bold text-[#17151C]">
-                  No projects in this category
-                </h3>
-                <p className="mt-1 text-xs max-w-sm mx-auto font-medium text-[#5F5965]">
-                  Start a new project build, manage deliverables, research notes, and deadlines.
+                <h3 className="font-serif text-lg font-bold text-[#17151C]">No projects found</h3>
+                <p className="mt-1 text-xs text-[#5F5965] max-w-xs">
+                  Add a new coursework build, web application, or design sprint.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setShowProjectModal(true)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#17151C] px-5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#2D263B] cursor-pointer"
-                >
-                  <Plus size={14} />
-                  <span>Create Project</span>
-                </button>
               </Card>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
@@ -523,24 +448,22 @@ export default function Workspace() {
                     key={proj.id}
                     variant="glass"
                     hoverEffect
-                    className="p-5 border-[#E8E3F0] bg-white/95"
+                    className="p-5 border-[#E8E3F0] bg-white/95 transition duration-200"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span
                           className={`rounded-md border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                            proj.status === "In Progress"
-                              ? "bg-[#EEF3FA] text-[#4A729A] border-[#D9E7F2]"
-                              : proj.status === "Completed"
+                            proj.status === "Completed"
                               ? "bg-[#EEF8F4] text-[#3E7D5C] border-[#CCE5DC]"
-                              : proj.status === "Planning"
-                              ? "bg-[#EEEAFE] text-[#6B5BA5] border-[#DCD8F2]"
-                              : "bg-[#FDF3EC] text-[#9A644D] border-[#F1D2C9]"
+                              : proj.status === "In Progress"
+                              ? "bg-[#EEF3FA] text-[#4A729A] border-[#D9E7F2]"
+                              : "bg-[#EEEAFE] text-[#6B5BA5] border-[#DCD8F2]"
                           }`}
                         >
                           {proj.status}
                         </span>
-                        <h3 className="mt-2.5 font-serif text-base font-bold tracking-tight text-[#17151C]">
+                        <h3 className="mt-2.5 font-serif text-base font-bold text-[#17151C] tracking-tight">
                           {proj.name}
                         </h3>
                       </div>
@@ -549,7 +472,7 @@ export default function Workspace() {
                         type="button"
                         onClick={() => handleDeleteProject(proj.id)}
                         className="flex h-8 w-8 items-center justify-center rounded-xl text-[#8D8792] hover:text-[#D99BB8] hover:bg-[#FDF0F6] transition cursor-pointer"
-                        title="Delete Project"
+                        title="Delete project"
                       >
                         <Trash2 size={15} />
                       </button>
@@ -568,24 +491,33 @@ export default function Workspace() {
                         </span>
                         <span className="text-[#9E96D8] font-bold">{proj.progress}%</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EEEAFE]">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#9E96D8] to-[#B8D4E8] transition-all duration-500"
-                            style={{ width: `${proj.progress}%` }}
-                          />
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={proj.progress}
-                          onChange={(e) =>
-                            handleProgressChange(proj, Number(e.target.value))
-                          }
-                          className="w-20 accent-[#17151C] cursor-pointer"
-                          title="Adjust progress"
+                      <div className="h-1.5 overflow-hidden rounded-full bg-[#EEEAFE]">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#9E96D8] to-[#E8B9CD] transition-all duration-500"
+                          style={{ width: `${proj.progress}%` }}
                         />
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between pt-2">
+                      <span className="text-[10px] font-semibold text-[#8D8792]">
+                        Adjust progress
+                      </span>
+                      <div className="flex gap-1">
+                        {[25, 50, 75, 100].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => handleProgressChange(proj, pct)}
+                            className={`rounded-lg px-2 py-0.5 text-[10px] font-bold transition cursor-pointer ${
+                              proj.progress === pct
+                                ? "bg-[#17151C] text-white"
+                                : "bg-[#F7F5F8] text-[#5F5965] hover:bg-[#EEEAFE]"
+                            }`}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </Card>
@@ -612,7 +544,7 @@ export default function Workspace() {
               <input
                 type="text"
                 autoFocus
-                placeholder="e.g. Dynamic Programming Memoization Notes"
+                placeholder="e.g. Dynamic Programming Memoization"
                 value={newNoteTitle}
                 onChange={(e) => setNewNoteTitle(e.target.value)}
                 className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
@@ -622,14 +554,14 @@ export default function Workspace() {
 
             <div>
               <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Note Content *
+                Content *
               </label>
               <textarea
                 rows={5}
-                placeholder="Write your notes, formulas, or summaries here..."
+                placeholder="Write your note content here..."
                 value={newNoteContent}
                 onChange={(e) => setNewNoteContent(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E3F0] bg-white p-3 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none resize-none leading-relaxed shadow-2xs"
+                className="w-full rounded-xl border border-[#E8E3F0] bg-white p-3 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none resize-none shadow-2xs"
                 required
               />
             </div>
@@ -640,7 +572,7 @@ export default function Workspace() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. algorithms, cs, midterm"
+                placeholder="e.g. college, cs, algorithms"
                 value={newNoteTags}
                 onChange={(e) => setNewNoteTags(e.target.value)}
                 className="w-full rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"

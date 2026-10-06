@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { AuthLayout } from "./AuthLayout";
 import { api } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,32 +28,13 @@ export default function Login() {
     const { data, error } = await api.auth.login({ email, password });
     setIsLoading(false);
 
-    if (error && !error.includes("Network error") && !error.includes("Failed to fetch")) {
-      setErrorMessage(error);
+    if (error || !data?.token || !data?.user) {
+      setErrorMessage(error || "Invalid email or password. Please try again.");
       return;
     }
 
-    const token = data?.token || `lumi_session_${Date.now()}`;
-    const user = data?.user || {
-      id: "demo-user-1",
-      email,
-      name: email.split("@")[0] || "LUMI User",
-      handle: `@${email.split("@")[0] || "lumi.user"}`
-    };
-
-    if (rememberMe) {
-      localStorage.setItem("lumi_token", token);
-      localStorage.setItem("lumi_user", JSON.stringify(user));
-      sessionStorage.removeItem("lumi_token");
-      sessionStorage.removeItem("lumi_user");
-    } else {
-      sessionStorage.setItem("lumi_token", token);
-      sessionStorage.setItem("lumi_user", JSON.stringify(user));
-      localStorage.removeItem("lumi_token");
-      localStorage.removeItem("lumi_user");
-    }
-
-    navigate("/dashboard");
+    login(data.token, data.user, rememberMe);
+    navigate("/dashboard", { replace: true });
   }
 
   return (

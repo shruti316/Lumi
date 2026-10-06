@@ -3,33 +3,61 @@ const API_BASE_URL =
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem("lumi_token") || sessionStorage.getItem("lumi_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
 }
 
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<{ data?: T; error?: string }> {
+): Promise<{ data?: T; error?: string; status?: number }> {
   try {
-    const headers = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...getAuthHeader(),
-      ...(options.headers || {}),
+      ...((options.headers as Record<string, string>) || {}),
     };
 
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const method = options.method || "GET";
+    const url = `${API_BASE_URL}${endpoint}`;
+
+    const res = await fetch(url, {
       ...options,
       headers,
     });
 
-    const json = await res.json();
-    if (!res.ok) {
-      return { error: json.error || `HTTP error ${res.status}` };
+    let json: any = null;
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        json = await res.json();
+      } catch {
+        json = null;
+      }
     }
-    return { data: json };
+
+    if (!res.ok) {
+      const errorMsg = json?.error || `HTTP error ${res.status}: ${res.statusText}`;
+      
+      // Auto-clear invalid/expired token on 401 or 403
+      if (res.status === 401 || res.status === 403) {
+        console.warn(`[LUMI API] ${method} ${endpoint} -> ${res.status} Unauthorized / Forbidden`);
+        localStorage.removeItem("lumi_token");
+        localStorage.removeItem("lumi_user");
+        sessionStorage.removeItem("lumi_token");
+        sessionStorage.removeItem("lumi_user");
+        window.dispatchEvent(new CustomEvent("lumi-auth-expired"));
+      } else {
+        console.error(`[LUMI API] ${method} ${endpoint} -> ${res.status}:`, errorMsg);
+      }
+
+      return { error: errorMsg, status: res.status };
+    }
+
+    return { data: json, status: res.status };
   } catch (err: any) {
-    console.warn(`[LUMI API Sync] Falling back to local store for ${endpoint}:`, err);
-    return { error: err.message || "Network error" };
+    console.error(`[LUMI API Network Error] ${options.method || "GET"} ${endpoint}:`, err);
+    return { error: err.message || "Network connection error" };
   }
 }
 
@@ -51,6 +79,10 @@ export const api = {
       request<{ user: any }>("/auth/me", {
         method: "PUT",
         body: JSON.stringify(body),
+      }),
+    resetData: () =>
+      request<{ message: string }>("/auth/reset-data", {
+        method: "DELETE",
       }),
   },
 
@@ -205,6 +237,23 @@ export const api = {
       request<{ comment: any }>(`/friends/memories/${id}/comment`, {
         method: "POST",
         body: JSON.stringify({ text }),
+      }),
+  },
+
+  // 1-to-1 Messaging
+  messages: {
+    getConversations: () => request<{ conversations: any[] }>("/messages/conversations"),
+    getMessages: (conversationId: string) =>
+      request<{ messages: any[] }>(`/messages/conversations/${conversationId}`),
+    send: (conversationId: string, text: string, mediaUrl?: string) =>
+      request<{ data: any }>(`/messages/conversations/${conversationId}/send`, {
+        method: "POST",
+        body: JSON.stringify({ text, mediaUrl }),
+      }),
+    start: (friendId: string, initialMessage?: string) =>
+      request<{ conversation: any }>("/messages/conversations/start", {
+        method: "POST",
+        body: JSON.stringify({ friendId, initialMessage }),
       }),
   },
 };

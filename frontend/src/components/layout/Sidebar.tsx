@@ -42,19 +42,32 @@ const PRIMARY_NAV: NavItemConfig[] = [
   { icon: <Users size={17} strokeWidth={1.9} />, label: "Friends", path: "/friends" },
 ];
 
+import { useAuth } from "../../context/AuthContext";
+
 export function Sidebar({
   currentPath,
   onNavigate,
   onOpenCreate,
   onOpenSearch,
 }: SidebarProps) {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<{ displayName: string; username: string; avatarUrl?: string }>(() => {
     try {
       const saved = localStorage.getItem("lumi_profile");
       if (saved) return JSON.parse(saved);
     } catch {}
-    return { displayName: "Shru", username: "shru.lumi" };
+    return { displayName: user?.name || "Shru", username: user?.email ? user.email.split("@")[0] : "shru.lumi" };
   });
+
+  useEffect(() => {
+    if (user) {
+      setProfile((prev) => ({
+        ...prev,
+        displayName: user.name || prev.displayName,
+        username: user.email ? user.email.split("@")[0] : prev.username,
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     function handleProfileSync(e: Event) {
