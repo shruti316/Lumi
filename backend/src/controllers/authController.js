@@ -1,8 +1,12 @@
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { readDB, writeDB } = require("../services/store");
+const userService = require("../services/userService");
 const { JWT_SECRET } = require("../middleware/auth");
 
+/**
+ * Handles new user registration.
+ */
 async function signup(req, res) {
   try {
     const { email, password, name } = req.body;
@@ -11,11 +15,15 @@ async function signup(req, res) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const db = readDB();
-    const existingUser = db.users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
-    );
+    if (typeof email !== "string" || !email.includes("@")) {
+      return res.status(400).json({ error: "Please provide a valid email address" });
+    }
 
+    if (typeof password !== "string" || password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
+    }
+
+    const existingUser = await userService.findUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: "An account with this email already exists" });
     }
@@ -23,18 +31,12 @@ async function signup(req, res) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const newUser = {
-      id: "u-" + Date.now(),
-      email: email.toLowerCase(),
+    const newUser = await userService.createUser({
+      id: crypto.randomUUID(),
+      email,
       passwordHash,
-      name: name || email.split("@")[0],
-      bio: "Crafting beautiful days with LUMI ✨",
-      theme: "light",
-      createdAt: new Date().toISOString(),
-    };
-
-    db.users.push(newUser);
-    writeDB(db);
+      name: name?.trim() || email.split("@")[0],
+    });
 
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, name: newUser.name },
@@ -59,6 +61,9 @@ async function signup(req, res) {
   }
 }
 
+/**
+ * Handles user login with email and password.
+ */
 async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -67,18 +72,13 @@ async function login(req, res) {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const db = readDB();
-    const user = db.users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
-    );
-
+    const user = await userService.findUserByEmail(email);
     if (!user) {
-      // In development, auto-create account or reject
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch && password !== "password") {
+    if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
@@ -105,50 +105,62 @@ async function login(req, res) {
   }
 }
 
-function getMe(req, res) {
-  const db = readDB();
-  const user = db.users.find((u) => u.id === req.user.id) || db.users[0];
+/**
+ * Retrieves profile of the currently authenticated user.
+ */
+async function getMe(req, res) {
+  try {
+    const user = await userService.findUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        bio: user.bio,
+        theme: user.theme,
+      },
+    });
+  } catch (err) {
+    console.error("GetMe error:", err);
+    res.status(500).json({ error: "Internal server error retrieving user profile" });
   }
-
-  res.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      bio: user.bio,
-      theme: user.theme,
-    },
-  });
 }
 
-function updateMe(req, res) {
-  const { name, bio, theme } = req.body;
-  const db = readDB();
-  const userIndex = db.users.findIndex((u) => u.id === req.user.id);
+/**
+ * Updates profile fields for the currently authenticated user.
+ */
+async function updateMe(req, res) {
+  try {
+    const { name, bio, theme } = req.body;
 
-  if (userIndex === -1) {
-    return res.status(404).json({ error: "User not found" });
+    const updatedUser = await userService.updateUser(req.user.id, {
+      name,
+      bio,
+      theme,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        bio: updatedUser.bio,
+        theme: updatedUser.theme,
+      },
+    });
+  } catch (err) {
+    console.error("UpdateMe error:", err);
+    res.status(500).json({ error: "Internal server error updating profile" });
   }
-
-  if (name) db.users[userIndex].name = name;
-  if (bio) db.users[userIndex].bio = bio;
-  if (theme) db.users[userIndex].theme = theme;
-
-  writeDB(db);
-
-  res.json({
-    message: "Profile updated successfully",
-    user: {
-      id: db.users[userIndex].id,
-      email: db.users[userIndex].email,
-      name: db.users[userIndex].name,
-      bio: db.users[userIndex].bio,
-      theme: db.users[userIndex].theme,
-    },
-  });
 }
 
 module.exports = {

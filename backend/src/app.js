@@ -1,6 +1,8 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const express = require("express");
 const cors = require("cors");
+const pool = require("./config/db");
 const apiRouter = require("./routes/api");
 
 const app = express();
@@ -27,12 +29,22 @@ app.get("/", (req, res) => {
   res.send("✧ LUMI Life OS API is running 🌙");
 });
 
-// Health check route
-app.get("/api/health", (req, res) => {
+// Health check route with safe database connectivity test
+app.get("/api/health", async (req, res) => {
+  let dbStatus = "disconnected";
+
+  try {
+    await pool.query("SELECT 1");
+    dbStatus = "connected";
+  } catch (err) {
+    dbStatus = "disconnected";
+  }
+
   res.json({
     status: "ok",
     app: "LUMI Life OS",
     version: "1.0.0",
+    database: dbStatus,
     timestamp: new Date().toISOString(),
   });
 });
