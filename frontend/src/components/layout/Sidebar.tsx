@@ -142,7 +142,7 @@ export function Sidebar({
         {PRIMARY_NAV.map((item) => {
           const isActive =
             currentPath === item.path ||
-            (item.path === "/plan" && (currentPath === "/tasks" || currentPath === "/planner")) ||
+            (item.path === "/plan" && (currentPath === "/tasks" || currentPath === "/planner" || currentPath === "/focus")) ||
             (item.path === "/workspace" && (currentPath === "/notes" || currentPath === "/projects")) ||
             (item.path === "/journal" && (currentPath === "/diary" || currentPath === "/reflection"));
 

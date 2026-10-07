@@ -176,6 +176,9 @@ async function resetUserData(userId) {
     await conn.query("DELETE FROM messages WHERE sender_id = ?", [userId]);
     await conn.query("DELETE FROM conversation_participants WHERE user_id = ?", [userId]);
 
+    // 10. Focus Sessions
+    await conn.query("DELETE FROM focus_sessions WHERE user_id = ?", [userId]);
+
     await conn.commit();
     return true;
   } catch (err) {

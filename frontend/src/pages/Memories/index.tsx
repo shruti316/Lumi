@@ -127,8 +127,8 @@ export default function Memories() {
       return;
     }
 
-    if (file.size > 2.5 * 1024 * 1024) {
-      alert("Please choose an image smaller than 2.5MB.");
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Please choose a file smaller than 50MB.");
       return;
     }
 
@@ -137,7 +137,7 @@ export default function Memories() {
         setImageUrl(dataUrl);
       })
       .catch(() => {
-        alert("Could not read this image.");
+        alert("Could not process this image file. Please try a different image.");
       });
   }
 

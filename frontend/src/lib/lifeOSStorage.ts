@@ -346,75 +346,15 @@ export interface ScheduleBlock {
 
 const SCHEDULE_KEY = "lumi_schedule";
 
-const DEFAULT_SCHEDULE: ScheduleBlock[] = [
-  {
-    id: "def-1",
-    time: "08:00 - 09:00",
-    title: "Morning Routine & Healthy Breakfast",
-    category: "Routine",
-    completed: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "def-2",
-    time: "09:00 - 11:30",
-    title: "Algorithms & Data Structures Lecture",
-    category: "Class",
-    completed: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "def-3",
-    time: "12:00 - 13:00",
-    title: "Lunch Break & Coffee with Friends",
-    category: "Break",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "def-4",
-    time: "14:00 - 16:30",
-    title: "LUMI Life OS Project Sprint & Coding",
-    category: "Project",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "def-5",
-    time: "17:00 - 18:00",
-    title: "Gym Workout & Fresh Air",
-    category: "Personal",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "def-6",
-    time: "19:30 - 20:30",
-    title: "Dinner & Cozy Downtime",
-    category: "Break",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "def-7",
-    time: "21:30 - 22:30",
-    title: "Reading, Reflection & Wind Down",
-    category: "Routine",
-    completed: false,
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export function getScheduleBlocks(): ScheduleBlock[] {
   try {
     const data = localStorage.getItem(SCHEDULE_KEY);
     if (!data) {
-      saveScheduleBlocks(DEFAULT_SCHEDULE);
-      return DEFAULT_SCHEDULE;
+      return [];
     }
     return JSON.parse(data);
   } catch {
-    return DEFAULT_SCHEDULE;
+    return [];
   }
 }
 

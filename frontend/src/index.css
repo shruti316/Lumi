@@ -180,6 +180,38 @@ body {
   border: 1px solid #DCD8F2;
 }
 
+.card-motivation {
+  background: linear-gradient(135deg, #FDF4F8 0%, #F5EFFE 50%, #EEF4FC 100%);
+  border: 1px solid #E4DCF0;
+  color: #17151C;
+}
+
+.card-motivation .motivation-overlay {
+  background: linear-gradient(90deg, rgba(253, 244, 248, 0.96) 0%, rgba(245, 239, 254, 0.88) 45%, rgba(238, 244, 252, 0.35) 100%);
+}
+
+.card-motivation .motivation-tag {
+  background-color: #EEEAFE;
+  color: #6B5BA5;
+  border: 1px solid #DCD8F2;
+}
+
+.card-motivation .motivation-btn {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #E8E3F0;
+  color: #17151C;
+}
+
+.card-motivation .motivation-btn:hover {
+  background-color: #FFFFFF;
+}
+
+.card-spotify {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 248, 252, 0.9) 100%);
+  border: 1px solid #E8E3F0;
+  color: #17151C;
+}
+
 [data-theme="dark"] .card-date-hero {
   background: linear-gradient(135deg, #28213A 0%, #32202E 50%, #1C2436 100%) !important;
   border-color: #4C3E68 !important;
@@ -634,6 +666,38 @@ button:active {
   border-color: #322A42 !important;
 }
 
+[data-theme="dark"] .card-motivation {
+  background: linear-gradient(135deg, #241D34 0%, #2D1E2D 50%, #1A2334 100%) !important;
+  border-color: #4C3E68 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .card-motivation .motivation-overlay {
+  background: linear-gradient(90deg, rgba(36, 29, 52, 0.96) 0%, rgba(45, 30, 45, 0.88) 45%, rgba(26, 35, 52, 0.35) 100%) !important;
+}
+
+[data-theme="dark"] .card-motivation .motivation-tag {
+  background-color: #352A4A !important;
+  color: #E2DEFA !important;
+  border-color: #584775 !important;
+}
+
+[data-theme="dark"] .card-motivation .motivation-btn {
+  background-color: rgba(45, 37, 65, 0.9) !important;
+  border-color: #4C3E68 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .card-motivation .motivation-btn:hover {
+  background-color: #3B304E !important;
+}
+
+[data-theme="dark"] .card-spotify {
+  background: linear-gradient(135deg, #1F1B2B 0%, #161320 100%) !important;
+  border-color: #342C44 !important;
+  color: #FFFFFF !important;
+}
+
 /* Pastel accent containers in dark mode */
 [data-theme="dark"] .bg-\[\#EEEAFE\] {
   background-color: #2A233E !important;
@@ -1076,6 +1140,38 @@ button:active {
 [data-theme="mist"] .card-pearl {
   background: linear-gradient(135deg, #F8F6F2 0%, #EFECE6 100%) !important;
   border-color: #DDD8D0 !important;
+}
+
+[data-theme="mist"] .card-motivation {
+  background: linear-gradient(135deg, #F3EFE9 0%, #EDE8E1 50%, #E7E3DC 100%) !important;
+  border-color: #DDD8D0 !important;
+  color: #1F1D1B !important;
+}
+
+[data-theme="mist"] .card-motivation .motivation-overlay {
+  background: linear-gradient(90deg, rgba(243, 239, 233, 0.96) 0%, rgba(237, 232, 225, 0.88) 45%, rgba(231, 227, 220, 0.35) 100%) !important;
+}
+
+[data-theme="mist"] .card-motivation .motivation-tag {
+  background-color: #EAE6DF !important;
+  color: #5C5854 !important;
+  border-color: #DDD8D0 !important;
+}
+
+[data-theme="mist"] .card-motivation .motivation-btn {
+  background-color: #FAF8F5 !important;
+  border-color: #DDD8D0 !important;
+  color: #1F1D1B !important;
+}
+
+[data-theme="mist"] .card-motivation .motivation-btn:hover {
+  background-color: #FFFFFF !important;
+}
+
+[data-theme="mist"] .card-spotify {
+  background: linear-gradient(135deg, #F8F6F2 0%, #EFECE6 100%) !important;
+  border-color: #DDD8D0 !important;
+  color: #1F1D1B !important;
 }
 
 [data-theme="mist"] .border-\[\#E8E3F0\] {

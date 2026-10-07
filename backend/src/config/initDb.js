@@ -235,15 +235,35 @@ async function initDatabase() {
       CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
       CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+
+    // 11. Focus Sessions Table
+    `CREATE TABLE IF NOT EXISTS focus_sessions (
+      id VARCHAR(36) PRIMARY KEY,
+      user_id VARCHAR(36) NOT NULL,
+      task_id VARCHAR(36) DEFAULT NULL,
+      mode VARCHAR(30) DEFAULT 'focus',
+      duration_minutes INT NOT NULL,
+      tag VARCHAR(100) DEFAULT 'Deep Work',
+      notes TEXT DEFAULT NULL,
+      completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_focus_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+      CONSTRAINT fk_focus_task FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
   ];
 
   for (const q of queries) {
     await pool.query(q);
   }
 
-  // Ensure tasks due_date column is VARCHAR(100)
+  // Ensure tasks due_date column is VARCHAR(100) and memories image_url is LONGTEXT
   try {
     await pool.query("ALTER TABLE tasks MODIFY COLUMN due_date VARCHAR(100) DEFAULT NULL;");
+  } catch (err) {
+    // Column might already be modified
+  }
+
+  try {
+    await pool.query("ALTER TABLE memories MODIFY COLUMN image_url LONGTEXT;");
   } catch (err) {
     // Column might already be modified
   }

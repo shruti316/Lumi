@@ -256,4 +256,32 @@ export const api = {
         body: JSON.stringify({ friendId, initialMessage }),
       }),
   },
+
+  // Focus & Pomodoro
+  focus: {
+    getStats: () =>
+      request<{
+        stats: {
+          todayMinutes: number;
+          todaySessions: number;
+          totalMinutes: number;
+          totalSessions: number;
+          tagBreakdown: { tag: string; sessionCount: number; totalMinutes: number }[];
+          recentSessions: any[];
+        };
+      }>("/focus/stats"),
+    getSessions: (limit: number = 50) =>
+      request<{ sessions: any[] }>(`/focus/sessions?limit=${limit}`),
+    createSession: (body: {
+      taskId?: string | null;
+      mode: "focus" | "short_break" | "long_break";
+      durationMinutes: number;
+      tag?: string;
+      notes?: string;
+    }) =>
+      request<{ session: any }>("/focus/sessions", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+  },
 };

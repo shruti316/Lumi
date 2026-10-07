@@ -14,6 +14,7 @@ const memoryController = require("../controllers/memoryController");
 const readingController = require("../controllers/readingController");
 const friendController = require("../controllers/friendController");
 const messageController = require("../controllers/messageController");
+const focusController = require("../controllers/focusController");
 
 // ==========================================
 // 1. AUTHENTICATION & PROFILE ROUTES
@@ -98,5 +99,12 @@ router.get("/messages/conversations", authenticateToken, messageController.getCo
 router.get("/messages/conversations/:conversationId", authenticateToken, messageController.getMessages);
 router.post("/messages/conversations/:conversationId/send", authenticateToken, messageController.sendMessage);
 router.post("/messages/conversations/start", authenticateToken, messageController.startConversation);
+
+// ==========================================
+// 11. FOCUS & POMODORO SESSIONS ROUTES
+// ==========================================
+router.get("/focus/sessions", authenticateToken, focusController.getSessions);
+router.get("/focus/stats", authenticateToken, focusController.getStats);
+router.post("/focus/sessions", authenticateToken, focusController.recordSession);
 
 module.exports = router;

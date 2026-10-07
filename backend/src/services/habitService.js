@@ -6,12 +6,14 @@ const pool = require("../config/db");
  */
 function formatHabit(row, completedDates = []) {
   if (!row) return null;
+  const iconVal = row.icon || "🌱";
   return {
     id: row.id,
     userId: row.user_id,
     name: row.name,
     category: row.category || "Daily",
-    icon: row.icon || "Sparkles",
+    icon: iconVal,
+    emoji: iconVal,
     color: row.color || "#9E96D8",
     targetDaysPerWeek: row.target_days_per_week || 7,
     completedDates,

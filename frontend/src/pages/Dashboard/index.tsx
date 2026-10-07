@@ -31,6 +31,7 @@ import { Card } from "../../components/ui/Card";
 import { api } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { spotify, type SpotifyTrack } from "../../lib/spotify";
+import { getScheduleBlocks, type ScheduleBlock } from "../../lib/lifeOSStorage";
 import type { CreateTemplateType } from "../../components/common/UniversalCreateModal";
 
 export interface Task {
@@ -87,6 +88,7 @@ export default function Dashboard() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [scheduleBlocks, setScheduleBlocks] = useState<ScheduleBlock[]>(() => getScheduleBlocks());
 
   // Notifications State Foundation
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -214,7 +216,7 @@ export default function Dashboard() {
           habitsRes.value.data.habits.map((h: any) => ({
             id: h.id,
             name: h.name,
-            emoji: h.emoji || "✨",
+            emoji: (h.icon && h.icon !== "Sparkles") ? h.icon : (h.emoji && h.emoji !== "Sparkles" ? h.emoji : "🌱"),
             completedDates: h.completedDates || [],
             streak: h.streak || 0,
           }))
@@ -264,6 +266,8 @@ export default function Dashboard() {
         setFriendsFeed(friendsRes.value.data.feed);
       }
 
+      setScheduleBlocks(getScheduleBlocks());
+
       // Check Spotify live status
       if (spotify.isConnected()) {
         try {
@@ -308,21 +312,10 @@ export default function Dashboard() {
       ? "Good afternoon"
       : "Good evening";
 
-  // Default focus tasks if user has none
-  const defaultFocusTasks: Task[] = [
-    { id: "def-t-1", title: "Complete AI-ML assignment", completed: false, priority: "high", createdAt: "" },
-    { id: "def-t-2", title: "Read 20 pages", completed: true, priority: "medium", createdAt: "" },
-    { id: "def-t-3", title: "Workout", completed: false, priority: "low", createdAt: "" },
-    { id: "def-t-4", title: "Plan for midterm", completed: false, priority: "high", createdAt: "" },
-  ];
+  // Task Stats (Real authenticated data)
+  const remainingTasksCount = tasks.filter((t) => !t.completed).length;
 
-  // Task Stats
-  const remainingTasksCount =
-    tasks.length > 0
-      ? tasks.filter((t) => !t.completed).length
-      : defaultFocusTasks.filter((t) => !t.completed).length;
-
-  // Habit Streak Stats
+  // Habit Streak Stats (Real authenticated data)
   const habitStreaks = habits.map((habit) => {
     const completedDates = new Set(habit.completedDates);
     let streak = 0;
@@ -335,62 +328,31 @@ export default function Dashboard() {
     }
     return streak;
   });
-  const bestStreak = habitStreaks.length > 0 ? Math.max(...habitStreaks, 7) : 7;
+  const bestStreak = habitStreaks.length > 0 ? Math.max(...habitStreaks) : 0;
 
-  // Goal Progress Stats
+  // Goal Progress Stats (Real authenticated data)
   const overallGoalProgress =
     goals.length > 0
       ? Math.round(goals.reduce((acc, g) => acc + (g.progress || 0), 0) / goals.length)
-      : 64;
+      : 0;
 
-  // Currently Reading Book
+  // Currently Reading Book (Real authenticated data)
   const readingBooks = books.filter((b) => b.status === "reading");
   const currentBook =
     readingBooks.length > 0
       ? readingBooks[0]
       : books.length > 0
       ? books[0]
-      : {
-          title: "Atomic Habits",
-          author: "James Clear",
-          cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80",
-          currentPage: 142,
-          totalPages: 320,
-        };
+      : null;
 
   const bookProgressPercent =
-    currentBook.totalPages && currentBook.totalPages > 0
+    currentBook && currentBook.totalPages && currentBook.totalPages > 0
       ? Math.round((currentBook.currentPage / currentBook.totalPages) * 100)
-      : 64;
+      : 0;
 
-  // Recent Memories sample or existing
-  const displayMemories =
-    memories.length > 0
-      ? memories.slice(0, 4)
-      : [
-          {
-            id: "m-1",
-            title: "Golden Hour Walk",
-            imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80",
-          },
-          {
-            id: "m-2",
-            title: "Coffee & Study",
-            imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&q=80",
-          },
-          {
-            id: "m-3",
-            title: "Mountain Trail",
-            imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500&q=80",
-          },
-          {
-            id: "m-4",
-            title: "Library Moments",
-            imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&q=80",
-          },
-        ];
-
-  const focusTasksList = tasks.length > 0 ? tasks.slice(0, 4) : defaultFocusTasks;
+  // Recent Memories (Real authenticated data)
+  const displayMemories = memories.slice(0, 4);
+  const focusTasksList = tasks.slice(0, 4);
 
   async function handleToggleTask(task: Task) {
     if (tasks.some((t) => t.id === task.id)) {
@@ -712,31 +674,31 @@ export default function Dashboard() {
             DYNAMIC DAILY MINDSET BANNER (FULL WIDTH HORIZONTAL HERO)
         ═══════════════════════════════════════════════════ */}
         <section className="mb-6">
-          <div className="relative overflow-hidden rounded-3xl bg-[#17151C] text-white p-6 sm:p-7 shadow-md border border-[#2D263B] group">
+          <div className="card-motivation relative overflow-hidden rounded-3xl p-6 sm:p-7 shadow-sm group">
             <div
-              className="absolute inset-0 bg-cover bg-center opacity-35 transition-all duration-700 group-hover:scale-105"
+              className="absolute inset-0 bg-cover bg-right sm:bg-center opacity-85 transition-all duration-700 group-hover:scale-105 pointer-events-none"
               style={{
                 backgroundImage: `url('${currentMindset.image}')`,
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/75 to-black/40" />
+            <div className="motivation-overlay absolute inset-0 transition-opacity duration-300 pointer-events-none" />
 
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-              <div className="max-w-3xl">
+              <div className="max-w-2xl">
                 <div className="flex items-center gap-2 mb-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#B8B3E8]">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#9E96D8]">
                     Daily Mindset
                   </span>
-                  <span className="text-white/40">•</span>
-                  <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[9px] font-semibold text-white/90">
+                  <span className="text-[#8D8792]">•</span>
+                  <span className="motivation-tag rounded-full px-2.5 py-0.5 text-[9px] font-semibold">
                     {currentMindset.tag}
                   </span>
                 </div>
 
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-white leading-snug drop-shadow-xs">
+                <h2 className="font-serif text-xl sm:text-2xl font-bold leading-snug">
                   "{currentMindset.quote}"
                 </h2>
-                <p className="mt-1.5 text-xs sm:text-sm text-white/80 font-normal leading-relaxed drop-shadow-xs">
+                <p className="mt-1.5 text-xs sm:text-sm font-normal opacity-85 leading-relaxed">
                   {currentMindset.supporting}
                 </p>
               </div>
@@ -745,10 +707,10 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => setMindsetIndex((prev) => prev + 1)}
-                  className="flex items-center gap-2 rounded-2xl bg-white/15 hover:bg-white/25 px-4 py-2 text-xs font-semibold text-white transition backdrop-blur-xs cursor-pointer active:scale-95 border border-white/10 shadow-2xs"
+                  className="motivation-btn flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-semibold transition backdrop-blur-xs cursor-pointer active:scale-95 shadow-2xs"
                   title="Shuffle next inspiration"
                 >
-                  <RotateCw size={13} />
+                  <RotateCw size={13} className="text-[#9E96D8]" />
                   <span>Next Quote</span>
                 </button>
               </div>
@@ -787,39 +749,53 @@ export default function Dashboard() {
               </div>
 
               {/* Task Checklist Items */}
-              <div className="space-y-2.5">
-                {focusTasksList.map((task) => (
-                  <div
-                    key={task.id}
-                    onClick={() => handleToggleTask(task)}
-                    className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 transition duration-200 cursor-pointer ${
-                      task.completed
-                        ? "bg-[#FAF8FC] border-[#E8E3F0]/60 opacity-60"
-                        : "bg-white border-[#E8E3F0] hover:border-[#9E96D8]/50 hover:bg-[#FAF8FC] shadow-2xs"
-                    }`}
+              {focusTasksList.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-4 text-center">
+                  <p className="text-xs font-medium text-[#8D8792]">No tasks planned for today</p>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerUniversalCreate("task")}
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#9E96D8] hover:underline cursor-pointer"
                   >
+                    <Plus size={12} />
+                    <span>Create your first task</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {focusTasksList.map((task) => (
                     <div
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition ${
+                      key={task.id}
+                      onClick={() => handleToggleTask(task)}
+                      className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 transition duration-200 cursor-pointer ${
                         task.completed
-                          ? "bg-[#9E96D8] border-[#9E96D8] text-white"
-                          : "border-[#DCD8F2] bg-white hover:border-[#9E96D8]"
+                          ? "bg-[#FAF8FC] border-[#E8E3F0]/60 opacity-60"
+                          : "bg-white border-[#E8E3F0] hover:border-[#9E96D8]/50 hover:bg-[#FAF8FC] shadow-2xs"
                       }`}
                     >
-                      {task.completed && <Check size={12} strokeWidth={3} />}
-                    </div>
+                      <div
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition ${
+                          task.completed
+                            ? "bg-[#9E96D8] border-[#9E96D8] text-white"
+                            : "border-[#DCD8F2] bg-white hover:border-[#9E96D8]"
+                        }`}
+                      >
+                        {task.completed && <Check size={12} strokeWidth={3} />}
+                      </div>
 
-                    <span
-                      className={`text-xs font-medium truncate min-w-0 flex-1 ${
-                        task.completed
-                          ? "line-through text-[#8D8792]"
-                          : "text-[#17151C]"
-                      }`}
-                    >
-                      {task.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                      <span
+                        className={`text-xs font-medium truncate min-w-0 flex-1 ${
+                          task.completed
+                            ? "line-through text-[#8D8792]"
+                            : "text-[#17151C]"
+                        }`}
+                      >
+                        {task.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Add Task Button */}
               <button
@@ -830,6 +806,75 @@ export default function Dashboard() {
                 <Plus size={14} />
                 <span>Add task</span>
               </button>
+            </Card>
+
+            {/* CARD: TODAY'S SCHEDULE / TIMETABLE */}
+            <Card
+              variant="glass"
+              hoverEffect
+              className="p-5 border-[#E8E3F0] bg-white/95 rounded-3xl shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">⏱️</span>
+                  <h2 className="font-serif text-lg font-bold text-[#17151C]">
+                    Today's Schedule
+                  </h2>
+                </div>
+                <Link
+                  to="/planner"
+                  className="text-xs font-semibold text-[#9E96D8] hover:text-[#7A70C2] flex items-center gap-1 transition"
+                >
+                  <span>See planner</span>
+                  <span>→</span>
+                </Link>
+              </div>
+
+              {scheduleBlocks.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-4 text-center">
+                  <p className="text-xs font-medium text-[#8D8792]">
+                    No time blocks planned for today
+                  </p>
+                  <Link
+                    to="/planner"
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#9E96D8] hover:underline"
+                  >
+                    <Plus size={12} />
+                    <span>Plan your day</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {scheduleBlocks.slice(0, 3).map((block) => (
+                    <div
+                      key={block.id}
+                      className="flex items-center gap-3 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-2.5 shadow-2xs"
+                    >
+                      <span className="rounded-xl bg-[#EEEAFE] px-2.5 py-1 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2] shrink-0">
+                        {block.time}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#17151C] truncate">
+                          {block.title}
+                        </p>
+                        {block.category && (
+                          <p className="text-[10px] text-[#8D8792] truncate">
+                            {block.category}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {scheduleBlocks.length > 3 && (
+                    <Link
+                      to="/planner"
+                      className="block text-center text-[11px] font-semibold text-[#9E96D8] hover:underline pt-1"
+                    >
+                      +{scheduleBlocks.length - 3} more blocks in Planner →
+                    </Link>
+                  )}
+                </div>
+              )}
             </Card>
 
             {/* CARD: UPCOMING */}
@@ -929,61 +974,69 @@ export default function Dashboard() {
                     </Link>
                   </div>
 
-                  <div className="flex items-center gap-3.5">
-                    {/* Book Thumbnail */}
-                    <img
-                      src={currentBook.cover || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80"}
-                      alt={currentBook.title}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80";
-                      }}
-                      className="h-24 w-17 rounded-xl object-cover shadow-sm border border-black/5 shrink-0"
-                    />
+                  {currentBook ? (
+                    <div className="flex items-center gap-3.5">
+                      {/* Book Thumbnail */}
+                      <img
+                        src={currentBook.cover || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80"}
+                        alt={currentBook.title}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&q=80";
+                        }}
+                        className="h-24 w-17 rounded-xl object-cover shadow-sm border border-black/5 shrink-0"
+                      />
 
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-serif text-sm font-bold text-[#17151C] truncate">
-                        {currentBook.title}
-                      </h3>
-                      <p className="text-[11px] font-medium text-[#5F5965] truncate">
-                        {currentBook.author}
-                      </p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-serif text-sm font-bold text-[#17151C] truncate">
+                          {currentBook.title}
+                        </h3>
+                        <p className="text-[11px] font-medium text-[#5F5965] truncate">
+                          {currentBook.author}
+                        </p>
 
-                      {/* Progress Bar */}
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-[10px] font-semibold text-[#8D8792] mb-1">
-                          <span>Progress</span>
-                          <span>{bookProgressPercent}%</span>
-                        </div>
-                        <div className="h-1.5 overflow-hidden rounded-full bg-[#EEEAFE]">
-                          <div
-                            className="h-full rounded-full bg-[#9E96D8]"
-                            style={{ width: `${bookProgressPercent}%` }}
-                          />
+                        {/* Progress Bar */}
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-[10px] font-semibold text-[#8D8792] mb-1">
+                            <span>Progress</span>
+                            <span>{bookProgressPercent}%</span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-[#EEEAFE]">
+                            <div
+                              className="h-full rounded-full bg-[#9E96D8]"
+                              style={{ width: `${bookProgressPercent}%` }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-4 text-center">
+                      <BookOpen size={20} className="mx-auto text-[#9E96D8] mb-1 opacity-70" />
+                      <p className="text-xs font-bold text-[#17151C]">No active book</p>
+                      <p className="text-[11px] text-[#8D8792] mt-0.5">Track what you're reading & page progress</p>
+                    </div>
+                  )}
                 </div>
 
                 <Link
                   to="/reading"
                   className="mt-4 flex w-full items-center justify-center rounded-xl bg-[#EEEAFE] py-2 text-xs font-semibold text-[#6B5BA5] hover:bg-[#DDD8F2] border border-[#DDD8F2] transition"
                 >
-                  Continue Reading
+                  {currentBook ? "Continue Reading" : "Open Bookshelf"}
                 </Link>
               </Card>
 
-              {/* NOW PLAYING CARD (SPOTIFY READY AESTHETIC) */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1F232B] to-[#121418] text-white p-5 shadow-sm border border-[#2F3542] flex flex-col justify-between group">
+              {/* NOW PLAYING CARD (SPOTIFY READY AESTHETIC & THEME ADAPTIVE) */}
+              <div className="card-spotify relative overflow-hidden rounded-3xl p-5 shadow-sm flex flex-col justify-between group">
                 <div>
                   <div className="flex items-center justify-between mb-3.5">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold text-white/90">
+                      <span className="text-xs font-semibold text-[#17151C]">
                         Now Playing
                       </span>
                       {spotify.isConnected() && (
-                        <span className="rounded-full bg-[#1DB954]/20 text-[#1DB954] border border-[#1DB954]/40 px-2 py-0.5 text-[9px] font-bold">
+                        <span className="rounded-full bg-[#1DB954]/15 text-[#1DB954] border border-[#1DB954]/30 px-2 py-0.5 text-[9px] font-bold">
                           Spotify
                         </span>
                       )}
@@ -1010,21 +1063,21 @@ export default function Dashboard() {
                         (e.target as HTMLImageElement).src =
                           "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=200&q=80";
                       }}
-                      className="h-16 w-16 rounded-xl object-cover shadow-sm shrink-0 border border-white/10"
+                      className="h-16 w-16 rounded-xl object-cover shadow-sm shrink-0 border border-black/5"
                     />
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-white truncate">
+                          <p className="text-sm font-bold text-[#17151C] truncate">
                             {spotifyTrack?.name || "Snooze"}
                           </p>
-                          <p className="text-xs text-white/60 truncate">
+                          <p className="text-xs text-[#5F5965] truncate">
                             {spotifyTrack?.artist || "SZA"}
                           </p>
                         </div>
 
-                        <div className="h-6 w-6 rounded-full bg-[#1DB954] flex items-center justify-center text-black shrink-0">
+                        <div className="h-6 w-6 rounded-full bg-[#1DB954] flex items-center justify-center text-white shrink-0 shadow-2xs">
                           <Headphones size={13} />
                         </div>
                       </div>
@@ -1033,11 +1086,11 @@ export default function Dashboard() {
                 </div>
 
                 {/* Audio Controls */}
-                <div className="mt-4 flex items-center justify-between pt-2 border-t border-white/10">
+                <div className="mt-4 flex items-center justify-between pt-2 border-t border-[#E8E3F0]">
                   <button
                     type="button"
                     onClick={() => setIsLikedSong(!isLikedSong)}
-                    className="text-white/70 hover:text-[#D99BB8] transition cursor-pointer"
+                    className="text-[#8D8792] hover:text-[#D99BB8] transition cursor-pointer"
                   >
                     <Heart
                       size={16}
@@ -1048,7 +1101,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      className="text-white/70 hover:text-white transition cursor-pointer"
+                      className="text-[#8D8792] hover:text-[#17151C] transition cursor-pointer"
                     >
                       <SkipBack size={15} />
                     </button>
@@ -1056,20 +1109,20 @@ export default function Dashboard() {
                     <button
                       type="button"
                       onClick={() => setIsPlaying(!isPlaying)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#17151C] hover:scale-105 transition cursor-pointer"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-[#17151C] text-white hover:scale-105 transition cursor-pointer shadow-2xs"
                     >
                       {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
                     </button>
 
                     <button
                       type="button"
-                      className="text-white/70 hover:text-white transition cursor-pointer"
+                      className="text-[#8D8792] hover:text-[#17151C] transition cursor-pointer"
                     >
                       <SkipForward size={15} />
                     </button>
                   </div>
 
-                  <Link to="/music" className="text-white/50 hover:text-white transition" title="Focus Music">
+                  <Link to="/music" className="text-[#8D8792] hover:text-[#17151C] transition" title="Focus Music">
                     <MoreHorizontal size={16} />
                   </Link>
                 </div>
@@ -1099,30 +1152,38 @@ export default function Dashboard() {
                   </div>
 
                   {/* Photos Row */}
-                  <div className="grid grid-cols-4 gap-2">
-                    {displayMemories.map((mem, idx) => (
-                      <Link
-                        key={mem.id}
-                        to="/memories"
-                        className="group relative h-24 overflow-hidden rounded-2xl border border-black/5 bg-[#FAF8FC]"
-                      >
-                        <img
-                          src={mem.imageUrl}
-                          alt={mem.title}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80";
-                          }}
-                          className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
-                        />
-                        {idx === 3 && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-bold">
-                            +12
-                          </div>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
+                  {displayMemories.length > 0 ? (
+                    <div className="grid grid-cols-4 gap-2">
+                      {displayMemories.map((mem, idx) => (
+                        <Link
+                          key={mem.id}
+                          to="/memories"
+                          className="group relative h-24 overflow-hidden rounded-2xl border border-black/5 bg-[#FAF8FC]"
+                        >
+                          <img
+                            src={mem.imageUrl}
+                            alt={mem.title}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80";
+                            }}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
+                          />
+                          {idx === 3 && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-bold">
+                              +12
+                            </div>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-4 text-center">
+                      <Camera size={20} className="mx-auto text-[#9E96D8] mb-1 opacity-70" />
+                      <p className="text-xs font-bold text-[#17151C]">No memories yet</p>
+                      <p className="text-[11px] text-[#8D8792] mt-0.5">Capture daily moments and polaroids</p>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -1244,97 +1305,77 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                {(friendsFeed.length > 0
-                  ? friendsFeed.slice(0, 4)
-                  : [
-                      {
-                        id: "f-1",
-                        authorName: "Aarav",
-                        time: "2h ago",
-                        authorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80",
-                        imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80",
-                      },
-                      {
-                        id: "f-2",
-                        authorName: "Meera",
-                        time: "5h ago",
-                        authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
-                        imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80",
-                      },
-                      {
-                        id: "f-3",
-                        authorName: "Rohan",
-                        time: "1d ago",
-                        authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80",
-                        imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&q=80",
-                      },
-                      {
-                        id: "f-4",
-                        authorName: "Isha",
-                        time: "2d ago",
-                        authorAvatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&q=80",
-                        imageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&q=80",
-                      },
-                    ]
-                ).map((friend: any, index: number) => {
-                  const name = friend.authorName || friend.name || "Friend";
-                  const avatar =
-                    friend.authorAvatar ||
-                    friend.avatar ||
-                    `https://images.unsplash.com/photo-${1534528741775 + index}?w=150&q=80`;
-                  const memoryImg = friend.imageUrl || friend.image_url;
+              {friendsFeed.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {friendsFeed.slice(0, 4).map((friend: any) => {
+                    const name = friend.authorName || friend.name || "Friend";
+                    const avatar =
+                      friend.authorAvatar ||
+                      friend.avatar ||
+                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80";
+                    const memoryImg = friend.imageUrl || friend.image_url;
 
-                  return (
-                    <Link
-                      key={friend.id || name}
-                      to="/friends"
-                      className="flex items-center gap-2.5 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-2.5 hover:border-[#9E96D8]/50 hover:bg-[#F4F0FB] transition group shadow-2xs min-w-0"
-                    >
-                      <div className="relative shrink-0">
-                        <img
-                          src={avatar}
-                          alt={name}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80";
-                          }}
-                          className="h-9 w-9 rounded-full object-cover border-2 border-white shadow-2xs group-hover:scale-105 transition"
-                        />
-                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#528D6F] ring-1.5 ring-white" />
-                      </div>
+                    return (
+                      <Link
+                        key={friend.id || name}
+                        to="/friends"
+                        className="flex items-center gap-2.5 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-2.5 hover:border-[#9E96D8]/50 hover:bg-[#F4F0FB] transition group shadow-2xs min-w-0"
+                      >
+                        <div className="relative shrink-0">
+                          <img
+                            src={avatar}
+                            alt={name}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80";
+                            }}
+                            className="h-9 w-9 rounded-full object-cover border-2 border-white shadow-2xs group-hover:scale-105 transition"
+                          />
+                          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#528D6F] ring-1.5 ring-white" />
+                        </div>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-[#17151C] leading-tight truncate">
-                          {name}
-                        </p>
-                        <p className="text-[10px] text-[#8D8792] truncate mt-0.5">
-                          {friend.time || "Recent"}
-                        </p>
-                      </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-[#17151C] leading-tight truncate">
+                            {name}
+                          </p>
+                          <p className="text-[10px] text-[#8D8792] truncate mt-0.5">
+                            {friend.time || "Recent"}
+                          </p>
+                        </div>
 
-                      {memoryImg && (
-                        <img
-                          src={memoryImg}
-                          alt="preview"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                          className="h-8 w-8 rounded-lg object-cover shrink-0 border border-black/5"
-                        />
-                      )}
-                    </Link>
-                  );
-                })}
+                        {memoryImg && (
+                          <img
+                            src={memoryImg}
+                            alt="preview"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                            className="h-8 w-8 rounded-lg object-cover shrink-0 border border-black/5"
+                          />
+                        )}
+                      </Link>
+                    );
+                  })}
 
-                <Link
-                  to="/friends"
-                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-2.5 text-xs font-semibold text-[#6B5BA5] hover:bg-[#EEEAFE] hover:text-[#17151C] hover:border-[#9E96D8] transition shadow-2xs group text-center"
-                >
-                  <span>Open Feed</span>
-                  <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-                </Link>
-              </div>
+                  <Link
+                    to="/friends"
+                    className="flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-2.5 text-xs font-semibold text-[#6B5BA5] hover:bg-[#EEEAFE] hover:text-[#17151C] hover:border-[#9E96D8] transition shadow-2xs group text-center"
+                  >
+                    <span>Open Feed</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform">→</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-4 text-center">
+                  <p className="text-xs font-medium text-[#8D8792]">No shared memories from friends yet</p>
+                  <Link
+                    to="/friends"
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#9E96D8] hover:underline"
+                  >
+                    <span>Visit Friends circle →</span>
+                  </Link>
+                </div>
+              )}
             </Card>
           </div>
         </div>

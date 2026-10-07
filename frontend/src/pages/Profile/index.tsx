@@ -1555,6 +1555,7 @@ export default function Profile() {
                       font-bold
                       tracking-tight
                       text-[#17151C]
+                      dark:text-[#F3EFF8]
                       sm:text-4xl
                     "
                   >
@@ -1575,99 +1576,46 @@ export default function Profile() {
                       rounded-full
                       border
                       border-[#DDD8F2]
+                      dark:border-[#584D7A]
                       bg-[#EEEAFE]
+                      dark:bg-[#3D3456]
                       px-2.5
                       py-1
                       text-[11px]
                       font-bold
-                      text-[#6B5BA5]
+                      text-[#554394]
+                      dark:text-[#E2DEEA]
                     "
                   >
                     @{profile.username}
                   </span>
                 </div>
 
-                <p
-                  className="
-                    mt-1.5
-                    max-w-2xl
-                    text-sm
-                    leading-relaxed
-                    text-white
-                    drop-shadow-[0_1px_5px_rgba(0,0,0,0.75)]
-                  "
-                >
+                <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#2D263B] dark:text-[#E2DEEA] font-normal">
                   {profile.bio}
                 </p>
 
-                <div
-                  className="
-                    mt-2.5
-                    flex
-                    flex-wrap
-                    items-center
-                    gap-x-3
-                    gap-y-1.5
-                    text-[11px]
-                    text-white/75
-                    drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]
-                  "
-                >
-                  <span
-                    className="
-                      flex
-                      items-center
-                      gap-1.5
-                    "
-                  >
-                    <Calendar
-                      size={13}
-                      className="text-[#BDB5FF]"
-                    />
-
-                    Member since{" "}
-                    {profile.joinedDate}
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-[#524B5C] dark:text-[#B2AABF]">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Calendar size={13} className="text-[#9E96D8]" />
+                    Member since {profile.joinedDate}
                   </span>
 
-                  <span className="hidden sm:inline">
-                    •
-                  </span>
+                  <span className="hidden sm:inline text-[#DDD8F2] dark:text-[#4A3E65]">•</span>
 
-                  <span
-                    className="
-                      flex
-                      items-center
-                      gap-1.5
-                      text-white/85
-                    "
-                  >
-                    <Shield
-                      size={13}
-                      className="text-[#73C79B]"
-                    />
-
+                  <span className="flex items-center gap-1.5 text-[#2F6B4D] dark:text-[#7BE0B8] font-semibold">
+                    <Shield size={13} className="text-[#3E7D5C] dark:text-[#7BE0B8]" />
                     Private Vault Protected
                   </span>
 
                   {profile.avatarUrl && (
                     <>
-                      <span className="hidden sm:inline">
-                        •
-                      </span>
+                      <span className="hidden sm:inline text-[#DDD8F2] dark:text-[#4A3E65]">•</span>
 
                       <button
                         type="button"
-                        onClick={
-                          handleRemoveAvatar
-                        }
-                        className="
-                          text-[11px]
-                          font-medium
-                          text-[#F0B5CF]
-                          drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]
-                          hover:underline
-                          cursor-pointer
-                        "
+                        onClick={handleRemoveAvatar}
+                        className="text-[11px] font-semibold text-[#B83E6A] dark:text-[#F0B5CF] hover:underline cursor-pointer transition"
                       >
                         Remove photo
                       </button>
@@ -1699,12 +1647,15 @@ export default function Profile() {
                       rounded-full
                       border
                       border-[#E8E3F0]
-                      bg-white/80
+                      dark:border-[#3D3550]
+                      bg-white/90
+                      dark:bg-[#252033]
                       px-3
                       py-1.5
                       text-[11px]
                       font-medium
-                      text-[#5F5965]
+                      text-[#3D3747]
+                      dark:text-[#DDD8F2]
                       shadow-2xs
                     "
                   >
@@ -2101,7 +2052,8 @@ export default function Profile() {
                 className="
                   text-sm
                   leading-7
-                  text-[#5F5965]
+                  text-[#2D263B]
+                  dark:text-[#E2DEEA]
                 "
               >
                 {profile.bio}
@@ -2115,7 +2067,8 @@ export default function Profile() {
                     font-bold
                     uppercase
                     tracking-wider
-                    text-[#8D8792]
+                    text-[#524B5C]
+                    dark:text-[#A7A0B5]
                   "
                 >
                   Interests
@@ -2130,12 +2083,15 @@ export default function Profile() {
                           rounded-xl
                           border
                           border-[#E8E3F0]
+                          dark:border-[#3D3550]
                           bg-[#FAF8FC]
+                          dark:bg-[#252033]
                           px-3
                           py-1.5
                           text-xs
                           font-medium
-                          text-[#5F5965]
+                          text-[#3D3747]
+                          dark:text-[#DDD8F2]
                         "
                       >
                         {interest}

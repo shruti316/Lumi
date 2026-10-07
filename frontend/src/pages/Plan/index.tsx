@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   CheckSquare,
   CalendarDays,
@@ -325,6 +326,17 @@ export default function Plan() {
                 {blocks.length}
               </span>
             </button>
+
+            <Link
+              to="/focus"
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-[#5F5965] hover:text-[#17151C] transition cursor-pointer"
+            >
+              <Clock size={15} className="text-[#9E96D8]" />
+              <span>Focus Time</span>
+              <span className="rounded-full bg-[#EEEAFE] px-2 py-0.5 text-[10px] font-bold text-[#6B5BA5] border border-[#DDD8F2]">
+                Pomodoro
+              </span>
+            </Link>
           </div>
         </div>
 

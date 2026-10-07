@@ -92,7 +92,7 @@ export function UniversalCreateModal({
 
   // Habit
   const [habitName, setHabitName] = useState(initialText);
-  const [habitEmoji, setHabitEmoji] = useState("✨");
+  const [habitEmoji, setHabitEmoji] = useState("💧");
 
   // Reading
   const [bookTitle, setBookTitle] = useState(initialText);
@@ -307,8 +307,10 @@ export function UniversalCreateModal({
     setErrorMessage(null);
     const { data, error } = await api.habits.create({
       name: habitName.trim(),
-      emoji: habitEmoji || "✨",
-      targetDays: 7,
+      emoji: habitEmoji || "🌱",
+      icon: habitEmoji || "🌱",
+      category: "Daily",
+      targetDaysPerWeek: 7,
       frequency: "daily",
     });
     setIsSubmitting(false);
@@ -399,9 +401,9 @@ export function UniversalCreateModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17151C]/45 backdrop-blur-md p-4 lumi-animate-fade-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#17151C]/45 backdrop-blur-md p-3 sm:p-4 lumi-animate-fade-up">
       <div
-        className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-[#E8E3F0] bg-white p-6 shadow-2xl transition-all"
+        className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl border border-[#E8E3F0] bg-white p-4 sm:p-6 shadow-2xl transition-all scrollbar-thin"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -938,15 +940,68 @@ export function UniversalCreateModal({
 
             <div>
               <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Photo URL (or choose aesthetic default)
+                Photo Media / Upload (Up to 50MB)
               </label>
-              <input
-                type="text"
-                placeholder="https://images.unsplash.com/photo-..."
-                value={memoryImage}
-                onChange={(e) => setMemoryImage(e.target.value)}
-                className="w-full rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
-              />
+              <div className="space-y-2">
+                <label className="flex flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-[#DDD8F2] bg-[#FAF8FC] hover:bg-[#EEEAFE]/50 hover:border-[#9E96D8] p-3.5 text-center transition cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (!file.type.startsWith("image/")) {
+                        setErrorMessage("Please select an image file.");
+                        return;
+                      }
+                      if (file.size > 50 * 1024 * 1024) {
+                        setErrorMessage("File exceeds 50MB limit. Please choose a smaller file.");
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => setMemoryImage(reader.result as string);
+                      reader.onerror = () => setErrorMessage("Could not process this file.");
+                      reader.readAsDataURL(file);
+                    }}
+                    className="hidden"
+                  />
+                  <Camera size={18} className="text-[#9E96D8]" />
+                  <span className="text-xs font-semibold text-[#5F5965]">
+                    Click or drag image to upload
+                  </span>
+                  <span className="text-[10px] text-[#8D8792]">
+                    Supports JPG, PNG, WEBP, GIF, SVG (Max 50MB)
+                  </span>
+                </label>
+
+                {memoryImage && (
+                  <div className="relative h-28 w-full rounded-2xl overflow-hidden border border-[#E8E3F0] bg-black/5">
+                    <img
+                      src={memoryImage}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setMemoryImage("")}
+                      className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white hover:bg-black transition cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase font-bold text-[#8D8792]">or URL:</span>
+                  <input
+                    type="text"
+                    placeholder="https://images.unsplash.com/photo-..."
+                    value={memoryImage.startsWith("data:") ? "" : memoryImage}
+                    onChange={(e) => setMemoryImage(e.target.value)}
+                    className="flex-1 rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3 py-1.5 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* 2. DETAILS */}
@@ -1108,18 +1163,23 @@ export function UniversalCreateModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#17151C] mb-1">
-                Icon / Emoji
-              </label>
-              <div className="flex gap-2">
-                {["🏃🏻‍♀️", "📖", "💧", "🧘🏻‍♀️", "✍️", "🥗", "✨"].map((em) => (
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-[#17151C]">
+                  Habit Icon / Emoji
+                </label>
+                <span className="text-xs font-medium text-[#5F5965] flex items-center gap-1">
+                  Selected: <span className="text-base">{habitEmoji}</span>
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {["💧", "📚", "🏃", "🧘", "💻", "🥗", "😴", "✍️", "🌱", "🎧", "☀️", "🍵", "🎯", "✨"].map((em) => (
                   <button
                     key={em}
                     type="button"
                     onClick={() => setHabitEmoji(em)}
                     className={`h-9 w-9 rounded-xl text-base flex items-center justify-center transition cursor-pointer ${
                       habitEmoji === em
-                        ? "bg-[#EEEAFE] border border-[#DDD8F2] scale-110 shadow-2xs"
+                        ? "bg-[#EEEAFE] border border-[#9E96D8] scale-110 shadow-2xs"
                         : "bg-[#FAF8FC] border border-[#E8E3F0] hover:bg-white"
                     }`}
                   >

@@ -15,6 +15,8 @@ import {
   Smile,
   ShieldCheck,
   CheckCheck,
+  ChevronLeft,
+  User,
 } from "lucide-react";
 import { Card } from "../../components/ui/Card";
 import { Modal } from "../../components/ui/Modal";
@@ -352,6 +354,7 @@ export default function Friends() {
   const [addedFriendToast, setAddedFriendToast] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<FriendProfile | null>(null);
   const [cheeredToast, setCheeredToast] = useState(false);
+  const [mobileViewChat, setMobileViewChat] = useState(false);
 
   // Chat message composition & media
   const [chatInputText, setChatInputText] = useState("");
@@ -602,6 +605,7 @@ export default function Friends() {
     }
 
     setSelectedProfile(null);
+    setMobileViewChat(true);
     setActiveTab("messages");
   }
 
@@ -1029,10 +1033,10 @@ export default function Friends() {
             TAB 3: 💬 1-TO-1 MESSAGING & CHAT SYSTEM
         ========================================================= */}
         {activeTab === "messages" && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 rounded-3xl border border-[#E8E3F0] bg-white/95 p-3 shadow-lg min-h-[560px]">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 rounded-3xl border border-[#E8E3F0] bg-white/95 p-3 sm:p-4 shadow-lg min-h-[560px]">
             
             {/* Conversations Sidebar List (Left 4 cols) */}
-            <div className="md:col-span-4 border-r border-[#E8E3F0] pr-2 space-y-2">
+            <div className={`md:col-span-4 border-r border-[#E8E3F0] pr-1 sm:pr-2 space-y-2 ${mobileViewChat ? "hidden md:block" : "block"}`}>
               <div className="p-2 border-b border-[#E8E3F0]">
                 <h3 className="font-serif text-base font-bold text-[#17151C]">Direct Messages</h3>
                 <p className="text-[11px] text-[#8D8792]">Private chats with accepted friends</p>
@@ -1050,6 +1054,7 @@ export default function Friends() {
                       type="button"
                       onClick={() => {
                         setActiveConvId(conv.id);
+                        setMobileViewChat(true);
                         // Clear unread
                         setConversations((prev) =>
                           prev.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c))
@@ -1096,50 +1101,64 @@ export default function Friends() {
             </div>
 
             {/* Active Chat Conversation (Right 8 cols) */}
-            <div className="md:col-span-8 flex flex-col justify-between pl-1">
+            <div className={`md:col-span-8 flex flex-col justify-between pl-0 sm:pl-1 min-w-0 ${mobileViewChat ? "flex" : "hidden md:flex"}`}>
               {activeFriend && activeConversation ? (
                 <>
                   {/* Chat Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-[#E8E3F0] px-3">
-                    <div
-                      className="flex items-center gap-3 cursor-pointer"
-                      onClick={() => setSelectedProfile(activeFriend)}
-                    >
-                      <div className="relative">
-                        <img
-                          src={activeFriend.avatar}
-                          alt={activeFriend.name}
-                          className="h-10 w-10 rounded-full object-cover border border-[#DDD8F2]"
-                        />
-                        {activeFriend.online && (
-                          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#528D6F] border-2 border-white" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-serif font-bold text-sm text-[#17151C] flex items-center gap-2">
-                          <span>{activeFriend.name}</span>
-                          <span className="text-[11px] font-normal text-[#8D8792]">
-                            {activeFriend.handle}
-                          </span>
-                        </h3>
-                        <p className="text-[10px] text-[#528D6F] font-medium flex items-center gap-1">
-                          <Sparkles size={10} />
-                          <span>{activeFriend.online ? "Online • " + activeFriend.status : "Offline"}</span>
-                        </p>
+                  <div className="flex items-center justify-between pb-3 border-b border-[#E8E3F0] px-1 sm:px-3 gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => setMobileViewChat(false)}
+                        className="md:hidden flex items-center gap-1 rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-2.5 py-1.5 text-xs font-semibold text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0"
+                        title="Back to conversations list"
+                      >
+                        <ChevronLeft size={15} />
+                        <span className="text-xs">Chats</span>
+                      </button>
+
+                      <div
+                        className="flex items-center gap-2.5 cursor-pointer min-w-0 flex-1"
+                        onClick={() => setSelectedProfile(activeFriend)}
+                      >
+                        <div className="relative shrink-0">
+                          <img
+                            src={activeFriend.avatar}
+                            alt={activeFriend.name}
+                            className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover border border-[#DDD8F2]"
+                          />
+                          {activeFriend.online && (
+                            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-[#528D6F] border-2 border-white" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-serif font-bold text-xs sm:text-sm text-[#17151C] flex items-center gap-1.5 truncate">
+                            <span className="truncate">{activeFriend.name}</span>
+                            <span className="hidden sm:inline text-[11px] font-normal text-[#8D8792] truncate">
+                              {activeFriend.handle}
+                            </span>
+                          </h3>
+                          <p className="text-[10px] text-[#528D6F] font-medium flex items-center gap-1 truncate">
+                            <Sparkles size={10} className="shrink-0" />
+                            <span className="truncate">{activeFriend.online ? "Online • " + activeFriend.status : "Offline"}</span>
+                          </p>
+                        </div>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => setSelectedProfile(activeFriend)}
-                      className="rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-3 py-1.5 text-xs font-semibold text-[#5F5965] hover:bg-white transition cursor-pointer"
+                      className="rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0 flex items-center gap-1"
                     >
-                      View Profile
+                      <User size={13} className="sm:hidden" />
+                      <span className="hidden sm:inline">View Profile</span>
+                      <span className="sm:hidden">Profile</span>
                     </button>
                   </div>
 
                   {/* Message Stream */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[380px] scrollbar-thin">
+                  <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 max-h-[380px] sm:max-h-[420px] scrollbar-thin">
                     <div className="text-center my-1">
                       <span className="rounded-full bg-[#FAF8FC] border border-[#E8E3F0] px-3 py-1 text-[10px] font-semibold text-[#8D8792]">
                         🔒 End-to-end private chat with {activeFriend.name}
@@ -1152,7 +1171,7 @@ export default function Friends() {
                       return (
                         <div
                           key={msg.id}
-                          className={`flex items-end gap-2 group ${isMe ? "justify-end" : "justify-start"}`}
+                          className={`flex items-end gap-1.5 sm:gap-2 group ${isMe ? "justify-end" : "justify-start"}`}
                         >
                           {!isMe && (
                             <img
@@ -1162,9 +1181,9 @@ export default function Friends() {
                             />
                           )}
 
-                          <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[78%]`}>
+                          <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[85%] sm:max-w-[78%]`}>
                             <div
-                              className={`relative rounded-2xl p-3 shadow-2xs ${
+                              className={`relative rounded-2xl p-2.5 sm:p-3 shadow-2xs ${
                                 isMe
                                   ? "bg-[#17151C] text-white rounded-br-xs"
                                   : "bg-[#FAF8FC] border border-[#E8E3F0] text-[#17151C] rounded-bl-xs"
@@ -1178,7 +1197,7 @@ export default function Friends() {
                                   className="rounded-xl mb-2 max-h-52 w-full object-cover cursor-pointer hover:opacity-95 transition"
                                 />
                               )}
-                              <p className="text-xs leading-relaxed whitespace-pre-wrap select-text">{msg.text}</p>
+                              <p className="text-xs leading-relaxed whitespace-pre-wrap select-text break-words">{msg.text}</p>
 
                               {/* Reaction Pills on Bubble */}
                               {msg.reactions && msg.reactions.length > 0 && (
@@ -1234,7 +1253,7 @@ export default function Friends() {
 
                   {/* Attachment Preview Bar */}
                   {attachmentPreview && (
-                    <div className="p-2 px-4 border-t border-[#E8E3F0] bg-[#FAF8FC] flex items-center justify-between lumi-animate-fade-up">
+                    <div className="p-2 px-3 sm:px-4 border-t border-[#E8E3F0] bg-[#FAF8FC] flex items-center justify-between lumi-animate-fade-up">
                       <div className="flex items-center gap-2">
                         <img
                           src={attachmentPreview}
@@ -1277,7 +1296,7 @@ export default function Friends() {
                   {/* Chat Composer */}
                   <form
                     onSubmit={handleSendMessage}
-                    className="p-3 border-t border-[#E8E3F0] flex items-center gap-2"
+                    className="p-2 sm:p-3 border-t border-[#E8E3F0] flex items-center gap-1.5 sm:gap-2"
                   >
                     <input
                       type="file"
@@ -1299,7 +1318,7 @@ export default function Friends() {
                     <button
                       type="button"
                       onClick={() => chatFileInputRef.current?.click()}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0"
+                      className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0 text-sm"
                       title="Attach photo"
                     >
                       📷
@@ -1308,7 +1327,7 @@ export default function Friends() {
                     <button
                       type="button"
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0"
+                      className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-[#E8E3F0] bg-[#FAF8FC] text-[#5F5965] hover:bg-white transition cursor-pointer shrink-0"
                       title="Add sticker or emoji"
                     >
                       <Smile size={16} />
@@ -1316,7 +1335,7 @@ export default function Friends() {
 
                     <input
                       type="text"
-                      placeholder={`Write a message to ${activeFriend.name}... (Press Enter to send)`}
+                      placeholder={`Message ${activeFriend.name}...`}
                       value={chatInputText}
                       onChange={(e) => setChatInputText(e.target.value)}
                       onKeyDown={(e) => {
@@ -1325,13 +1344,13 @@ export default function Friends() {
                           handleSendMessage();
                         }
                       }}
-                      className="flex-1 rounded-xl border border-[#E8E3F0] bg-white px-3.5 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs"
+                      className="flex-1 rounded-xl border border-[#E8E3F0] bg-white px-3 py-2 text-xs font-medium text-[#17151C] focus:border-[#9E96D8] outline-none shadow-2xs min-w-0"
                     />
 
                     <button
                       type="submit"
                       disabled={!chatInputText.trim() && !attachmentPreview}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#17151C] text-white hover:bg-[#2D263B] disabled:opacity-40 transition cursor-pointer shadow-2xs shrink-0"
+                      className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-[#17151C] text-white hover:bg-[#2D263B] disabled:opacity-40 transition cursor-pointer shadow-2xs shrink-0"
                     >
                       <Send size={14} />
                     </button>

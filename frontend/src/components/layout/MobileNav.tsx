@@ -142,7 +142,7 @@ export function MobileNav({
             type="button"
             onClick={() => onNavigate("/plan")}
             className={`flex min-w-12 flex-col items-center gap-1 rounded-xl px-2 py-1 text-[10px] font-medium transition cursor-pointer ${
-              currentPath === "/plan" || currentPath === "/tasks" || currentPath === "/planner"
+              currentPath === "/plan" || currentPath === "/tasks" || currentPath === "/planner" || currentPath === "/focus"
                 ? "text-[#17151C] font-semibold"
                 : "text-[#8D8792] hover:text-[#17151C]"
             }`}
@@ -150,7 +150,7 @@ export function MobileNav({
             <CalendarDays
               size={18}
               className={
-                currentPath === "/plan" || currentPath === "/tasks" || currentPath === "/planner"
+                currentPath === "/plan" || currentPath === "/tasks" || currentPath === "/planner" || currentPath === "/focus"
                   ? "text-[#9E96D8]"
                   : "text-[#8D8792]"
               }

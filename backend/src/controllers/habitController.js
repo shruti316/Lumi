@@ -20,7 +20,7 @@ async function getHabits(req, res) {
 async function createHabit(req, res) {
   try {
     const userId = req.user.id;
-    const { name, category, icon, color, targetDaysPerWeek } = req.body;
+    const { name, category, icon, emoji, color, targetDaysPerWeek } = req.body;
 
     if (!name || typeof name !== "string" || !name.trim()) {
       return res.status(400).json({ error: "Habit name is required" });
@@ -30,7 +30,7 @@ async function createHabit(req, res) {
       userId,
       name,
       category,
-      icon,
+      icon: icon || emoji || "🌱",
       color,
       targetDaysPerWeek,
     });

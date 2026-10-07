@@ -90,6 +90,12 @@ function calculateStreak(habit: Habit) {
   return streak;
 }
 
+function normalizeHabitEmoji(val?: string) {
+  if (!val) return "🌱";
+  if (val === "Sparkles") return "✨";
+  return val;
+}
+
 export default function Habits() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +110,7 @@ export default function Habits() {
       setHabits(
         data.habits.map((h: any) => ({
           ...h,
-          emoji: h.icon || h.emoji || "🌱",
+          emoji: normalizeHabitEmoji(h.icon || h.emoji),
           completedDates: h.completedDates || [],
         }))
       );
@@ -164,7 +170,7 @@ export default function Habits() {
       setHabits((prev) => [
         {
           ...data.habit,
-          emoji: data.habit.icon || emoji || "🌱",
+          emoji: normalizeHabitEmoji(data.habit.icon || data.habit.emoji || emoji),
           completedDates: data.habit.completedDates || [],
         },
         ...prev,
@@ -186,6 +192,7 @@ export default function Habits() {
     const { data } = await api.habits.create({
       name: suggested.name,
       icon: suggested.emoji,
+      emoji: suggested.emoji,
       category: "Daily",
       targetDaysPerWeek: 7,
     });
@@ -194,7 +201,7 @@ export default function Habits() {
       setHabits((prev) => [
         {
           ...data.habit,
-          emoji: data.habit.icon || suggested.emoji,
+          emoji: normalizeHabitEmoji(data.habit.icon || data.habit.emoji || suggested.emoji),
           completedDates: data.habit.completedDates || [],
         },
         ...prev,

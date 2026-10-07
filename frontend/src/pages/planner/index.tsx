@@ -109,13 +109,21 @@ export default function Planner() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Link
-              to="/tasks"
+              to="/plan"
               className="flex items-center gap-1.5 rounded-xl border border-[#E8E3F0] bg-white/90 px-3.5 py-2.5 text-xs font-semibold text-[#5F5965] shadow-2xs transition hover:bg-white hover:text-[#17151C] hover:-translate-y-0.5"
             >
               <ListTodo size={15} />
-              <span>Action Tasks</span>
+              <span>All Tasks</span>
+            </Link>
+
+            <Link
+              to="/focus"
+              className="flex items-center gap-1.5 rounded-xl border border-[#DDD8F2] bg-[#EEEAFE]/60 px-3.5 py-2.5 text-xs font-semibold text-[#6B5BA5] shadow-2xs transition hover:bg-[#EEEAFE] hover:text-[#17151C] hover:-translate-y-0.5"
+            >
+              <Clock size={15} className="text-[#9E96D8]" />
+              <span>Focus Time</span>
             </Link>
 
             <button
