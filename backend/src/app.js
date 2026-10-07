@@ -1,5 +1,6 @@
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+
 const express = require("express");
 const cors = require("cors");
 const pool = require("./config/db");
@@ -8,9 +9,14 @@ const apiRouter = require("./routes/api");
 const app = express();
 
 // Enable CORS for frontend clients
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -60,7 +66,9 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
   console.error("Global error handler:", err);
-  res.status(500).json({ error: "An unexpected server error occurred" });
+  res.status(500).json({
+    error: "An unexpected server error occurred",
+  });
 });
 
 module.exports = app;
