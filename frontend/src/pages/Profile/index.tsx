@@ -1591,11 +1591,11 @@ export default function Profile() {
                   </span>
                 </div>
 
-                <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#2D263B] dark:text-[#E2DEEA] font-normal">
+                <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#17151C] dark:text-[#E2DEEA] font-normal">
                   {profile.bio}
                 </p>
 
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-[#524B5C] dark:text-[#B2AABF]">
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-[#2D263B] dark:text-[#B2AABF]">
                   <span className="flex items-center gap-1.5 font-medium">
                     <Calendar size={13} className="text-[#9E96D8]" />
                     Member since {profile.joinedDate}
@@ -1603,8 +1603,8 @@ export default function Profile() {
 
                   <span className="hidden sm:inline text-[#DDD8F2] dark:text-[#4A3E65]">•</span>
 
-                  <span className="flex items-center gap-1.5 text-[#2F6B4D] dark:text-[#7BE0B8] font-semibold">
-                    <Shield size={13} className="text-[#3E7D5C] dark:text-[#7BE0B8]" />
+                  <span className="flex items-center gap-1.5 text-[#1B5E39] dark:text-[#7BE0B8] font-bold">
+                    <Shield size={13} className="text-[#1B5E39] dark:text-[#7BE0B8]" />
                     Private Vault Protected
                   </span>
 
@@ -1615,7 +1615,7 @@ export default function Profile() {
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="text-[11px] font-semibold text-[#B83E6A] dark:text-[#F0B5CF] hover:underline cursor-pointer transition"
+                        className="text-[11px] font-bold text-[#B83E6A] dark:text-[#F0B5CF] hover:underline cursor-pointer transition"
                       >
                         Remove photo
                       </button>
@@ -1653,8 +1653,8 @@ export default function Profile() {
                       px-3
                       py-1.5
                       text-[11px]
-                      font-medium
-                      text-[#3D3747]
+                      font-semibold
+                      text-[#17151C]
                       dark:text-[#DDD8F2]
                       shadow-2xs
                     "
@@ -2052,7 +2052,7 @@ export default function Profile() {
                 className="
                   text-sm
                   leading-7
-                  text-[#2D263B]
+                  text-[#17151C]
                   dark:text-[#E2DEEA]
                 "
               >
@@ -2067,7 +2067,7 @@ export default function Profile() {
                     font-bold
                     uppercase
                     tracking-wider
-                    text-[#524B5C]
+                    text-[#2D263B]
                     dark:text-[#A7A0B5]
                   "
                 >
@@ -2089,8 +2089,8 @@ export default function Profile() {
                           px-3
                           py-1.5
                           text-xs
-                          font-medium
-                          text-[#3D3747]
+                          font-semibold
+                          text-[#17151C]
                           dark:text-[#DDD8F2]
                         "
                       >
@@ -2128,6 +2128,7 @@ export default function Profile() {
                     text-xl
                     font-bold
                     text-[#17151C]
+                    dark:text-[#F3EFF8]
                   "
                 >
                   Current things
@@ -2142,7 +2143,8 @@ export default function Profile() {
                       font-bold
                       uppercase
                       tracking-wider
-                      text-[#8D8792]
+                      text-[#2D263B]
+                      dark:text-[#B2AABF]
                     "
                   >
                     Current goal
@@ -2154,6 +2156,7 @@ export default function Profile() {
                       text-sm
                       font-semibold
                       text-[#17151C]
+                      dark:text-[#F3EFF8]
                     "
                   >
                     {profile.currentGoal}
@@ -2170,7 +2173,8 @@ export default function Profile() {
                       font-bold
                       uppercase
                       tracking-wider
-                      text-[#8D8792]
+                      text-[#2D263B]
+                      dark:text-[#B2AABF]
                     "
                   >
                     <BookOpen size={12} />
@@ -2183,6 +2187,7 @@ export default function Profile() {
                       text-sm
                       font-semibold
                       text-[#17151C]
+                      dark:text-[#F3EFF8]
                     "
                   >
                     {profile.favoriteBook}
@@ -2199,7 +2204,8 @@ export default function Profile() {
                       font-bold
                       uppercase
                       tracking-wider
-                      text-[#8D8792]
+                      text-[#2D263B]
+                      dark:text-[#B2AABF]
                     "
                   >
                     <Music size={12} />
@@ -2212,6 +2218,7 @@ export default function Profile() {
                       text-sm
                       font-semibold
                       text-[#17151C]
+                      dark:text-[#F3EFF8]
                     "
                   >
                     {profile.favoriteSong}
@@ -2252,7 +2259,8 @@ export default function Profile() {
                       font-bold
                       uppercase
                       tracking-wider
-                      text-[#8D8792]
+                      text-[#2D263B]
+                      dark:text-[#B2AABF]
                     "
                   >
                     Guiding philosophy
@@ -2266,6 +2274,7 @@ export default function Profile() {
                       italic
                       leading-relaxed
                       text-[#17151C]
+                      dark:text-[#F3EFF8]
                       md:text-lg
                     "
                   >
@@ -2277,7 +2286,8 @@ export default function Profile() {
                       mt-2
                       text-xs
                       font-semibold
-                      text-[#5F5965]
+                      text-[#2D263B]
+                      dark:text-[#E2DEEA]
                     "
                   >
                     — {profile.quoteAuthor}

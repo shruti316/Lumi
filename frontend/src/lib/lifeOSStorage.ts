@@ -197,28 +197,12 @@ export interface ReflectionEntry {
 
 const REFLECTIONS_KEY = "lumi_reflections";
 
-const DEFAULT_REFLECTIONS: ReflectionEntry[] = [
-  {
-    id: "ref-1",
-    weekOf: "Week 5 • Calm Midterm Sprint",
-    wentWell: "Maintained a steady 2-hour morning focus routine and shipped lab builds on time.",
-    wasDifficult: "Late-night screen time • Focus: Wind down 30 minutes earlier.",
-    learned: "Consistent small daily habits compound much better than all-nighters.",
-    nextWeekIntention: "Protect morning deep work blocks and drink more water throughout lectures.",
-    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-  },
-];
-
 export function getReflections(): ReflectionEntry[] {
   try {
     const data = localStorage.getItem(REFLECTIONS_KEY);
-    if (!data) {
-      saveReflections(DEFAULT_REFLECTIONS);
-      return DEFAULT_REFLECTIONS;
-    }
-    return JSON.parse(data);
+    return data ? JSON.parse(data) : [];
   } catch {
-    return DEFAULT_REFLECTIONS;
+    return [];
   }
 }
 
@@ -389,46 +373,12 @@ export interface MoodCheckin {
 
 const MOOD_KEY = "lumi_mood_checkins";
 
-const DEFAULT_MOODS: MoodCheckin[] = [
-  {
-    id: "mood-1",
-    mood: "Serene",
-    energy: 4,
-    tags: ["Morning Sun", "Herbal Tea", "Gentle Pace"],
-    note: "Started the morning with quiet contemplation and felt peaceful throughout the day.",
-    date: new Date().toISOString().split("T")[0],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "mood-2",
-    mood: "Inspired",
-    energy: 5,
-    tags: ["Deep Focus", "Creative Flow", "Music"],
-    note: "Made incredible headway on architectural concepts and interface designs.",
-    date: new Date(Date.now() - 86400000).toISOString().split("T")[0],
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: "mood-3",
-    mood: "Grateful",
-    energy: 4,
-    tags: ["Connection", "Good Food", "Evening Walk"],
-    note: "Had a delightful conversation with family and enjoyed a calm evening stroll.",
-    date: new Date(Date.now() - 2 * 86400000).toISOString().split("T")[0],
-    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-];
-
 export function getMoodCheckins(): MoodCheckin[] {
   try {
     const data = localStorage.getItem(MOOD_KEY);
-    if (!data) {
-      saveMoodCheckins(DEFAULT_MOODS);
-      return DEFAULT_MOODS;
-    }
-    return JSON.parse(data);
+    return data ? JSON.parse(data) : [];
   } catch {
-    return DEFAULT_MOODS;
+    return [];
   }
 }
 

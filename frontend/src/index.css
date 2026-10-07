@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700;1,800;1,900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap");
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
 
 :root {
   font-family: "Plus Jakarta Sans", "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -1183,16 +1184,28 @@ button:active {
   border-color: #D2CDC4 !important;
 }
 
-[data-theme="mist"] .text-\[\#17151C\] {
-  color: #1F1D1B !important;
+[data-theme="mist"] .text-\[\#17151C\],
+[data-theme="light"] .text-\[\#17151C\],
+:root:not([data-theme="dark"]) .text-\[\#17151C\] {
+  color: #17151C !important;
 }
 
-[data-theme="mist"] .text-\[\#5F5965\] {
-  color: #5C5854 !important;
+[data-theme="mist"] .text-\[\#2D263B\],
+[data-theme="light"] .text-\[\#2D263B\],
+:root:not([data-theme="dark"]) .text-\[\#2D263B\] {
+  color: #2D263B !important;
 }
 
-[data-theme="mist"] .text-\[\#8D8792\] {
-  color: #8E8982 !important;
+[data-theme="mist"] .text-\[\#5F5965\],
+[data-theme="light"] .text-\[\#5F5965\],
+:root:not([data-theme="dark"]) .text-\[\#5F5965\] {
+  color: #4A4452 !important;
+}
+
+[data-theme="mist"] .text-\[\#8D8792\],
+[data-theme="light"] .text-\[\#8D8792\],
+:root:not([data-theme="dark"]) .text-\[\#8D8792\] {
+  color: #635C6E !important;
 }
 
 /* Form inputs & Auth inputs in Mist mode */

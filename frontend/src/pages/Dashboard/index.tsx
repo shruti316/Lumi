@@ -354,6 +354,31 @@ export default function Dashboard() {
   const displayMemories = memories.slice(0, 4);
   const focusTasksList = tasks.slice(0, 4);
 
+  // Upcoming items (Real schedule & task data)
+  const upcomingItems = [
+    ...scheduleBlocks
+      .filter((b) => !b.completed)
+      .map((b) => ({
+        id: b.id,
+        title: b.title,
+        time: b.time || "Today",
+        category: b.category,
+      })),
+    ...tasks
+      .filter((t) => !t.completed && t.dueDate)
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        time: t.dueDate
+          ? new Date(t.dueDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })
+          : "Upcoming",
+        category: "Study" as const,
+      })),
+  ].slice(0, 3);
+
   async function handleToggleTask(task: Task) {
     if (tasks.some((t) => t.id === task.id)) {
       const nextCompleted = !task.completed;
@@ -899,52 +924,45 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              <div className="space-y-2.5">
-                {/* Midterm Item */}
-                <div className="flex items-center gap-3 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-3 shadow-2xs">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EEEAFE] text-[#6B5BA5] border border-[#DDD8F2]">
-                    <BookOpen size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#17151C] truncate">
-                      DSA Midterm
-                    </p>
-                    <p className="text-[11px] font-medium text-[#8D8792]">
-                      Tomorrow, 10:00 AM
-                    </p>
-                  </div>
+              {upcomingItems.length > 0 ? (
+                <div className="space-y-2.5">
+                  {upcomingItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-3 shadow-2xs"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EEEAFE] text-[#6B5BA5] border border-[#DDD8F2]">
+                        {item.category === "Study" || item.category === "Class" ? (
+                          <BookOpen size={16} />
+                        ) : item.category === "Routine" || item.category === "Personal" ? (
+                          <Dumbbell size={16} />
+                        ) : (
+                          <Laptop size={16} />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#17151C] truncate">
+                          {item.title}
+                        </p>
+                        <p className="text-[11px] font-medium text-[#8D8792]">
+                          {item.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Project Meeting Item */}
-                <div className="flex items-center gap-3 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-3 shadow-2xs">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EEF3FA] text-[#4A729A] border border-[#D9E7F2]">
-                    <Laptop size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#17151C] truncate">
-                      Project Meeting
-                    </p>
-                    <p className="text-[11px] font-medium text-[#8D8792]">
-                      5 Oct, 2:00 PM
-                    </p>
-                  </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[#DDD8F2] bg-[#FAF8FC] p-4 text-center">
+                  <p className="text-xs font-bold text-[#17151C]">No upcoming events</p>
+                  <p className="text-[11px] text-[#8D8792] mt-0.5">Your schedule and deadlines will appear here</p>
+                  <Link
+                    to="/planner"
+                    className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-[#9E96D8] hover:text-[#7A70C2] hover:underline"
+                  >
+                    <span>Plan schedule →</span>
+                  </Link>
                 </div>
-
-                {/* Gym Item */}
-                <div className="flex items-center gap-3 rounded-2xl bg-[#FAF8FC] border border-[#E8E3F0] p-3 shadow-2xs">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FDF0F6] text-[#9A4E70] border border-[#F2D8E4]">
-                    <Dumbbell size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-[#17151C] truncate">
-                      Gym
-                    </p>
-                    <p className="text-[11px] font-medium text-[#8D8792]">
-                      Today, 6:00 PM
-                    </p>
-                  </div>
-                </div>
-              </div>
+              )}
             </Card>
           </div>
 
