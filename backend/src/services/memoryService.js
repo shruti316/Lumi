@@ -89,9 +89,16 @@ async function getMemoriesByUserId(userId) {
 }
 
 async function getMemoryById(id, userId = null) {
-  const where = userId ? "WHERE id = ? AND user_id = ?" : "WHERE id = ?";
-  const params = userId ? [id, userId] : [id];
+  const where = userId
+    ? "WHERE m.id = ? AND m.user_id = ?"
+    : "WHERE m.id = ?";
+
+  const params = userId
+    ? [id, userId]
+    : [id];
+
   const list = await getPopulatedMemories(where, params);
+
   return list.length > 0 ? list[0] : null;
 }
 

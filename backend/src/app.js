@@ -22,7 +22,7 @@ app.use(
 );
 
 // Body Parsing Middleware
-app.use(express.json());
++ app.use(express.json({ limit: "10mb" }));
 
 // Request logger for development
 app.use((req, res, next) => {
