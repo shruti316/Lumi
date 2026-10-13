@@ -29,7 +29,8 @@ async function initDatabase() {
       category VARCHAR(100) DEFAULT 'General',
       time VARCHAR(50) DEFAULT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_tasks_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_tasks_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 3. Habits Table
@@ -42,17 +43,19 @@ async function initDatabase() {
       color VARCHAR(50) DEFAULT '#9E96D8',
       target_days_per_week INT DEFAULT 7,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_habits_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_habits_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
-    // Habit Completions (Relational tracking)
+    // Habit Completions
     `CREATE TABLE IF NOT EXISTS habit_completions (
       id INT AUTO_INCREMENT PRIMARY KEY,
       habit_id VARCHAR(36) NOT NULL,
       completed_date VARCHAR(50) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE KEY unique_habit_date (habit_id, completed_date),
-      CONSTRAINT fk_habit_completions FOREIGN KEY (habit_id) REFERENCES habits (id) ON DELETE CASCADE
+      CONSTRAINT fk_habit_completions FOREIGN KEY (habit_id)
+        REFERENCES habits (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 4. Goals Table
@@ -68,7 +71,8 @@ async function initDatabase() {
       status VARCHAR(50) DEFAULT 'In Progress',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      CONSTRAINT fk_goals_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_goals_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // Goal Milestones
@@ -78,7 +82,8 @@ async function initDatabase() {
       title VARCHAR(255) NOT NULL,
       completed BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_milestones_goal FOREIGN KEY (goal_id) REFERENCES goals (id) ON DELETE CASCADE
+      CONSTRAINT fk_milestones_goal FOREIGN KEY (goal_id)
+        REFERENCES goals (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 5. Notes Table
@@ -90,7 +95,8 @@ async function initDatabase() {
       content LONGTEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      CONSTRAINT fk_notes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_notes_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // Note Tags
@@ -99,7 +105,8 @@ async function initDatabase() {
       note_id VARCHAR(36) NOT NULL,
       tag VARCHAR(100) NOT NULL,
       UNIQUE KEY unique_note_tag (note_id, tag),
-      CONSTRAINT fk_tags_note FOREIGN KEY (note_id) REFERENCES notes (id) ON DELETE CASCADE
+      CONSTRAINT fk_tags_note FOREIGN KEY (note_id)
+        REFERENCES notes (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 6. Projects Table
@@ -114,7 +121,8 @@ async function initDatabase() {
       notes TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_projects_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // Project Subtasks
@@ -124,7 +132,8 @@ async function initDatabase() {
       title VARCHAR(255) NOT NULL,
       completed BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_subtasks_project FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+      CONSTRAINT fk_subtasks_project FOREIGN KEY (project_id)
+        REFERENCES projects (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 7. Journals / Diary Table
@@ -138,7 +147,8 @@ async function initDatabase() {
       entry LONGTEXT,
       gratitude TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_journals_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_journals_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 8. Memories Table
@@ -149,10 +159,11 @@ async function initDatabase() {
       caption TEXT,
       date VARCHAR(50) DEFAULT NULL,
       location VARCHAR(255) DEFAULT NULL,
-      image_url TEXT,
+      image_url LONGTEXT,
       is_shared BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_memories_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_memories_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // Memory Tags
@@ -160,7 +171,8 @@ async function initDatabase() {
       id INT AUTO_INCREMENT PRIMARY KEY,
       memory_id VARCHAR(36) NOT NULL,
       tag VARCHAR(100) NOT NULL,
-      CONSTRAINT fk_memory_tags FOREIGN KEY (memory_id) REFERENCES memories (id) ON DELETE CASCADE
+      CONSTRAINT fk_memory_tags FOREIGN KEY (memory_id)
+        REFERENCES memories (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // Memory Reactions
@@ -170,8 +182,10 @@ async function initDatabase() {
       user_id VARCHAR(36) NOT NULL,
       reaction_type VARCHAR(50) NOT NULL,
       UNIQUE KEY unique_memory_user_reaction (memory_id, user_id, reaction_type),
-      CONSTRAINT fk_reactions_memory FOREIGN KEY (memory_id) REFERENCES memories (id) ON DELETE CASCADE,
-      CONSTRAINT fk_reactions_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_reactions_memory FOREIGN KEY (memory_id)
+        REFERENCES memories (id) ON DELETE CASCADE,
+      CONSTRAINT fk_reactions_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // Memory Comments
@@ -182,8 +196,10 @@ async function initDatabase() {
       author_name VARCHAR(100) NOT NULL,
       text TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_comments_memory FOREIGN KEY (memory_id) REFERENCES memories (id) ON DELETE CASCADE,
-      CONSTRAINT fk_comments_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_comments_memory FOREIGN KEY (memory_id)
+        REFERENCES memories (id) ON DELETE CASCADE,
+      CONSTRAINT fk_comments_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 9. Books / Reading Tracker Table
@@ -200,7 +216,8 @@ async function initDatabase() {
       notes TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      CONSTRAINT fk_books_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_books_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 10. Conversations Table
@@ -218,8 +235,10 @@ async function initDatabase() {
       conversation_id VARCHAR(36) NOT NULL,
       user_id VARCHAR(36) NOT NULL,
       UNIQUE KEY unique_conv_user (conversation_id, user_id),
-      CONSTRAINT fk_cp_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
-      CONSTRAINT fk_cp_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_cp_conversation FOREIGN KEY (conversation_id)
+        REFERENCES conversations (id) ON DELETE CASCADE,
+      CONSTRAINT fk_cp_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // Messages Table
@@ -232,8 +251,10 @@ async function initDatabase() {
       timestamp VARCHAR(50),
       read_status BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id) REFERENCES conversations (id) ON DELETE CASCADE,
-      CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users (id) ON DELETE CASCADE
+      CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id)
+        REFERENCES conversations (id) ON DELETE CASCADE,
+      CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id)
+        REFERENCES users (id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
     // 11. Focus Sessions Table
@@ -246,26 +267,34 @@ async function initDatabase() {
       tag VARCHAR(100) DEFAULT 'Deep Work',
       notes TEXT DEFAULT NULL,
       completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT fk_focus_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-      CONSTRAINT fk_focus_task FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE SET NULL
+      CONSTRAINT fk_focus_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE,
+      CONSTRAINT fk_focus_task FOREIGN KEY (task_id)
+        REFERENCES tasks (id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
   ];
 
-  for (const q of queries) {
-    await pool.query(q);
+  for (const query of queries) {
+    await pool.query(query);
   }
 
-  // Ensure tasks due_date column is VARCHAR(100) and memories image_url is LONGTEXT
+  // Ensure existing columns support the required data sizes.
   try {
-    await pool.query("ALTER TABLE tasks MODIFY COLUMN due_date VARCHAR(100) DEFAULT NULL;");
-  } catch (err) {
-    // Column might already be modified
+    await pool.query(
+      "ALTER TABLE tasks MODIFY COLUMN due_date VARCHAR(100) DEFAULT NULL"
+    );
+  } catch (error) {
+    console.error("[LUMI DB] Could not update tasks.due_date:", error.message);
+    throw error;
   }
 
   try {
-    await pool.query("ALTER TABLE memories MODIFY COLUMN image_url LONGTEXT;");
-  } catch (err) {
-    // Column might already be modified
+    await pool.query(
+      "ALTER TABLE memories MODIFY COLUMN image_url LONGTEXT"
+    );
+  } catch (error) {
+    console.error("[LUMI DB] Could not update memories.image_url:", error.message);
+    throw error;
   }
 
   console.log("[LUMI DB] All tables verified and ready.");
