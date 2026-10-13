@@ -1,6 +1,24 @@
+cons
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
+const fs = require("fs");
+
+require("dotenv").config({
+  path: path.resolve(__dirname, "../../.env"),
+});
+
 const mysql = require("mysql2/promise");
+
+const isProduction = process.env.NODE_ENV === "production";
+
+const ssl = isProduction
+  ? {
+      ca: fs.readFileSync(
+        path.resolve(__dirname, "../../certs/ca.pem"),
+        "utf8"
+      ),
+      rejectUnauthorized: true,
+    }
+  : undefined;
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "127.0.0.1",
@@ -11,6 +29,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  ...(ssl ? { ssl } : {}),
 });
 
 module.exports = pool;

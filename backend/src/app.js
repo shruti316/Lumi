@@ -1,5 +1,9 @@
+
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+
+require("dotenv").config({
+  path: path.resolve(__dirname, "../.env"),
+});
 
 const express = require("express");
 const cors = require("cors");
@@ -8,24 +12,32 @@ const apiRouter = require("./routes/api");
 
 const app = express();
 
-// Enable CORS for frontend clients
+// CORS configuration for local development and production
 const allowedOrigins = [
+  process.env.CLIENT_URL,
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-];
+].filter(Boolean);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests without an Origin header, such as health checks
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true,
   })
 );
 
-// Body Parsing Middleware (support high-res media up to 50MB)
+// Body parsing (support media uploads up to 50 MB)
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Request logger for development
+// Request logger
 app.use((req, res, next) => {
   console.log(`[LUMI API] ${req.method} ${req.url}`);
   next();
@@ -33,42 +45,57 @@ app.use((req, res, next) => {
 
 // Root welcome route
 app.get("/", (req, res) => {
-  res.send("✧ LUMI Life OS API is running 🌙");
+  res.send("LUMI Life OS API is running");
 });
 
-// Health check route with safe database connectivity test
+// Health check with database connectivity test
 app.get("/api/health", async (req, res) => {
-  let dbStatus = "disconnected";
-
   try {
     await pool.query("SELECT 1");
-    dbStatus = "connected";
-  } catch (err) {
-    dbStatus = "disconnected";
-  }
 
-  res.json({
-    status: "ok",
-    app: "LUMI Life OS",
-    version: "1.0.0",
-    database: dbStatus,
-    timestamp: new Date().toISOString(),
-  });
+    res.json({
+      status: "ok",
+      app: "LUMI Life OS",
+      version: "1.0.0",
+      database: "connected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("[LUMI DB] Health check failed:", err.message);
+
+    res.status(503).json({
+      status: "error",
+      app: "LUMI Life OS",
+      version: "1.0.0",
+      database: "disconnected",
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
-// Mount all modular application routes
+// Application API routes
 app.use("/api", apiRouter);
 
-// Global 404 handler for unknown routes
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error("Global error handler:", err);
-  res.status(500).json({
-    error: "An unexpected server error occurred",
+  console.error("[LUMI API] Error:", err.message);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const status = err.message === "Origin not allowed by CORS" ? 403 : 500;
+
+  res.status(status).json({
+    error:
+      status === 403
+        ? "Origin not allowed"
+        : "An unexpected server error occurred",
   });
 });
 
