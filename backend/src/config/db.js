@@ -1,4 +1,4 @@
-cons
+
 const path = require("path");
 const fs = require("fs");
 
@@ -10,15 +10,20 @@ const mysql = require("mysql2/promise");
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const ssl = isProduction
-  ? {
-      ca: fs.readFileSync(
-        path.resolve(__dirname, "../../certs/ca.pem"),
-        "utf8"
-      ),
-      rejectUnauthorized: true,
-    }
-  : undefined;
+let ssl;
+
+if (isProduction) {
+  const caPath = path.resolve(__dirname, "../../certs/ca.pem");
+
+  if (!fs.existsSync(caPath)) {
+    throw new Error(`Aiven CA certificate not found: ${caPath}`);
+  }
+
+  ssl = {
+    ca: fs.readFileSync(caPath, "utf8"),
+    rejectUnauthorized: true,
+  };
+}
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "127.0.0.1",
@@ -33,3 +38,4 @@ const pool = mysql.createPool({
 });
 
 module.exports = pool;
+
